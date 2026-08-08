@@ -55,10 +55,10 @@ jobs:
 
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.x'
 
@@ -136,7 +136,7 @@ jobs:
       # What was built, whether or not it is being released. A dispatch run stops here, which is
       # what makes it a rehearsal: everything that can fail has run, and nothing is public.
       - name: Keep the archives
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: archives
           path: artifacts/*
