@@ -311,8 +311,15 @@ and every file in [Samples](#samples) runs today.
 
 ## Writing and running a program
 
-You need the .NET 10 SDK and a clone of this repository. There is no released build to download
-yet, so you build it from source, which takes one command.
+You need the .NET 10 SDK and a clone of this repository. What follows builds the compiler from
+source, which is what to do with the repository in front of you — to work on it, or to run a
+change you have just made.
+
+**To use Profi-C rather than work on it, install it instead.** One command per platform at
+[profi-c.pluperfect.dev/install](https://profi-c.pluperfect.dev/install), or an archive from
+[the latest release](https://github.com/mnwachukwu/Profi-C/releases/latest). Either brings
+everything with it: the builds are self-contained, so nothing has to be installed first and there
+is no runtime on the machine to be the wrong version.
 
 ### 1. Build the tool
 
