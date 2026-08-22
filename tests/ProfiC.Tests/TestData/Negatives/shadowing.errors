@@ -1,4 +1,0 @@
-shadowing.pc(30,13): error PC0237: 'items' is already the name of something in an enclosing scope, so this one would hide it. Give it a name of its own.
-shadowing.pc(35,23): error PC0237: 'items' is already the name of something in an enclosing scope, so this one would hide it. Give it a name of its own.
-shadowing.pc(38,9): error PC0237: 'total' is already the name of something in an enclosing scope, so this one would hide it. Give it a name of its own.
-shadowing.pc(47,9): error PC0237: 'trouble' is already the name of something in an enclosing scope, so this one would hide it. Give it a name of its own.

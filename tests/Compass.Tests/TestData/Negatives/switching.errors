@@ -1,0 +1,5 @@
+switching.cm(21,16): error CM0315: A switch cannot examine a real. A case label compares an integer, a character, a string, a boolean or an enumeration member, and nothing else.
+switching.cm(28,18): error CM0325: A case label must be known while compiling.
+switching.cm(36,18): error CM0326: The value 1 is already handled by another case.
+switching.cm(42,18): error CM0300: Cannot use a string where a Suit is expected. Nothing converts one to the other.
+switching.cm(47,16): warning CM0337: This switch does not handle every Suit: Clubs and Spades have no case. Add one for each, or a 'default' for everything else.

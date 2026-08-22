@@ -1,0 +1,2 @@
+missing-source.cmp(9,1): error CM0606: There is no file or folder at 'nowhere.cm'.
+missing-source.cmp(11,1): error CM0608: '../runtime/empty-optional.cm' is already part of this project. Remove this line.

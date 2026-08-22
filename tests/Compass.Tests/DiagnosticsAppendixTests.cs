@@ -1,0 +1,247 @@
+using System.Globalization;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using Compass.Compiler.Diagnostics;
+
+namespace Compass.Tests;
+
+/// <summary>
+/// <para>Holds Appendix A of the specification to the diagnostics the compiler actually has.
+/// </para>
+/// <para>The appendix is a second, hand-written list of the same thing, and adding a
+/// descriptor does nothing to it. Drift here is quiet in a way most drift is not: nothing
+/// fails, no color changes, and the only sign is a reader meeting an id the document has
+/// never heard of — at the moment they most need it to have.</para>
+/// <para>The same argument the editor grammar's tests make in <c>Compass.Editors</c>, applied
+/// to prose.</para>
+/// </summary>
+[TestFixture]
+public sealed class DiagnosticsAppendixTests : LexerTestBase
+{
+    private static string SpecificationPath =>
+        Path.Combine(RepositoryRoot, "docs", "language-spec.md");
+
+    private static IEnumerable<DiagnosticDescriptor> Descriptors() =>
+        typeof(DiagnosticDescriptors)
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(field => field.FieldType == typeof(DiagnosticDescriptor))
+            .Select(field => (DiagnosticDescriptor)field.GetValue(null)!);
+
+    /// <summary>Every id the compiler can report, read off the descriptors themselves.</summary>
+    private static SortedSet<string> Declared()
+    {
+        SortedSet<string> ids = new(StringComparer.Ordinal);
+
+        foreach (FieldInfo field in typeof(DiagnosticDescriptors)
+                     .GetFields(BindingFlags.Public | BindingFlags.Static)
+                     .Where(f => f.FieldType == typeof(DiagnosticDescriptor)))
+        {
+            ids.Add(((DiagnosticDescriptor)field.GetValue(null)!).Id);
+        }
+
+        return ids;
+    }
+
+    /// <summary>Every id the appendix lists, read off its table rows.</summary>
+    private static SortedSet<string> Documented() =>
+        new(Regex.Matches(File.ReadAllText(SpecificationPath), @"^\| `(CM\d{4})`",
+                          RegexOptions.Multiline)
+                 .Select(m => m.Groups[1].Value),
+            StringComparer.Ordinal);
+
+    [Test]
+    public void EveryDiagnosticTheCompilerHasIsInTheAppendix() => Assert.That(
+        Declared().Except(Documented()),
+        Is.Empty,
+        "diagnostics the compiler reports that Appendix A does not list");
+
+    [Test]
+    public void TheAppendixListsNoDiagnosticTheCompilerLacks() => Assert.That(
+        Documented().Except(Declared()),
+        Is.Empty,
+        "diagnostics Appendix A lists that the compiler cannot report");
+
+    /// <summary>
+    /// <para>A message is either literal text or a format string, and never half of each.</para>
+    /// <para>Nothing formats a descriptor that takes no arguments — the text is used as
+    /// written — so one that takes none may hold a brace as punctuation, and <c>CM0313</c>'s
+    /// <c>values = {}</c> does. That is fine exactly as long as it stays argumentless. Give it a
+    /// <c>{0}</c> and the message is formatted instead: the brace stops being punctuation and
+    /// becomes a malformed placeholder, which throws at the moment the diagnostic was going to
+    /// be reported — so the compiler crashes where it meant to explain something.</para>
+    /// <para>Nothing about that fails to compile, and it is the kind of thing found by the
+    /// reader who hit it. So the rule is checked on the ones that carry a placeholder: those
+    /// have to survive being formatted, which means every brace in them is one or is doubled.
+    /// </para>
+    /// </summary>
+    [Test]
+    public void AMessageCarryingAPlaceholderSurvivesBeingFormatted() => Assert.Multiple(() =>
+    {
+        foreach (DiagnosticDescriptor descriptor in Descriptors())
+        {
+            MatchCollection placeholders =
+                Regex.Matches(descriptor.MessageFormat, @"\{(\d+)\}");
+
+            if (placeholders.Count == 0)
+            {
+                continue;
+            }
+
+            int wanted = placeholders.Max(
+                p => int.Parse(p.Groups[1].Value, CultureInfo.InvariantCulture)) + 1;
+
+            object?[] args = [.. Enumerable.Range(0, wanted).Select(object? (i) => $"<{i}>")];
+
+            Assert.That(
+                () => string.Format(CultureInfo.InvariantCulture, descriptor.MessageFormat, args),
+                Throws.Nothing,
+                $"{descriptor.Id} carries a placeholder, so every brace in it must be one "
+                + "or be doubled");
+        }
+    });
+
+    /// <summary>The word the appendix and the renderer both use for a severity.</summary>
+    private static string Spelled(DiagnosticSeverity severity) => severity switch
+    {
+        DiagnosticSeverity.Error => "error",
+        DiagnosticSeverity.Warning => "warning",
+        _ => "opinion",
+    };
+
+    /// <summary>
+    /// <para>Each severity is stated in the appendix, and a diagnostic moving between them is
+    /// exactly the kind of change a reader consults the appendix about.</para>
+    /// <para>A row whose second cell holds no severity the compiler knows is a failure rather
+    /// than a row to pass over. Skipping it would mean a misspelled severity — or one the
+    /// alternation below was never widened for — reads as agreement.</para>
+    /// </summary>
+    [Test]
+    public void TheAppendixAgreesAboutEverySeverity()
+    {
+        string specification = File.ReadAllText(SpecificationPath);
+        List<string> wrong = [];
+
+        foreach (DiagnosticDescriptor descriptor in Descriptors())
+        {
+            Match row = Regex.Match(
+                specification,
+                $@"^\| `{descriptor.Id}` \| (opinion|warning|error) \|",
+                RegexOptions.Multiline);
+
+            string actual = Spelled(descriptor.DefaultSeverity);
+
+            if (!row.Success)
+            {
+                wrong.Add($"{descriptor.Id} is a{(actual == "warning" ? "" : "n")} {actual}, "
+                          + "but its appendix row states no severity the compiler knows");
+                continue;
+            }
+
+            string documented = row.Groups[1].Value;
+
+            if (!string.Equals(documented, actual, StringComparison.Ordinal))
+            {
+                wrong.Add($"{descriptor.Id} is a {actual} but the appendix says {documented}");
+            }
+        }
+
+        Assert.That(wrong.Order(StringComparer.Ordinal), Is.Empty);
+    }
+
+    /// <summary>
+    /// <para>Every row states the diagnostic's title and its message, and both are quoted from the
+    /// compiler rather than described.</para>
+    /// <para><b>This is the column that rotted.</b> The id, the severity and the counts were each
+    /// held to the compiler and each did their job; the message was printed and checked by nothing,
+    /// so changing one in <c>DiagnosticDescriptors</c> left the appendix saying the old thing and
+    /// the whole suite green. It is also the longest prose in the specification, and the part a
+    /// reader arrives at having already seen the real message in their terminal — so a difference
+    /// between the two reads as the document describing a different compiler.</para>
+    /// <para>Compared as written, placeholders and all. A row is a quotation, not a paraphrase.
+    /// </para>
+    /// </summary>
+    [Test]
+    public void TheAppendixQuotesEveryDiagnosticAsTheCompilerWordsIt()
+    {
+        string specification = File.ReadAllText(SpecificationPath);
+        List<string> wrong = [];
+
+        foreach (DiagnosticDescriptor descriptor in Descriptors())
+        {
+            // A cell may hold a bar, written '\|' so the table does not read it as a divider —
+            // which CM0333's '(1|2)' needs. So a cell runs to the first bar that is not escaped,
+            // and what it holds is unescaped before it is compared.
+            const string Cell = @"(?:\\.|[^|\\])*";
+
+            Match row = Regex.Match(
+                specification,
+                $@"^\| `{descriptor.Id}` \| \w+ \| (?<title>{Cell}) \| (?<message>{Cell}) \|$",
+                RegexOptions.Multiline);
+
+            if (!row.Success)
+            {
+                wrong.Add($"{descriptor.Id} has no appendix row of the expected four columns");
+                continue;
+            }
+
+            static string Written(Group cell) =>
+                cell.Value.Trim().Replace(@"\|", "|", StringComparison.Ordinal);
+
+            foreach ((string what, string documented, string actual) in new[]
+            {
+                ("title", Written(row.Groups["title"]), descriptor.Title),
+                ("message", Written(row.Groups["message"]), descriptor.MessageFormat),
+            })
+            {
+                if (!string.Equals(documented, actual, StringComparison.Ordinal))
+                {
+                    wrong.Add($"{descriptor.Id} {what}:{Environment.NewLine}"
+                              + $"      appendix: {documented}{Environment.NewLine}"
+                              + $"      compiler: {actual}");
+                }
+            }
+        }
+
+        Assert.That(wrong.Order(StringComparer.Ordinal), Is.Empty);
+    }
+
+    /// <summary>
+    /// <para>The appendix counts the warnings and the opinions in two sentences, each saying its
+    /// number in words.</para>
+    /// <para>It is a second hand-written list of the same thing, and a count is the claim a
+    /// reader is least likely to verify and most likely to repeat — which is why it drifted the
+    /// last time nothing checked it.</para>
+    /// <para>Each count is read from its own sentence rather than looked for anywhere in the
+    /// file. The two happen to be equal, so a search of the whole document would find the other
+    /// one's number and agree with itself.</para>
+    /// </summary>
+    [TestCase(DiagnosticSeverity.Warning, "Warnings are few")]
+    [TestCase(DiagnosticSeverity.Opinion, "Opinions are the language")]
+    public void TheAppendixCountsThemCorrectly(DiagnosticSeverity severity, string opening)
+    {
+        string[] words =
+        [
+            "Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+            "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+            "Seventeen", "Eighteen", "Nineteen", "Twenty",
+        ];
+
+        int reported = Descriptors().Count(d => d.DefaultSeverity == severity);
+
+        Assert.That(reported, Is.LessThan(words.Length), "this table needs more number words");
+
+        Match sentence = Regex.Match(
+            File.ReadAllText(SpecificationPath),
+            $@"\*\*{Regex.Escape(opening)}[^*]*\*\* (\w+) exist");
+
+        Assert.That(
+            sentence.Success,
+            $"the appendix should carry a sentence opening '{opening}' and counting them");
+
+        Assert.That(
+            sentence.Groups[1].Value,
+            Is.EqualTo(words[reported]),
+            $"the compiler has {reported} of {Spelled(severity)} severity, so the sentence "
+            + $"opening '{opening}' should say '{words[reported]} exist'");
+    }
+}

@@ -31,8 +31,8 @@ fewer than a float shows, and every one of them true.
 | `Math.Pi` | `real` |
 | `Math.E` | `real` |
 
-**Values, not functions.** Writing `Math.Pi()` is reported (`PC0338`), as is naming a function
-without calling it (`PC0330`) — the two are a pair, so whichever a reader guesses, the compiler
+**Values, not functions.** Writing `Math.Pi()` is reported (`CM0338`), as is naming a function
+without calling it (`CM0330`) — the two are a pair, so whichever a reader guesses, the compiler
 says which it is.
 
 ```

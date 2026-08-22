@@ -1,11 +1,30 @@
 # Changelog
 
-What changed in each release of Profi-C, newest first.
+What changed in each release of Compass, newest first.
 
 Versions are `major.minor.patch`. A **major** goes up where a program that compiled stops
 compiling or starts meaning something else. A **minor** adds something the language did not have.
 A **patch** fixes what was already meant to work. Released builds carry a fourth number, which
 identifies the build rather than the language, and never changes what a program means.
+
+## 1.0.1
+
+The language is called Compass.
+
+**Files.** Source is `.cm`. A project is `.cmp`.
+
+**The command.** `compass`, with `cm` as the short form.
+
+**Diagnostics.** Identifiers begin `CM`, as in `CM0403`, and an `# ignore` comment names one in
+that form.
+
+**Assemblies.** The namespaces and assemblies are `Compass.*`, and the runtime types a built
+program refers to are `Compass*`.
+
+**Environment.** `COMPASS_UPDATE_GOLDEN` and `COMPASS_KEEP_ASSEMBLIES`.
+
+Renamed from Profi-C. A 1.0.0 program compiles once its extension and any `# ignore` comment are
+rewritten.
 
 ## 1.0.0
 
@@ -22,7 +41,7 @@ and the two outputs are held against each other. The interpreter is the oracle; 
 disagree, one of them has a bug and the corpus finds out which. Every emitted assembly is also
 read by the runtime's own IL verifier, which checks the methods a run never reaches.
 
-**A command line.** `pc run`, `pc build`, `pc format`, `pc new`, and `pc debug`, plus `pc lsp`
+**A command line.** `cm run`, `cm build`, `cm format`, `cm new`, and `cm debug`, plus `cm lsp`
 for an editor to talk to.
 
 **An editor.** Syntax highlighting, diagnostics as you type, completion, hover, go to definition,

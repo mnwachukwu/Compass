@@ -1,0 +1,2 @@
+unclear-output.cmp(16,1): error CM0628: 'output' says where a build is written, so a folder must follow it, as in 'output ../artifacts'.
+unclear-output.cmp(18,1): error CM0629: A project is written to one place, so it names one 'output'.

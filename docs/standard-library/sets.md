@@ -2,7 +2,7 @@
 
 [← Back to the index](README.md)
 
-Everything a `T[]` answers, whatever `T` is. A Profi-C set is a row of things that **keeps its
+Everything a `T[]` answers, whatever `T` is. A Compass set is a row of things that **keeps its
 order** and **allows a value twice** — it is what C# spells `List<T>` rather than what
 mathematics calls a set, and [`Distinct`](#distinct) is how you ask for the mathematical one.
 
@@ -98,7 +98,7 @@ All four give back a new set and leave both originals alone.
 | `Distinct()` | `T[]` | One of each, keeping the first of every run |
 
 **These are not the operations of the same name in mathematics**, and the difference is worth
-having straight. Because a Profi-C set keeps order and allows a value twice, `Union` *appends*
+having straight. Because a Compass set keeps order and allows a value twice, `Union` *appends*
 rather than merging — what was in both ends up in the answer twice. `Distinct` is what turns a
 row of things into a mathematical set, and it is only ever done when asked.
 

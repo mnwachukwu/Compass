@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Compass.Interpreter</RootNamespace>
+    <AssemblyName>Compass.Interpreter</AssemblyName>
+    <Description>Runs a checked Compass program by walking its lowered tree. Stays afterwards as the oracle the compiler is checked against.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Compass.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Compass.Compiler\Compass.Compiler.csproj" />
+    <ProjectReference Include="..\Compass.Runtime\Compass.Runtime.csproj" />
+  </ItemGroup>
+
+</Project>

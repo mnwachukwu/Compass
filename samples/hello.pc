@@ -1,7 +1,0 @@
-# The smallest Profi-C program that does something.
-
-shared model Program
-    function Main()
-        Console.WriteLine("Hello, World!");
-    end function
-end model

@@ -1,0 +1,13 @@
+namespace Compass.Cli.Alias;
+
+/// <summary>
+/// <para><c>cm</c>, the short name for <c>compass</c>.</para>
+/// <para>A separate executable rather than a shell alias so that the short name works the same
+/// way everywhere — in a script, in a build task, and on a machine whose shell nobody
+/// configured. It adds no behavior of its own; the command reports whichever name it was
+/// invoked as.</para>
+/// </summary>
+internal static class Program
+{
+    private static int Main(string[] args) => Cli.Program.Run(args);
+}

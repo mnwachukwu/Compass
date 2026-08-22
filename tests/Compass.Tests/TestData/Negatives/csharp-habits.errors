@@ -1,0 +1,12 @@
+csharp-habits.cm(20,18): error CM0006: '&&' is not an operator in Compass. Use 'and'.
+csharp-habits.cm(24,18): error CM0006: '||' is not an operator in Compass. Use 'or'.
+csharp-habits.cm(29,12): error CM0006: '!' is not an operator in Compass. Use 'not'.
+csharp-habits.cm(34,15): error CM0006: '+=' is not an operator in Compass. Compass has no compound assignment. Write 'x = x + y'.
+csharp-habits.cm(35,14): error CM0006: '++' is not an operator in Compass. Compass has no increment operator. Write 'x = x + 1'.
+csharp-habits.cm(38,29): error CM0006: '**' is not an operator in Compass. Compass raises to a power with '^'. Write 'base ^ exponent', or 'Math.Pow(base, exponent)' for a real result.
+csharp-habits.cm(41,44): opinion CM0115: The surrounding code already says what 'n' holds, so writing its type says it twice. Leave the type out.
+csharp-habits.cm(41,55): error CM0006: '=>' is not an operator in Compass. A function's body follows 'yield'. Write '(integer n) yield n + 1'.
+csharp-habits.cm(42,45): opinion CM0115: The surrounding code already says what 'n' holds, so writing its type says it twice. Leave the type out.
+csharp-habits.cm(42,56): error CM0006: '->' is not an operator in Compass. A function's body follows 'yield'. Write '(integer n) yield n + 1'.
+csharp-habits.cm(45,24): error CM0336: Nothing here says what 'n' holds. Write its type, as in '(integer n)'.
+csharp-habits.cm(48,18): opinion CM0111: A range loop counts with integers, so its counter takes no type. Remove the 'integer'.

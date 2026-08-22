@@ -1,0 +1,549 @@
+using System.Runtime.ExceptionServices;
+using Compass.Compiler.Ast;
+using Compass.Compiler.Semantics;
+using Compass.Runtime;
+
+namespace Compass.Interpreter;
+
+/// <summary>
+/// <para>Runs a Compass program by walking its lowered tree.</para>
+/// <para>It proves the resolver and the type checker with no code generation in the way, and
+/// serves as the oracle the emitter is measured against: where the two disagree about what a
+/// program means, the compiler has the bug.</para>
+/// <para>It runs the <em>lowered</em> tree, so it never meets a <c>for each</c> and never has
+/// to work out which conversion a value needs. Lowering settles both, in one place.</para>
+/// </summary>
+public sealed partial class Interpreter
+{
+    private readonly SemanticModel _model;
+    private readonly TextWriter _output;
+
+    /// <summary>
+    /// <para>Where <c>Console.Read</c> reads from.</para>
+    /// <para>Handed in for the same reason the writer is: a program that asks a question can
+    /// only be tested if the answers can be given to it, and reaching for the process's own
+    /// input would make one test depend on how another was run.</para>
+    /// </summary>
+    private readonly TextReader _input;
+
+    /// <summary>Storage for the fields of a shared model, of which there is one each.</summary>
+    private readonly Environment _shared = new(parent: null);
+
+    /// <summary>
+    /// <para>The generator behind <c>Random.Integer</c> and the two beside it, for every
+    /// program that did not ask for one of its own.</para>
+    /// <para>One per run rather than one per process, so two programs run in the same session
+    /// — as the tests do — cannot draw from each other's sequence.</para>
+    /// </summary>
+    private readonly CompassRandom _chance = new();
+
+    /// <summary>Every type declared, so that construction can find one by name.</summary>
+    private readonly Dictionary<string, DeclaredTypeSymbol> _types = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// <para>The lowered body of each function.</para>
+    /// <para>A symbol's own <c>Declaration</c> points at the tree the resolver saw, which is
+    /// the tree <em>before</em> lowering. Running that would mean meeting the shapes lowering
+    /// exists to remove, so bodies are looked up here instead.</para>
+    /// </summary>
+    private readonly Dictionary<FunctionSymbol, FunctionDecl> _bodies = [];
+
+    /// <summary>The lowered initializer of each field, for the same reason as <see cref="_bodies"/>.</summary>
+    private readonly Dictionary<FieldSymbol, Expression> _initializers = [];
+
+    /// <summary>
+    /// <para>The type whose constructor body is running, or null outside one.</para>
+    /// <para>What <c>base(...)</c> means by "the parent". Kept here rather than read off the
+    /// instance because the instance holds the type it was made as at every level of the
+    /// chain, so asking it would send a two-deep hierarchy round in circles.</para>
+    /// </summary>
+    private DeclaredTypeSymbol? _constructing;
+
+    /// <summary>How deep the call stack is, so that runaway recursion fails cleanly.</summary>
+    private int _depth;
+
+    /// <summary>
+    /// <para>The calls in progress, outermost first, kept only while something is watching.
+    /// </para>
+    /// <para>A debugger needs a name and a line per call, and <see cref="_depth"/> is a count.
+    /// Kept behind the host check so that an ordinary run allocates nothing and does no
+    /// bookkeeping: a stack that is never read is a cost with no reader.</para>
+    /// </summary>
+    private readonly List<WatchedFrame> _frames = [];
+
+    /// <summary>A call in progress, with the file it is in and the line it is currently on.</summary>
+    private sealed class WatchedFrame(string? name, string file)
+    {
+        public string? Name { get; } = name;
+
+        public string File { get; } = file;
+
+        public int Line { get; set; }
+    }
+
+    /// <summary>
+    /// <para>The file whose code is running.</para>
+    /// <para>Moved as calls are entered and put back as they return, which is the only way it
+    /// can be right: a function in one file calling one in another is two files at once, and
+    /// only the stack knows which is which.</para>
+    /// </summary>
+    private string _file = string.Empty;
+
+    /// <summary>Which file each function was declared in, noted while the units are walked.</summary>
+    private readonly Dictionary<FunctionDecl, string> _fileOf = [];
+
+
+    private const int MaximumDepth = 512;
+
+    /// <summary>
+    /// <para>How much stack a program is given to run on.</para>
+    /// <para><b>A limit that fires after the stack is gone is not a limit.</b> The depth above
+    /// exists so that runaway recursion is reported as a sentence naming the cause; reaching it
+    /// costs on the order of twenty native frames a level, which is more than the stack a
+    /// process hands its first thread. So a run gets a thread of its own, sized for the depth
+    /// rather than the depth trimmed to fit whatever stack it happened to start on.</para>
+    /// </summary>
+    private const int StackBytes = 64 * 1024 * 1024;
+
+    /// <summary>
+    /// Something watching the run, or null. Null is the ordinary case and costs one check per
+    /// statement, which is why the gate can sit on the path every statement takes.
+    /// </summary>
+    private readonly IDebugHost? _host;
+
+    private Interpreter(
+        SemanticModel model,
+        TextWriter output,
+        TextReader input,
+        IDebugHost? host = null)
+    {
+        _model = model;
+        _output = output;
+        _input = input;
+        _host = host;
+    }
+
+    /// <summary>
+    /// <para>Runs a program, returning what <c>Main</c> yielded, or zero.</para>
+    /// <para>The tree must already be lowered; running an unlowered one would meet shapes
+    /// this deliberately does not handle.</para>
+    /// </summary>
+    public static int Run(
+        IReadOnlyList<CompilationUnit> lowered,
+        SemanticModel model,
+        TextWriter? output = null,
+        TextReader? input = null,
+        IDebugHost? host = null)
+    {
+        ArgumentNullException.ThrowIfNull(lowered);
+        ArgumentNullException.ThrowIfNull(model);
+
+        Interpreter interpreter = new(model, output ?? Console.Out, input ?? Console.In, host);
+
+        try
+        {
+            return Deeply(() => interpreter.Execute(lowered));
+        }
+        catch (CompassThrow uncaught)
+        {
+            // A declared exception travels inside CompassThrow, which is the interpreter's own
+            // business. Past the top of the program it is the program's exception again.
+            throw new UncaughtCompassException(
+                uncaught.Thrown.Type.Name,
+                uncaught.Thrown.Message ?? string.Empty);
+        }
+        catch (Exception raised) when (raised.Data.Contains(RaisedByProgram))
+        {
+            // One the program threw that the language already had a type for. It needs no
+            // carrier on the way up, but it does need saying the same way, or a beginner who
+            // wrote 'throw new Exception("...")' and caught nothing meets a .NET stack trace
+            // where every other unhandled exception gives them a sentence.
+            throw new UncaughtCompassException(raised.GetType().Name, raised.Message);
+        }
+    }
+
+    /// <summary>
+    /// <para>Runs the program on a thread with room for <see cref="MaximumDepth"/> calls, and
+    /// waits for it.</para>
+    /// <para>Whatever it raised is raised again here, on the caller's own thread, so that every
+    /// caller — the command line, a test, the debug adapter — catches what it always caught and
+    /// the stack this exists to provide is the only difference. Rethrown through
+    /// <see cref="ExceptionDispatchInfo"/> rather than by <c>throw raised</c>, which would
+    /// replace the trace with one starting here.</para>
+    /// <para><b>A browser has no thread to give.</b> WebAssembly in a page is single-threaded
+    /// unless the page is served cross-origin isolated, which is a demand on whoever hosts it
+    /// rather than a property of the program — so asking for one there fails at
+    /// <c>Start</c> and takes every program down with it, however small. Where that is the
+    /// platform, the program runs on the thread already here and takes the stack that thread
+    /// has. The depth limit is what keeps runaway recursion a sentence rather than a crash, and
+    /// it is unchanged; what is given up is only the extra room, which affects a program deep
+    /// enough to need it and no other.</para>
+    /// </summary>
+    private static int Deeply(Func<int> run)
+    {
+        if (OperatingSystem.IsBrowser())
+        {
+            return run();
+        }
+
+        int answer = 0;
+        ExceptionDispatchInfo? raised = null;
+
+        Thread runner = new(
+            () =>
+            {
+                try
+                {
+                    answer = run();
+                }
+                catch (Exception failure)
+                {
+                    raised = ExceptionDispatchInfo.Capture(failure);
+                }
+            },
+            StackBytes)
+        {
+            IsBackground = true,
+            Name = "compass",
+        };
+
+        runner.Start();
+        runner.Join();
+
+        raised?.Throw();
+
+        return answer;
+    }
+
+    /// <summary>Runs one lowered file, which is a program of one.</summary>
+    public static int Run(
+        CompilationUnit lowered,
+        SemanticModel model,
+        TextWriter? output = null,
+        TextReader? input = null,
+        IDebugHost? host = null)
+    {
+        ArgumentNullException.ThrowIfNull(lowered);
+
+        return Run([lowered], model, output, input, host);
+    }
+
+    private int Execute(IReadOnlyList<CompilationUnit> units)
+    {
+        // Types across every file are collected before any shared field is initialized, so that
+        // an initializer in one file may name a type declared in another.
+        foreach (CompilationUnit unit in units)
+        {
+            // Walked a unit at a time so that each function is noted against the file it was
+            // declared in. This is the one moment both are in hand.
+            _file = unit.Source.FileName;
+
+            foreach (Declaration declaration in unit.Declarations)
+            {
+                CollectTypes(declaration);
+            }
+        }
+
+        foreach (Declaration declaration in units.SelectMany(unit => unit.Declarations))
+        {
+            InitializeShared(declaration);
+        }
+
+        if (_model.EntryPoint is not { } main)
+        {
+            throw new CompassRuntimeException("This program has no entry point to run.");
+        }
+
+        if (BodyOf(main) is not { } declarationOfMain)
+        {
+            throw new CompassRuntimeException("The entry point has no body.");
+        }
+
+        // Main takes no arguments, or a set of them; either way nothing is passed in yet.
+        object? result = Invoke(
+            new FunctionValue(
+                declarationOfMain.Parameters,
+                declarationOfMain.Body,
+                expressionBody: null,
+                _shared,
+                receiver: null,
+                declarationOfMain.Name,
+                _fileOf.GetValueOrDefault(declarationOfMain, _file)),
+            arguments: [],
+            declarationOfMain.Parameters.Count == 0 ? [] : [new CompassSet<object?>()]);
+
+        return result is long code ? (int)code : 0;
+    }
+
+    /// <summary>
+    /// The lowered declaration of a function, which is the one that actually runs. Falls back
+    /// to the symbol's own declaration only for a function lowering never saw.
+    /// </summary>
+    private FunctionDecl? BodyOf(FunctionSymbol function) =>
+        _bodies.TryGetValue(function, out FunctionDecl? lowered)
+            ? lowered
+            : function.Declaration as FunctionDecl;
+
+    /// <summary>
+    /// Walks the lowered tree once, noting every type by name and every function body and field
+    /// initializer by symbol. This walk is the only thing that knows the lowered declarations,
+    /// so everything the run needs from them is taken here.
+    /// </summary>
+    private void CollectTypes(Declaration declaration)
+    {
+        switch (declaration)
+        {
+            case NamespaceDecl namespaceDecl:
+                foreach (Declaration member in namespaceDecl.Declarations)
+                {
+                    CollectTypes(member);
+                }
+
+                break;
+
+            case ModelDecl or StructureDecl when _model.GetSymbol(declaration) is DeclaredTypeSymbol type:
+                _types[type.Name] = type;
+
+                foreach (Declaration member in MembersOf(declaration))
+                {
+                    CollectTypes(member);
+                }
+
+                break;
+
+            case FunctionDecl function when _model.GetSymbol(function) is FunctionSymbol symbol:
+                _bodies[symbol] = function;
+                _fileOf[function] = _file;
+                break;
+
+            case FieldDecl { Initializer: { } start } field
+                when _model.GetSymbol(field) is FieldSymbol symbol:
+                _initializers[symbol] = start;
+                break;
+        }
+    }
+
+    private static IReadOnlyList<Declaration> MembersOf(Declaration declaration) => declaration switch
+    {
+        ModelDecl model => model.Members,
+        StructureDecl structure => structure.Members,
+        _ => [],
+    };
+
+    /// <summary>
+    /// Gives every shared field its starting value. Field initializers run before anything
+    /// else, so a shared constant is ready by the time the entry point begins.
+    /// </summary>
+    private void InitializeShared(Declaration declaration)
+    {
+        switch (declaration)
+        {
+            case NamespaceDecl namespaceDecl:
+                foreach (Declaration member in namespaceDecl.Declarations)
+                {
+                    InitializeShared(member);
+                }
+
+                break;
+
+            case ModelDecl or StructureDecl:
+                foreach (Declaration member in MembersOf(declaration))
+                {
+                    if (member is FieldDecl field
+                        && _model.GetSymbol(field) is FieldSymbol { IsShared: true } symbol)
+                    {
+                        object? value = field.Initializer is null
+                            ? DefaultFor(symbol.Type)
+                            : Evaluate(field.Initializer, _shared, receiver: null);
+
+                        _shared.Declare(symbol, value);
+                    }
+                    else
+                    {
+                        InitializeShared(member);
+                    }
+                }
+
+                break;
+        }
+    }
+
+    /// <summary>
+    /// <para>What a field holds before anybody writes to it.</para>
+    /// <para>Every primitive has a zero of its own, and an optional starts empty. Those are the
+    /// only types a program may leave alone: everything else is asked for where it is declared
+    /// or in a constructor, so the null at the foot of this is a placeholder for a field that
+    /// did not check and which a correct program never observes.</para>
+    /// <para>A local is a separate question and a stricter one — none of these reaches a local,
+    /// which must be given a value on every path that reads it.</para>
+    /// </summary>
+    private static object? DefaultFor(TypeSymbol type) => type switch
+    {
+        OptionalType => null,
+        _ when ReferenceEquals(type, PrimitiveType.Integer) => 0L,
+        _ when ReferenceEquals(type, PrimitiveType.Real) => 0.0m,
+        _ when ReferenceEquals(type, PrimitiveType.Float) => 0.0,
+        _ when ReferenceEquals(type, PrimitiveType.Boolean) => false,
+        _ when ReferenceEquals(type, PrimitiveType.Character) => '\0',
+        _ when ReferenceEquals(type, PrimitiveType.String) => string.Empty,
+        _ when ReferenceEquals(type, PrimitiveType.Fraction) => Fraction.Zero,
+        _ => null,
+    };
+
+    // ---- Calling ----------------------------------------------------------------------------
+
+    /// <summary>
+    /// Runs a function with the given arguments, returning what it yielded.
+    /// </summary>
+    private object? Invoke(
+        FunctionValue function,
+        IReadOnlyList<Expression> arguments,
+        IReadOnlyList<object?> values)
+    {
+        _ = arguments;
+
+        if (++_depth > MaximumDepth)
+        {
+            _depth--;
+            throw new RecursionTooDeepException(MaximumDepth);
+        }
+
+        string callersFile = _file;
+
+        if (function.File is { } declaredIn)
+        {
+            _file = declaredIn;
+        }
+
+        if (_host is not null)
+        {
+            _frames.Add(new WatchedFrame(function.Name, _file));
+        }
+
+        try
+        {
+            Environment scope = function.Closure.Push();
+
+            for (int i = 0; i < function.Parameters.Count; i++)
+            {
+                object? value = i < values.Count ? values[i] : null;
+
+                if (_model.GetSymbol(function.Parameters[i]) is { } parameter)
+                {
+                    scope.Declare(parameter, CopyIfValue(value));
+                }
+            }
+
+            if (function.ExpressionBody is not null)
+            {
+                return Evaluate(function.ExpressionBody, scope, function.Receiver);
+            }
+
+            if (function.Body is not { } body)
+            {
+                // An abstract function reached at run time. The checker refuses to let a model
+                // that can be constructed leave one open, so arriving here means it let one
+                // through — say so rather than returning nothing and calling it an answer.
+                throw new InvalidOperationException(
+                    "an abstract function was reached with nothing written for it");
+            }
+
+            ExecutionResult result = ExecuteStatements(body, scope, function.Receiver);
+            return result.Completion == Completion.Yield ? result.Value : null;
+        }
+        finally
+        {
+            _depth--;
+            _file = callersFile;
+
+            if (_host is not null && _frames.Count > 0)
+            {
+                _frames.RemoveAt(_frames.Count - 1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para>How instances of a type render, or null where the default stands.</para>
+    /// <para>Settled once per instance rather than at every print, and by the same walk a call
+    /// takes, so that <c>x.ToString()</c> and printing <c>x</c> can never reach two different
+    /// functions. Zero arguments, because a <c>ToString</c> taking any is a different function
+    /// that happens to share a name.</para>
+    /// </summary>
+    private Func<Instance, string>? RendererFor(DeclaredTypeSymbol type)
+    {
+        // No version was chosen while checking, because nothing here is a call somebody wrote —
+        // this is the language deciding how to print a value. Count alone settles it.
+        if (FindMethod(type, chosen: null, "ToString", arity: 0) is not { } declared
+            || BodyOf(declared) is not { } body)
+        {
+            return null;
+        }
+
+        return instance => Invoke(
+            new FunctionValue(body.Parameters, body.Body, null, _shared, instance, body.Name, _fileOf.GetValueOrDefault(body, _file)),
+            [],
+            []) as string ?? string.Empty;
+    }
+
+    /// <summary>
+    /// <para>The type a receiver names, or null where it is a value.</para>
+    /// <para>Only a written name can name a type: an identifier, or a run of them joined by
+    /// dots. <c>this</c> is bound to the type around it and is still a value rather than that
+    /// type's name, which is the difference between reading a field and reaching a shared one.
+    /// </para>
+    /// </summary>
+    private DeclaredTypeSymbol? TypeNamedBy(Expression receiver) =>
+        receiver is IdentifierExpr or MemberExpr
+            ? _model.GetSymbol(receiver) as DeclaredTypeSymbol
+            : null;
+
+    /// <summary>
+    /// <para>Copies a structure wherever one is stored or passed.</para>
+    /// <para>This is the whole of value semantics. Models are references and are never copied,
+    /// which is why one method can serve both.</para>
+    /// </summary>
+    private static object? CopyIfValue(object? value) =>
+        value is Instance { Type.IsValueType: true } structure ? structure.Copy() : value;
+}
+
+/// <summary>
+/// <para>An exception a program declared and threw, on its way to a catch clause.</para>
+/// <para>The exceptions the language raises itself are real .NET ones, so they travel as
+/// themselves. A model a program declared is not one, so it rides inside this — .NET's
+/// unwinding is what carries a throw to its handler either way.</para>
+/// </summary>
+internal sealed class CompassThrow(Instance thrown)
+    : Exception($"An unhandled {thrown.Type.Name} reached the top of the program.")
+{
+    public Instance Thrown { get; } = thrown;
+}
+
+/// <summary>
+/// <para>An exception a program declared and threw that no catch clause took.</para>
+/// <para>Carries the name the program gave its exception model and the message it was built
+/// with, so this reads the same way as an exception the language raises itself.</para>
+/// </summary>
+public sealed class UncaughtCompassException(string typeName, string text)
+    : Exception($"unhandled {typeName}: {text}")
+{
+    /// <summary>The name of the exception model the program threw.</summary>
+    public string TypeName { get; } = typeName;
+
+    /// <summary>The message the thrown exception carries.</summary>
+    public string Text { get; } = text;
+}
+
+/// <summary>Something went wrong while running a program, rather than while compiling it.</summary>
+public sealed class CompassRuntimeException : Exception
+{
+    public CompassRuntimeException(string message)
+        : base(message)
+    {
+    }
+
+    public CompassRuntimeException(string message, Exception inner)
+        : base(message, inner)
+    {
+    }
+}

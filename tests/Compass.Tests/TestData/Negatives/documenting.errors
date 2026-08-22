@@ -1,0 +1,5 @@
+documenting.cm(17,9): warning CM0245: 'limit' is documented, but 'Total' takes 'n'. Rename the line or take it out.
+documenting.cm(19,9): opinion CM0247: 'summary' already has a line above this one, and the first is the one that shows. For a second paragraph, leave a blank line and keep writing.
+documenting.cm(33,9): warning CM0246: 'Announce' yields nothing, so there is no value for '@yields:' to describe.
+documenting.cm(40,9): warning CM0244: Nothing follows this that an '@summary:' can document, so nothing will show it. Move it directly above a declaration, or make it an ordinary comment.
+documenting.cm(45,25): error CM0300: Cannot use a string where an integer is expected. Write 'ToInteger()', or 'Integer.Parse(...)'.

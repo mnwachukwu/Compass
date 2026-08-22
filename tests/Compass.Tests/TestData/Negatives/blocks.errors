@@ -1,0 +1,2 @@
+blocks.cm(15,13): error CM0104: Expected 'end if' to close the if beginning on line 13, but found 'end loop'.
+blocks.cm(19,13): error CM0104: Expected 'end loop' to close the loop beginning on line 17, but found 'end if'.

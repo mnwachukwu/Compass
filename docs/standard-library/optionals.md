@@ -42,7 +42,7 @@ else
 end if
 ```
 
-Written without the guard, `typed.Value()` is `PC0401` — a compile error, not a crash. The mistake
+Written without the guard, `typed.Value()` is `CM0401` — a compile error, not a crash. The mistake
 moves from run time to build time.
 
 ## `Or` supplies a fallback

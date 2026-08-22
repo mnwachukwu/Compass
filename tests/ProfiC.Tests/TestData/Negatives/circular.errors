@@ -1,1 +1,0 @@
-Reports.pcp(9,1): error PC0624: This reference closes a circle: Ledger references Reports, which references Ledger. Move what both need into a third project they both reference.

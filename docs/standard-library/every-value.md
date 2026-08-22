@@ -137,5 +137,5 @@ end model
 ```
 
 **The conversion only goes one way.** There is no `ToSuit(0)`, because an integer that names no
-member would have to produce something that is not a `Suit` — and every enumeration in Profi-C
+member would have to produce something that is not a `Suit` — and every enumeration in Compass
 holds only the members it declared.

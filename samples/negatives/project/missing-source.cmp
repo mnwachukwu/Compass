@@ -1,0 +1,12 @@
+##
+    A project that names a file that is not there.
+
+    Checked before compiling begins, so a mistyped path is reported as itself rather than as
+    every name the missing file would have declared.
+##
+
+project Missing
+    source nowhere.cm
+    source ../runtime/empty-optional.cm
+    source ../runtime/empty-optional.cm
+end project

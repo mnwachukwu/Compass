@@ -1,0 +1,4 @@
+shadowing.cm(30,13): error CM0237: 'items' is already the name of something in an enclosing scope, so this one would hide it. Give it a name of its own.
+shadowing.cm(35,23): error CM0237: 'items' is already the name of something in an enclosing scope, so this one would hide it. Give it a name of its own.
+shadowing.cm(38,9): error CM0237: 'total' is already the name of something in an enclosing scope, so this one would hide it. Give it a name of its own.
+shadowing.cm(47,9): error CM0237: 'trouble' is already the name of something in an enclosing scope, so this one would hide it. Give it a name of its own.

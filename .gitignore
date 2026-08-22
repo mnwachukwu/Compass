@@ -9,9 +9,9 @@ publish/
 *.exe
 *.pdb
 
-# Emitted Profi-C assemblies
-*.pc.dll
-*.pc.exe
+# Emitted Compass assemblies
+*.cm.dll
+*.cm.exe
 
 # Test results
 [Tt]est[Rr]esult*/
@@ -26,8 +26,8 @@ coverage*.json
 !.vscode/extensions.json
 !.vscode/tasks.json
 
-# Colors for Profi-C source. Committed because they are about the language rather than
-# about anyone's setup: a .pc file should read the same for whoever opens this repository.
+# Colors for Compass source. Committed because they are about the language rather than
+# about anyone's setup: a .cm file should read the same for whoever opens this repository.
 !.vscode/settings.json
 .idea/
 *.user
@@ -57,7 +57,7 @@ desktop.ini
 *.rej
 *~
 
-# Local publish output, for putting profi-c and pc on PATH
+# Local publish output, for putting compass and cm on PATH
 dist/
 
 # Installed by the editor grammar's tokenization test, which needs the engine

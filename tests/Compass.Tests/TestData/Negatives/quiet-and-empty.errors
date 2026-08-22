@@ -1,0 +1,2 @@
+quiet-and-empty.cmp(1,1): error CM0610: This project lists no source, so there is nothing to build.
+quiet-and-empty.cmp(15,1): warning CM0025: 'whatever' is not 'warning', not 'opinion', and not an identifier such as 'CM0340'.

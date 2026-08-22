@@ -138,7 +138,7 @@ is the ordinary reason to ask. That is the opposite of `File.Write`, which delib
 writing a file is about the file, and making folders on the way would hide a mistyped path.
 
 **`Files` and `Folders` do not descend.** What is directly inside is what you get, which is the
-same rule a `.pcp` project follows for a `source` naming a folder.
+same rule a `.cmp` project follows for a `source` naming a folder.
 
 ```
 Directory.Create("out/reports");

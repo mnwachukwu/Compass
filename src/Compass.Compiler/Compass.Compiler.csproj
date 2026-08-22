@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Compass.Compiler</RootNamespace>
+    <AssemblyName>Compass.Compiler</AssemblyName>
+    <Description>The Compass compiler front end: lexer, parser, semantic analysis, and CIL emitter.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Compass.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Compass.Runtime\Compass.Runtime.csproj" />
+  </ItemGroup>
+
+</Project>

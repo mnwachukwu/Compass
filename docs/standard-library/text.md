@@ -3,7 +3,7 @@
 [← Back to the index](README.md)
 
 Everything a `string` answers. Every member here yields a **new** string and leaves the original
-exactly as it was — a Profi-C `string` cannot be changed once it exists, which is why `Insert`
+exactly as it was — a Compass `string` cannot be changed once it exists, which is why `Insert`
 gives you something back rather than doing something.
 
 | Section | Members |

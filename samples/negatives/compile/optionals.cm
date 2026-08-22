@@ -1,0 +1,52 @@
+##
+    Reading an optional without proving there is anything in it.
+
+    This program does not compile. An optional cannot be read as a plain value, and the
+    members of what it holds are out of reach until presence is proven — which is what the
+    language has instead of null.
+##
+
+# Nothing here is run, so nothing reads what it declares and nothing keeps what it
+# works out. That is the shape of every negative, and not the lesson of this one.
+# ignore CM0409 in file
+
+model Account
+    public integer balance;
+
+    public string function Describe()
+        yield "an account";
+    end function
+end model
+
+shared model Program
+    function Main()
+        integer? maybe;
+        Account? found;
+
+        # Reading it as a plain value. The message names all three ways in.
+        integer total = maybe;
+
+        # Reaching a member of what it holds, without narrowing first.
+        Console.WriteLine(found.Describe());
+
+        # Arithmetic on one, likewise.
+        Console.WriteLine(maybe + 1);
+
+        # Narrowing proves the first one only; the second is still an optional.
+        if maybe.HasValue()
+            Console.WriteLine(found.balance);
+        end if
+
+        # Writing one out, in all three ways there are to ask a value for its text. An absence
+        # has no text, so none of them has an answer — and each is refused where it is written
+        # rather than at the call the last of them becomes while the program is being lowered.
+        Console.WriteLine(maybe);
+        Console.WriteLine("total: " + maybe);
+        Console.WriteLine("total: {{maybe}}");
+
+        # One '?' and no more. A second says nothing new, and the two ways of being empty it
+        # would make cannot be told apart: nothing an optional offers sees past the first
+        # level, so "absent" and "present, holding an absence" answer alike to every question.
+        integer?? twice;
+    end function
+end model

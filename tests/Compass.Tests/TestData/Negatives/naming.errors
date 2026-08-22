@@ -1,0 +1,3 @@
+naming.cm(22,5): error CM0253: A Shelf already has a member named 'count', declared on line 21. Rename one, unless they are versions of one function taking different types.
+naming.cm(30,5): error CM0253: A Shelf already has a member named 'report', declared on line 26. Rename one, unless they are versions of one function taking different types.
+naming.cm(40,5): error CM0253: A Shelf already has a member named 'Height', declared on line 36. Rename one, unless they are versions of one function taking different types.

@@ -1,0 +1,7 @@
+conditions.cm(28,12): error CM0302: An if condition must be a boolean, and this is an integer. Write a comparison.
+conditions.cm(37,20): error CM0302: A while condition must be a boolean, and this is an integer. Write a comparison.
+conditions.cm(48,15): error CM0302: An until condition must be a boolean, and this is an integer. Write a comparison.
+conditions.cm(57,26): error CM0302: An if expression's condition must be a boolean, and this is an integer. Write a comparison.
+conditions.cm(66,27): error CM0302: An operand of 'and' or 'or' must be a boolean, and this is an integer. Write a comparison.
+conditions.cm(77,27): error CM0304: 'not' is not defined for an integer. Convert it, or use a member.
+conditions.cm(88,12): error CM0302: An if condition must be a boolean, and this is a boolean?. Write a comparison.

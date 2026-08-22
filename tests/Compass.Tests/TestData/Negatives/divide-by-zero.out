@@ -1,0 +1,3 @@
+100 / 4 = 25
+100 / 2 = 50
+divide-by-zero.cm: unhandled DivideByZeroException: Cannot divide by zero. A divisor written down is refused while compiling as CM0324, so a zero reaching here arrived in a variable and could only be found now.

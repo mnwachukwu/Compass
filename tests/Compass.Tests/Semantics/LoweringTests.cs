@@ -1,0 +1,388 @@
+using Compass.Compiler.Ast;
+using Compass.Compiler.Diagnostics;
+using Compass.Compiler.Parsing;
+using Compass.Compiler.Semantics;
+using Compass.Compiler.Text;
+
+namespace Compass.Tests.Semantics;
+
+/// <summary>
+/// Lowering: conversions made explicit, and iteration rewritten so that neither the
+/// interpreter nor the emitter implements it separately.
+/// </summary>
+[TestFixture]
+public sealed class LoweringTests
+{
+    private static (CompilationUnit Lowered, SemanticModel Model, DiagnosticBag Diagnostics)
+        Lower(string source)
+    {
+        DiagnosticBag diagnostics = new();
+        CompilationUnit unit = Parser.Parse(new SourceText(source, "<test>"), diagnostics);
+        SemanticModel model = Resolver.Resolve(unit, diagnostics);
+        TypeChecker.Check(unit, model, diagnostics);
+        DefiniteAssignment.Analyze(unit, model, diagnostics);
+
+        return (Lowering.Lower(unit, model), model, diagnostics);
+    }
+
+    private static CompilationUnit LowerBody(string body)
+    {
+        (CompilationUnit lowered, _, DiagnosticBag diagnostics) = Lower($$"""
+            shared model Program
+                function Main()
+            {{body}}
+                end function
+            end model
+            """);
+
+        Assert.That(diagnostics.Select(d => d.Message), Is.Empty, "the snippet should check cleanly");
+        return lowered;
+    }
+
+    private static IReadOnlyList<ConversionExpr> ConversionsIn(SyntaxNode tree) =>
+        [.. tree.Descendants().OfType<ConversionExpr>()];
+
+    // ---- Conversions ------------------------------------------------------------------------
+
+    [TestCase("        real r = 1;", ConversionOperation.IntegerToReal)]
+    [TestCase("        fraction f = 2;", ConversionOperation.IntegerToFraction)]
+    [TestCase("        integer? maybe = 5;", ConversionOperation.WrapOptional)]
+    [TestCase("        character[] letters = \"abc\";", ConversionOperation.StringToCharacters)]
+    [TestCase("        string s = \"a\";", null)]
+    public void AnImplicitConversionBecomesARealNode(string body, ConversionOperation? expected)
+    {
+        IReadOnlyList<ConversionExpr> conversions = ConversionsIn(LowerBody(body));
+
+        if (expected is null)
+        {
+            Assert.That(conversions, Is.Empty, "nothing needed converting");
+            return;
+        }
+
+        Assert.That(conversions, Has.Count.EqualTo(1));
+        Assert.That(conversions[0].Operation, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void ACharacterSetBecomingAStringIsRecordedToo()
+    {
+        CompilationUnit lowered = LowerBody(
+            """
+                    character[] letters = {'a', 'b'};
+                    string rebuilt = letters;
+            """);
+
+        Assert.That(ConversionsIn(lowered).Select(c => c.Operation),
+                    Is.EqualTo(new[] { ConversionOperation.CharactersToString }));
+    }
+
+    [Test]
+    public void AConversionKeepsTheTypeItProduces()
+    {
+        (CompilationUnit lowered, SemanticModel model, _) = Lower(
+            """
+            shared model Program
+                function Main()
+                    real r = 1;
+                end function
+            end model
+            """);
+
+        ConversionExpr conversion = ConversionsIn(lowered).Single();
+
+        Assert.That(model.GetType(conversion), Is.SameAs(PrimitiveType.Real));
+    }
+
+    [Test]
+    public void ReachingAnAncestorNeedsNoConversionAtRunTime()
+    {
+        // An upcast changes nothing about the value, so nothing is inserted for it.
+        (CompilationUnit lowered, _, _) = Lower(
+            """
+            model Shape
+            end model
+
+            model Square extends Shape
+            end model
+
+            shared model Program
+                function Main()
+                    Shape s = new Square();
+                end function
+            end model
+            """);
+
+        Assert.That(ConversionsIn(lowered), Is.Empty);
+    }
+
+    [Test]
+    public void ArgumentsAreConvertedToo()
+    {
+        (CompilationUnit lowered, _, _) = Lower(
+            """
+            shared model Program
+                function Take(real value)
+                end function
+
+                function Main()
+                    Program.Take(1);
+                end function
+            end model
+            """);
+
+        Assert.That(ConversionsIn(lowered).Select(c => c.Operation),
+                    Is.EqualTo(new[] { ConversionOperation.IntegerToReal }));
+    }
+
+    // ---- Iteration ----------------------------------------------------------------------------
+
+    [Test]
+    public void ForEachIsRewrittenAsAnIndexLoop()
+    {
+        CompilationUnit lowered = LowerBody(
+            """
+                    integer[] numbers = {1, 2};
+                    loop each n in numbers
+                        let copy = n;
+                    end loop
+            """);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(lowered.Descendants().OfType<ForEachStmt>(), Is.Empty,
+                        "no 'loop each' should survive lowering");
+            Assert.That(lowered.Descendants().OfType<ForStmt>().Count(), Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void TheSequenceIsEvaluatedOnceIntoATemporary()
+    {
+        // The expression may have effects, so it must not run once per iteration.
+        CompilationUnit lowered = LowerBody(
+            """
+                    integer[] numbers = {1, 2};
+                    loop each n in numbers
+                        let copy = n;
+                    end loop
+            """);
+
+        ForStmt loop = lowered.Descendants().OfType<ForStmt>().Single();
+        BlockStmt wrapper = lowered.Descendants().OfType<BlockStmt>().Single();
+
+        Assert.Multiple(() =>
+        {
+            // A block holding both temporaries, then the loop, so none escapes. The second is
+            // the count: a range loop reads its bound on every turn, so leaving the call in
+            // the header would make the walk follow a sequence that grew underneath it.
+            Assert.That(wrapper.Statements, Has.Count.EqualTo(3));
+            Assert.That(wrapper.Statements[0], Is.TypeOf<VarDeclStmt>());
+            Assert.That(wrapper.Statements[1], Is.TypeOf<VarDeclStmt>());
+
+            // The loop is wrapped in a walk, which is what marks the sequence for as long as
+            // it runs. Nothing else in the lowered tree says a walk is happening.
+            Assert.That(wrapper.Statements[2], Is.TypeOf<WalkStmt>());
+            Assert.That(((WalkStmt)wrapper.Statements[2]).Body, Is.SameAs(loop));
+        });
+    }
+
+    /// <summary>
+    /// The element is declared inside the body, so each iteration binds a new one. That is
+    /// what removes the capture trap a shared loop variable creates.
+    /// </summary>
+    [Test]
+    public void TheElementIsBoundFreshInsideEachIteration()
+    {
+        CompilationUnit lowered = LowerBody(
+            """
+                    integer[] numbers = {1, 2};
+                    loop each n in numbers
+                        let copy = n;
+                    end loop
+            """);
+
+        ForStmt loop = lowered.Descendants().OfType<ForStmt>().Single();
+        VarDeclStmt first = (VarDeclStmt)loop.Body[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(first.Name, Is.EqualTo("n"), "the element is declared inside the body");
+            Assert.That(first.Initializer, Is.TypeOf<IndexExpr>());
+        });
+    }
+
+    [Test]
+    public void TheLoopCountsFromZeroUpToTheCountExclusively()
+    {
+        CompilationUnit lowered = LowerBody(
+            """
+                    integer[] numbers = {1, 2};
+                    loop each n in numbers
+                        let copy = n;
+                    end loop
+            """);
+
+        ForStmt loop = lowered.Descendants().OfType<ForStmt>().Single();
+        BlockStmt wrapper = lowered.Descendants().OfType<BlockStmt>().Single();
+        VarDeclStmt countDecl = (VarDeclStmt)wrapper.Statements[1];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(loop.IsInclusive, Is.False, "an index runs up to the count, not through it");
+            Assert.That(((LiteralExpr)loop.Start).Text, Is.EqualTo("0"));
+
+            // The bound is a name, and the call it holds was made once above the loop.
+            Assert.That(loop.Bound, Is.TypeOf<IdentifierExpr>());
+            Assert.That(((IdentifierExpr)loop.Bound).Name, Is.EqualTo(countDecl.Name));
+            Assert.That(countDecl.Initializer, Is.TypeOf<CallExpr>());
+            Assert.That(
+                ((MemberExpr)((CallExpr)countDecl.Initializer!).Callee).MemberName,
+                Is.EqualTo("Count"));
+        });
+    }
+
+    /// <summary>
+    /// A string works unchanged, because its members were deliberately made to mirror a
+    /// set's: it answers Count() and indexes to characters.
+    /// </summary>
+    [Test]
+    public void IteratingAStringLowersTheSameWay()
+    {
+        CompilationUnit lowered = LowerBody(
+            """
+                    loop each letter in "abc"
+                        let copy = letter;
+                    end loop
+            """);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(lowered.Descendants().OfType<ForEachStmt>(), Is.Empty);
+            Assert.That(lowered.Descendants().OfType<ForStmt>().Count(), Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void TemporaryNamesCannotCollideWithAnythingWritten()
+    {
+        CompilationUnit lowered = LowerBody(
+            """
+                    integer[] numbers = {1};
+                    loop each n in numbers
+                        let copy = n;
+                    end loop
+            """);
+
+        IEnumerable<string> synthesized = lowered.Descendants()
+            .OfType<VarDeclStmt>()
+            .Select(v => v.Name)
+            .Where(n => n.StartsWith('<'));
+
+        // Angle brackets are not identifier characters, so no program can write one of these.
+        Assert.That(synthesized, Is.Not.Empty);
+        Assert.That(synthesized, Is.All.Matches<string>(n => n.Contains('<') && n.Contains('>')));
+    }
+
+    [Test]
+    public void NestedIterationLowersBothLoops()
+    {
+        CompilationUnit lowered = LowerBody(
+            """
+                    integer[] outer = {1};
+                    integer[] inner = {2};
+                    loop each a in outer
+                        loop each b in inner
+                            let sum = a + b;
+                        end loop
+                    end loop
+            """);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(lowered.Descendants().OfType<ForEachStmt>(), Is.Empty);
+            Assert.That(lowered.Descendants().OfType<ForStmt>().Count(), Is.EqualTo(2));
+        });
+    }
+
+    // ---- Structure --------------------------------------------------------------------------------
+
+    [Test]
+    public void ParenthesesAreDroppedSinceTheTreeAlreadyRecordsGrouping()
+    {
+        CompilationUnit lowered = LowerBody("        let x = (1 + 2) * 3;");
+
+        Assert.That(lowered.Descendants().OfType<ParenthesizedExpr>(), Is.Empty);
+
+        // The grouping itself survives, which is the point: only the punctuation is gone.
+        BinaryExpr outerMost = lowered.Descendants().OfType<BinaryExpr>().First();
+        Assert.That(outerMost.Operator, Is.EqualTo(BinaryOperator.Multiply));
+        Assert.That(outerMost.Left, Is.TypeOf<BinaryExpr>());
+    }
+
+    [Test]
+    public void LoweringPreservesEverythingElse()
+    {
+        CompilationUnit lowered = LowerBody(
+            """
+                    integer x = 1;
+                    if x > 0
+                        x = 2;
+                    else
+                        x = 3;
+                    end if
+                    loop while x > 0
+                        x = x - 1;
+                    end loop
+                    switch x
+                        case 0:
+                            x = 1;
+                        default:
+                            x = 2;
+                    end switch
+                    try
+                        throw new ArgumentException();
+                    catch Exception problem
+                        x = 0;
+                    finally
+                        x = 9;
+                    end try
+            """);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(lowered.Descendants().OfType<IfStmt>().Count(), Is.EqualTo(1));
+            Assert.That(lowered.Descendants().OfType<WhileStmt>().Count(), Is.EqualTo(1));
+            Assert.That(lowered.Descendants().OfType<SwitchStmt>().Count(), Is.EqualTo(1));
+            Assert.That(lowered.Descendants().OfType<TryStmt>().Count(), Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void LoweringIsDeterministic()
+    {
+        CompilationUnit first = LowerBody("        integer[] n = {1}; loop each x in n\n let c = x;\n end loop");
+        CompilationUnit second = LowerBody("        integer[] n = {1}; loop each x in n\n let c = x;\n end loop");
+
+        Assert.That(AstPrinter.Print(second), Is.EqualTo(AstPrinter.Print(first)));
+    }
+
+    [Test]
+    public void EverySampleLowersWithoutTrouble()
+    {
+        string root = LexerTestBase.RepositoryRootForTests;
+
+        foreach (string path in Directory.EnumerateFiles(Path.Combine(root, "samples"), "*.cm"))
+        {
+            SourceText source = SourceText.FromFile(path);
+            DiagnosticBag diagnostics = new();
+
+            CompilationUnit unit = Parser.Parse(source, diagnostics);
+            SemanticModel model = Resolver.Resolve(unit, diagnostics);
+            TypeChecker.Check(unit, model, diagnostics);
+
+            Assert.DoesNotThrow(
+                () => Lowering.Lower(unit, model),
+                $"lowering {Path.GetFileName(path)} threw");
+        }
+    }
+}

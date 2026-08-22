@@ -1,0 +1,4 @@
+closures.cm(33,13): error CM0206: 'i' is a loop variable and is read-only inside the loop. Each iteration binds a fresh one, so assigning to it would change nothing.
+closures.cm(48,13): error CM0237: 'total' is already the name of something in an enclosing scope, so this one would hide it. Give it a name of its own.
+closures.cm(63,46): error CM0214: 'this' can only be used inside a model's instance member. Drop 'shared' from this member, or reach what you want through its type name.
+closures.cm(77,27): error CM0405: 'Doubled' uses 'total', which has not been given a value yet. Call it after 'total' is set, or move what it needs above this line.

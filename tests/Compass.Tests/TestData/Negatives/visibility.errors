@@ -1,0 +1,9 @@
+visibility.cm(20,22): error CM0114: 'shared' is a reserved word, so it cannot be a name on its own. Write '@shared' to use it as one.
+visibility.cm(26,14): error CM0114: 'shared' is a reserved word, so it cannot be a name on its own. Write '@shared' to use it as one.
+visibility.cm(37,1): error CM0220: 'Confused' is a type, and 'protected' is for members. Write 'internal' for its project, or 'public' for anywhere.
+visibility.cm(38,5): error CM0219: 'count' is written public and internal, and one declaration has one visibility. Keep the word that says how far this should reach.
+visibility.cm(45,19): error CM0339: 'Vault' is private in Vault, so it cannot be reached here. Mark it 'public' to allow that, or 'internal' to allow it anywhere in this project.
+visibility.cm(48,27): error CM0339: 'secret' is private in Vault, so it cannot be reached here. Mark it 'public' to allow that, or 'internal' to allow it anywhere in this project.
+visibility.cm(49,27): error CM0339: 'Hidden' is private in Vault, so it cannot be reached here. Mark it 'public' to allow that, or 'internal' to allow it anywhere in this project.
+visibility.cm(52,27): error CM0339: 'guarded' is protected in Vault, so it cannot be reached here. Mark it 'public' to allow that, or 'internal' to allow it anywhere in this project.
+visibility.cm(55,29): error CM0114: 'shared' is a reserved word, so it cannot be a name on its own. Write '@shared' to use it as one.

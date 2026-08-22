@@ -1,7 +1,7 @@
 # Line endings are normalized to LF in the repository and checked out as LF everywhere.
 #
 # Without this, a clone on Windows with core.autocrlf=true gets CRLF working files. That is
-# harmless for the compiler, but the golden files under tests/ProfiC.Tests/TestData record
+# harmless for the compiler, but the golden files under tests/Compass.Tests/TestData record
 # output the tools emit with LF, and a raw string literal in a test carries whatever endings
 # its source file has. Leaving it to each machine's git configuration makes those comparisons
 # pass or fail depending on how the repository happened to arrive, which is not a property a
@@ -14,8 +14,8 @@
 *.out    -text
 *.errors -text
 
-# Profi-C source, including the samples the golden files are recorded from.
-*.pc  text eol=lf
+# Compass source, including the samples the golden files are recorded from.
+*.cm  text eol=lf
 
-# Profi-C project files.
-*.pcp text eol=lf
+# Compass project files.
+*.cmp text eol=lf

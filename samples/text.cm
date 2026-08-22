@@ -1,0 +1,251 @@
+##
+    Building text.
+
+    Three things that all end up as a string, each written for a different job: joining
+    values into a sentence, writing a block out as it stands, and taking a string apart to
+    put it back together differently.
+##
+
+shared model Program
+
+    function Main()
+        Program.Interpolation();
+        Program.SayingHowToWriteIt();
+        Program.BlockStrings();
+        Program.TakingStringsApart();
+        Program.OneCharacterAtATime();
+        Program.ReadingNumbersBack();
+        Program.ReadingByTheTypesName();
+    end function
+
+    # ---- Putting values into a sentence -----------------------------------------------
+
+    ##
+        A pair of braces inside a string holds an expression, and what it yields is written
+        where it stands. Anything you could write after a '+' can go in one, because that is
+        exactly what it becomes.
+
+        A single brace is just a brace and needs nothing done to it. Only a pair opens a hole,
+        which is why an ordinary string full of braces stays ordinary. To write a literal pair,
+        escape the first one.
+    ##
+    # @summary: Joining values into a sentence, with the holes written in place.
+    function Interpolation()
+        Console.WriteLine("== putting values in ==");
+
+        let name = "Matt";
+        let apples = 3;
+        let pears = 4;
+
+        Console.WriteLine("  hello, {{name}}");
+        Console.WriteLine("  {{apples}} apples and {{pears}} pears is {{apples + pears}} fruit");
+
+        # Any expression, not only a name.
+        Console.WriteLine("  in capitals: {{name.ToUpper()}}");
+        Console.WriteLine("  the longer word: {{if name.Count > 4 then name else "Compass"}}");
+
+        # A brace on its own, and a pair written on purpose.
+        Console.WriteLine("  a set looks like {1, 2, 3}");
+        Console.WriteLine("  and a hole is written \{\{ like this }}");
+    end function
+
+    # ---- Saying how a value should be written -------------------------------------------
+
+    ##
+        A colon inside a hole says how to write the value, using the same patterns .NET uses —
+        so what you learn here is what you will type in C# later. 'F2' is two decimal places,
+        'N0' is a whole number with separators, 'yyyy-MM-dd' is a date.
+
+        The same patterns are available without a string around them, through Format.
+    ##
+    # @summary: Format, for saying how a value should be written out.
+    function SayingHowToWriteIt()
+        Console.WriteLine("== saying how ==");
+
+        let price = 1234.5;
+        let when = new DateTime(2026, 8, 15, 14, 30, 0);
+
+        Console.WriteLine("  plain:      {{price}}");
+        Console.WriteLine("  to a penny: {{price:F2}}");
+        Console.WriteLine("  with commas:{{price:N2}}");
+        Console.WriteLine("  the date:   {{when:yyyy-MM-dd}}");
+        Console.WriteLine("  the time:   {{when:HH:mm}}");
+
+        # The same thing, asked of the value rather than written in a string.
+        Console.WriteLine("  through Format: " + price.Format("F2"));
+
+        # Rounding is a different question from writing: this gives back a real, not text.
+        Console.WriteLine("  rounded to 2:   " + Math.Round(price, 2));
+    end function
+
+    # ---- A block of text, exactly as written ---------------------------------------------
+
+    ##
+        Three quotes open a block, and three close it. Nothing inside is read: no escape, no
+        hole, no end of string. A backslash is a backslash and a quote is a quote, which is
+        what makes this the form to use when pasting something in.
+
+        Where the block spans lines, the indentation of the closing quotes is removed from
+        every line — so a block can sit at the indentation of the code around it without
+        dragging that indentation into what it holds.
+    ##
+    # @summary: Writing a block of text out exactly as it stands.
+    function BlockStrings()
+        Console.WriteLine("== a block, as written ==");
+
+        let usage = """
+            Usage: cm run <file>
+
+            A path may hold \ and " and {{ freely,
+            because nothing in here is read as anything.
+            """;
+
+        Console.WriteLine(usage);
+
+        # On one line, it is simply what lies between the quotes.
+        Console.WriteLine("""  one line, no escapes: C:\Users\Matt""");
+
+        Console.WriteLine("== quotes inside a block ==");
+
+        # One or two quotes are text, because three are what close it.
+        Console.WriteLine("""She said "no" twice""");
+
+        ##
+            To hold three, open and close with four. Any run shorter than the delimiter is
+            text, so the delimiter is picked to be one longer than the longest run inside.
+        ##
+        Console.WriteLine(""""a block is opened with """ or more"""");
+
+        ##
+            Text ending in a quote has no one-line form: that last quote would sit against
+            the closing run and lengthen it, whatever length the delimiter is. Closing on
+            its own line separates the two.
+        ##
+        Console.WriteLine("""
+            and the last word is "this"
+            """);
+    end function
+
+    # ---- Taking a string apart ------------------------------------------------------------
+
+    ##
+        Split gives a set, and Join puts one back together. They are opposites, and the pair is
+        how most text handling starts and ends.
+
+        Capitalize raises the first letter and leaves the rest alone. That is not what .NET's
+        title-casing does — that one also lowers everything it did not raise, which is wrong
+        for a name like "McDonald".
+    ##
+    # @summary: Splitting a string up and putting it back together differently.
+    function TakingStringsApart()
+        Console.WriteLine("== apart and back together ==");
+
+        let sentence = "the quick brown fox";
+        string[] words = sentence.Split(" ");
+
+        Console.WriteLine("  words:      {{words.Count}}");
+        Console.WriteLine("  hyphenated: {{words.Join("-")}}");
+        Console.WriteLine("  shouted:    {{sentence.ToUpper()}}");
+        Console.WriteLine("  quietly:    {{sentence.ToLower()}}");
+        Console.WriteLine("  as a title: {{sentence.Capitalize()}}");
+        Console.WriteLine("  swapped:    {{sentence.Replace("quick", "slow")}}");
+
+        # A set of anything joins, not only a set of strings.
+        integer[] counts = {1, 2, 3};
+
+        Console.WriteLine("  counts:     {{counts.Join(", ")}}");
+    end function
+
+    ##
+        A string is read by position with the brackets a set uses, counting from zero, and the
+        character that comes back is a character rather than a string of one.
+
+        A position outside the string stops the program rather than giving something back, which
+        is the same answer a set gives and for the same reason: there is no character there, and
+        inventing one would hide the mistake.
+    ##
+    # @summary: Reading one character at a time.
+    function OneCharacterAtATime()
+        Console.WriteLine("== by position ==");
+
+        let word = "cast";
+
+        Console.WriteLine("  first:      {{word[0]}}");
+        Console.WriteLine("  last:       {{word[word.Count - 1]}}");
+
+        # Counting through it, which is what the brackets are usually for.
+        string spelled = "";
+
+        loop for i = 0 until word.Count
+            spelled = spelled + word[i] + " ";
+        end loop
+
+        Console.WriteLine("  spelled:    {{spelled.Trim()}}");
+
+        # The same walk without the counting. A string is a sequence of characters, so 'loop
+        # each' takes one straight off it and there is no set to make first.
+        string backwards = "";
+
+        loop each letter in word
+            backwards = letter + backwards;
+        end loop
+
+        Console.WriteLine("  backwards:  {{backwards}}");
+    end function
+
+    ##
+        Text becomes a number by asking, and the asking answers with an optional: text arriving
+        in a shape nobody promised is the ordinary case rather than a fault, so there is nothing
+        to catch and nothing to guard against.
+
+        A fraction reads either way it is written. '22|7' is the language's spelling, because a
+        slash already means division; '22/7' is how a person writes one on paper. Both are read,
+        since text comes from people.
+    ##
+    # @summary: Reading numbers back out of text.
+    function ReadingNumbersBack()
+        Console.WriteLine("== text into numbers ==");
+
+        Console.WriteLine("  an integer: {{"42".ToInteger().Or(0)}}");
+        Console.WriteLine("  a real:     {{"3.5".ToReal().Or(0.0)}}");
+        Console.WriteLine("  a float:    {{"3.5".ToFloat().Or(0.0f)}}");
+        Console.WriteLine("  a boolean:  {{"true".ToBoolean().Or(false)}}");
+        Console.WriteLine("  one letter: {{"A".ToCharacter().Or('?')}}");
+
+        Console.WriteLine("  a ratio:    {{"22|7".ToFraction().Or(0|1)}}");
+        Console.WriteLine("  written /:  {{"22/7".ToFraction().Or(0|1)}}");
+        Console.WriteLine("  a whole:    {{"5".ToFraction().Or(0|1)}}");
+
+        # Nothing raised, nothing caught: the answer is simply absent.
+        Console.WriteLine("  not a number: {{"seven".ToInteger().HasValue()}}");
+
+        # One character means one. Two is as empty an answer as none.
+        Console.WriteLine("  two letters:  {{"ab".ToCharacter().HasValue()}}");
+    end function
+
+    ##
+        The same six readings, reached through each type's own name instead of through the text.
+
+        Neither spelling is the preferred one, and they cannot come to disagree: one method
+        stands behind each pair, so 'Integer.Parse(said)' and 'said.ToInteger()' are the same
+        question with the same answer. Which reads better is a matter of where the text is. A
+        string already in hand answers for itself; text arriving from somewhere else reads more
+        directly when the type asks for it.
+    ##
+    # @summary: The same readings, asked of the type rather than of the text.
+    function ReadingByTheTypesName()
+        Console.WriteLine("== the same, by the type's name ==");
+
+        Console.WriteLine("  an integer: {{Integer.Parse("42").Or(0)}}");
+        Console.WriteLine("  a real:     {{Real.Parse("3.5").Or(0.0)}}");
+        Console.WriteLine("  a float:    {{Float.Parse("3.5").Or(0.0f)}}");
+        Console.WriteLine("  a boolean:  {{Boolean.Parse("true").Or(false)}}");
+        Console.WriteLine("  one letter: {{Character.Parse("A").Or('?')}}");
+        Console.WriteLine("  a ratio:    {{Fraction.Parse("22/7").Or(0|1)}}");
+
+        # Both spellings answer alike, on text that reads and on text that does not.
+        Console.WriteLine("  agreeing:     {{Integer.Parse("42").Or(0) == "42".ToInteger().Or(0)}}");
+        Console.WriteLine("  and on junk:  {{Integer.Parse("x").HasValue() == "x".ToInteger().HasValue()}}");
+    end function
+
+end model

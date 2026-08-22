@@ -123,7 +123,7 @@ to make one from values that exist only while it runs. What comes back is an ord
 reduced, with its sign carried on the numerator.
 
 **A denominator of zero is rejected while compiling where it can be seen**, exactly as `1 / 0` is.
-Written as a literal it always can be, so `1|0` is `PC0027`; built from values it cannot, so
+Written as a literal it always can be, so `1|0` is `CM0027`; built from values it cannot, so
 `Fraction.Create(top, 0)` raises `DivideByZeroException`.
 
 The one-argument form earns its place only where nothing else says a fraction is wanted:
@@ -181,7 +181,7 @@ and `character`, each holding [nothing but a `Parse`](text.md#boolean-and-charac
 
 Each is the value a float's own arithmetic gives back, so `1.0f / 0.0f == Float.Infinity` is
 true. **A float is the one type allowed to divide by a zero written down**: for every other,
-`PC0324` refuses it while compiling, because for every other there is no answer. Here there is
+`CM0324` refuses it while compiling, because for every other there is no answer. Here there is
 one, so the expression is left alone and the constant merely names what it produces.
 
 A `real` has none of them: it counts in tens and there is nothing in it to hold them, so where a
@@ -193,13 +193,13 @@ are the same.
 
 ### Writing one too large
 
-A number written past its type's edge is reported (`PC0026`) rather than wrapping, saturating or
+A number written past its type's edge is reported (`CM0026`) rather than wrapping, saturating or
 converting to something else. The digits scan as a number; only storing them fails, so the
 refusal comes after scanning rather than during it.
 
 ```text
-integer counted = 9223372036854775808;   # PC0026 — one past Integer.MaxValue
-real measured = 1e400;                   # PC0026 — past Real.MaxValue
+integer counted = 9223372036854775808;   # CM0026 — one past Integer.MaxValue
+real measured = 1e400;                   # CM0026 — past Real.MaxValue
 ```
 
 **The most negative integer has no literal at all.** The minus sign is a separate operator, so
@@ -254,7 +254,7 @@ happens, and a float is asked for by name.
 | Conversion | Can it fail? | What is lost |
 |---|---|---|
 | `integer → real`, `integer → fraction` | no | nothing |
-| `real → fraction` | **yes** — `PC0346` where the compiler can see the value, otherwise at run time | nothing; the parts can outgrow a whole number |
+| `real → fraction` | **yes** — `CM0346` where the compiler can see the value, otherwise at run time | nothing; the parts can outgrow a whole number |
 | `real → float`, `integer → float` | no | digits past the sixteenth |
 | `fraction → real`, `fraction → float` | no | thirds and the like stop being exact |
 | `float → real` | **yes**, three ways | see below |

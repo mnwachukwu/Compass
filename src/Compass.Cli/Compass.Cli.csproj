@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Compass.Cli</RootNamespace>
+    <AssemblyName>compass</AssemblyName>
+    <Description>The compass command line driver.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Compass.Compiler\Compass.Compiler.csproj" />
+    <ProjectReference Include="..\Compass.Interpreter\Compass.Interpreter.csproj" />
+    <ProjectReference Include="..\Compass.Services\Compass.Services.csproj" />
+  </ItemGroup>
+
+</Project>

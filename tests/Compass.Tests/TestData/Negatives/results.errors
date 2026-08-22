@@ -1,0 +1,4 @@
+results.cm(16,5): error CM0404: 'Describe' yields a string, but it can reach its end without yielding one. Yield on every path out.
+results.cm(21,5): error CM0404: 'Grade' yields a string, but it can reach its end without yielding one. Yield on every path out.
+results.cm(31,27): error CM0332: This produces no value, so there is nothing to use here.
+results.cm(34,23): error CM0332: This produces no value, so there is nothing to use here.

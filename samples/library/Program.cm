@@ -1,0 +1,52 @@
+##
+    The lending desk.
+
+    Book comes from the Books project, which library.cmp references. It is written
+    here exactly as though it had been declared beside this file — a reference decides what a
+    build is made of, and changes nothing about how a type is named or used.
+##
+
+shared model Program
+
+    function Main()
+        Book[] shelf =
+        {
+            new Book("The Hobbit", "Tolkien", 2),
+            new Book("Dune", "Herbert", 1),
+            new Book("A Wizard of Earthsea", "Le Guin", 0)
+        };
+
+        Console.WriteLine("On the shelf");
+
+        loop each book in shelf
+            Console.WriteLine("  " + book.Described() + " - " + Program.Availability(book));
+        end loop
+
+        Console.WriteLine();
+        Program.Lend(shelf[1]);
+        Program.Lend(shelf[2]);
+    end function
+
+    # @summary: Whether a book can be borrowed, in words.
+    # @book: the book to ask about.
+    # @yields: a line saying how many copies are left.
+    string function Availability(Book book)
+        if book.IsAvailable()
+            yield book.Copies() + " on hand";
+        else
+            yield "all out";
+        end if
+    end function
+
+    # @summary: Lends a book out, and says what happened.
+    # @book: the book to lend.
+    function Lend(Book book)
+        try
+            book.Lend();
+            Console.WriteLine("Lent " + book.Title() + ", " + book.Copies() + " left");
+        catch ArgumentException _
+            Console.WriteLine("Cannot lend " + book.Title() + ": none on hand");
+        end try
+    end function
+
+end model

@@ -1,0 +1,16 @@
+##
+    Counting, which leans on Text.
+
+    Program imports this file and not Text.cm, yet Text is still compiled: an imported file
+    brings whatever it imports in turn, because otherwise it could not compile itself.
+##
+
+import "Text.cm";
+
+model Tally
+
+    public shared string function Bar(string label, integer count)
+        yield Text.Pad(label, 8) + Text.Repeat("#", count);
+    end function
+
+end model

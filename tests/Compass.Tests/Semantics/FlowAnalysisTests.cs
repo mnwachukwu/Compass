@@ -1,0 +1,1004 @@
+using Compass.Compiler.Ast;
+using Compass.Compiler.Diagnostics;
+using Compass.Compiler.Parsing;
+using Compass.Compiler.Semantics;
+using Compass.Compiler.Text;
+
+namespace Compass.Tests.Semantics;
+
+/// <summary>
+/// <para>Definite assignment, optional narrowing, and reaching a result.</para>
+/// <para>Together these are what let the language do without null: a variable with no value
+/// cannot be read, an optional cannot be read at all until presence is proven, and a function
+/// that declares a result cannot finish without producing one. All three are the same forward
+/// walk asked different questions.</para>
+/// </summary>
+[TestFixture]
+public sealed class FlowAnalysisTests
+{
+    private static DiagnosticBag Check(string source)
+    {
+        DiagnosticBag diagnostics = new();
+        CompilationUnit unit = Parser.Parse(new SourceText(source, "<test>"), diagnostics);
+        SemanticModel model = Resolver.Resolve(unit, diagnostics);
+        TypeChecker.Check(unit, model, diagnostics);
+        DefiniteAssignment.Analyze(unit, model, diagnostics);
+        return diagnostics;
+    }
+
+    private static string[] IdsOf(DiagnosticBag bag) => [.. bag.Sorted().Select(d => d.Id)];
+
+    private static DiagnosticBag CheckBody(string body) =>
+        Check($$"""
+            shared model Program
+                function Main(boolean flag)
+            {{body}}
+                end function
+            end model
+            """);
+
+    // ---- Definite assignment ---------------------------------------------------------------
+
+    [Test]
+    public void ReadingAVariableBeforeItHasAValueIsRejected()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer x;
+                    let y = x;
+            """)), Is.EqualTo(new[] { "CM0400" }));
+    }
+
+    [Test]
+    public void AssigningFirstMakesItReadable()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer x;
+                    x = 1;
+                    let y = x;
+            """)), Is.Empty);
+    }
+
+    [Test]
+    public void ParametersArriveHoldingValues()
+    {
+        Assert.That(IdsOf(CheckBody("        let copy = flag;")), Is.Empty);
+    }
+
+    [Test]
+    public void AnInitializerCannotReadTheVariableItInitializes()
+    {
+        // Evaluation runs left to right, so the name is read before it holds anything.
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer x;
+                    x = x;
+            """)), Is.EqualTo(new[] { "CM0400" }));
+    }
+
+    /// <summary>
+    /// Only what every path guarantees survives a join, which is the whole point of the
+    /// analysis.
+    /// </summary>
+    [Test]
+    public void AssigningOnOnlyOneBranchIsNotEnough()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer x;
+                    if flag
+                        x = 1;
+                    end if
+                    let y = x;
+            """)), Is.EqualTo(new[] { "CM0401" }));
+    }
+
+    [Test]
+    public void AssigningOnBothBranchesIsEnough()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer x;
+                    if flag
+                        x = 1;
+                    else
+                        x = 2;
+                    end if
+                    let y = x;
+            """)), Is.Empty);
+    }
+
+    [Test]
+    public void EveryArmOfAnElseIfChainMustAssign()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(IdsOf(CheckBody(
+                """
+                        integer x;
+                        if flag
+                            x = 1;
+                        else if not flag
+                            x = 2;
+                        else
+                            x = 3;
+                        end if
+                        let y = x;
+                """)), Is.Empty);
+
+            // Without the else, nothing may have matched.
+            Assert.That(IdsOf(CheckBody(
+                """
+                        integer x;
+                        if flag
+                            x = 1;
+                        else if not flag
+                            x = 2;
+                        end if
+                        let y = x;
+                """)), Is.EqualTo(new[] { "CM0401" }));
+        });
+    }
+
+    /// <summary>A loop body may run no times at all, so nothing it assigns can be relied on.</summary>
+    [Test]
+    public void ALoopBodyMayNotRun()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer x;
+                    loop while flag
+                        x = 1;
+                    end loop
+                    let y = x;
+            """)), Is.EqualTo(new[] { "CM0401" }));
+    }
+
+    [Test]
+    public void ARangeLoopVariableHoldsAValueInsideTheBody()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    loop for i = 1 to 10
+                        let copy = i;
+                    end loop
+            """)), Is.Empty);
+    }
+
+    [Test]
+    public void ASwitchWithoutADefaultMayMatchNothing()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(IdsOf(CheckBody(
+                """
+                        integer code = 1;
+                        integer x;
+                        switch code
+                            case 1:
+                                x = 1;
+                            case 2:
+                                x = 2;
+                        end switch
+                        let y = x;
+                """)), Is.EqualTo(new[] { "CM0401" }));
+
+            Assert.That(IdsOf(CheckBody(
+                """
+                        integer code = 1;
+                        integer x;
+                        switch code
+                            case 1:
+                                x = 1;
+                            default:
+                                x = 2;
+                        end switch
+                        let y = x;
+                """)), Is.Empty);
+        });
+    }
+
+    [Test]
+    public void APathThatCannotContinueDoesNotWeakenTheOther()
+    {
+        // The then-branch never falls through, so only the else-branch reaches the read.
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer x;
+                    if flag
+                        yield;
+                    else
+                        x = 1;
+                    end if
+                    let y = x;
+            """)), Is.Empty);
+    }
+
+    // ---- try, catch, finally ------------------------------------------------------------------
+
+    /// <summary>
+    /// The classic trap. An exception may be thrown before the assignment in the try ran, so
+    /// a catch clause can rely only on what was known on the way in.
+    /// </summary>
+    [Test]
+    public void ACatchClauseCannotRelyOnWhatTheTryAssigned()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer x;
+                    try
+                        x = 1;
+                    catch Exception problem
+                        let y = x;
+                    end try
+            """)), Is.EqualTo(new[] { "CM0400" }));
+    }
+
+    /// <summary>
+    /// The caught variable is the one thing a catch clause <em>can</em> rely on: catching is
+    /// what gives it its value.
+    /// </summary>
+    [Test]
+    public void TheCaughtVariableIsAssignedByTheCatch()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    try
+                        yield;
+                    catch Exception problem
+                        Console.WriteLine(problem.Message());
+                    end try
+            """)), Is.Empty);
+    }
+
+    [Test]
+    public void AFinallyClauseCannotRelyOnWhatTheTryAssignedEither()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer x;
+                    try
+                        x = 1;
+                    finally
+                        let y = x;
+                    end try
+            """)), Is.EqualTo(new[] { "CM0400" }));
+    }
+
+    /// <summary>
+    /// The other half of the trap: a finally clause runs whichever way the try turned out, so
+    /// what it assigns really is certain afterwards.
+    /// </summary>
+    [Test]
+    public void WhatAFinallyClauseAssignsIsCertainAfterwards()
+    {
+        // The try body must be able to finish, or there is no afterwards to be certain about.
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer x;
+                    try
+                        Console.WriteLine("trying");
+                    finally
+                        x = 1;
+                    end try
+                    let y = x;
+            """)), Is.Empty);
+    }
+
+    [Test]
+    public void AssigningInBothTryAndEveryCatchIsEnough()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer x;
+                    try
+                        x = 1;
+                    catch Exception problem
+                        x = 2;
+                    end try
+                    let y = x;
+            """)), Is.Empty);
+    }
+
+    [Test]
+    public void AssigningInTheTryButNotEveryCatchIsNotEnough()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer x;
+                    try
+                        x = 1;
+                    catch ArgumentException a
+                        x = 2;
+                    catch Exception b
+                        yield 0;
+                    end try
+                    let y = x;
+            """)), Does.Contain("CM0400").Or.Contain("CM0318"));
+    }
+
+    // ---- Constructors -------------------------------------------------------------------------
+
+    /// <summary>
+    /// <para>A constructor must give a value to every field whose type has none of its own.
+    /// </para>
+    /// <para><c>x</c> below is a primitive and starts at nought, so leaving it out is no
+    /// mistake. The set has nothing to start at, and a set that is nothing is not an empty
+    /// set — it is the null this language does without.</para>
+    /// </summary>
+    [Test]
+    public void AConstructorMustGiveEveryFieldAValue()
+    {
+        Assert.That(IdsOf(Check(
+            """
+            model Point
+                integer x;
+                integer[] seen;
+
+                public function Point(integer a)
+                    this.x = a;
+                end function
+            end model
+            """)), Is.EqualTo(new[] { "CM0402" }));
+    }
+
+    /// <summary>
+    /// <para>A shared field of a type with no value of its own is given one where it is
+    /// declared, there being nowhere else.</para>
+    /// <para><b>The hole this closes was the null the language says it does not have.</b> A
+    /// shared field left alone held nothing, and nothing was a different thing for each type: a
+    /// set threw a raw <c>NullReferenceException</c> out of the runtime, and a function reported
+    /// "This is not something that can be called" — a sentence about callability, when what was
+    /// wrong was that nobody had ever put a function there.</para>
+    /// </summary>
+    [TestCase("delegate() announce;", TestName = "ASharedFieldMustStartWithAValue_Function")]
+    [TestCase("integer[] gathered;", TestName = "ASharedFieldMustStartWithAValue_Set")]
+    [TestCase("Function held;", TestName = "ASharedFieldMustStartWithAValue_AnyFunction")]
+    [TestCase("Exception raised;", TestName = "ASharedFieldMustStartWithAValue_Model")]
+    public void ASharedFieldMustStartWithAValue(string field) =>
+        Assert.That(
+            IdsOf(Check(
+                $$"""
+                shared model Program
+                    {{field}}
+
+                    function Main()
+                    end function
+                end model
+                """)),
+            Is.EqualTo(new[] { "CM0408" }),
+            field);
+
+    /// <summary>
+    /// <para>What a shared field may be left alone, and the one thing that is not a way out.
+    /// </para>
+    /// <para>A <b>primitive</b> has a zero of its own that means what a reader expects, so
+    /// spelling it out buys nothing. An <b>optional</b> starts empty, which is a value like any
+    /// other and is what makes a self-referential model constructible. Assigning the field from
+    /// a function is <em>not</em> a way out — the function may never be called, and something
+    /// can read the field before it is.</para>
+    /// </summary>
+    [Test]
+    public void AnInitializerOrAnOptionalSatisfiesASharedField() =>
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                IdsOf(Check(
+                    """
+                    shared model Program
+                        integer counted;
+                        string named;
+                        fraction part;
+                        boolean flag;
+
+                        function Main()
+                        end function
+                    end model
+                    """)),
+                Is.Empty,
+                "every primitive starts at its own zero");
+
+            Assert.That(
+                IdsOf(Check(
+                    """
+                    shared model Program
+                        integer[] gathered = {};
+
+                        function Main()
+                        end function
+                    end model
+                    """)),
+                Is.Empty,
+                "an initializer where it is declared");
+
+            Assert.That(
+                IdsOf(Check(
+                    """
+                    shared model Program
+                        delegate()? announce;
+
+                        function Main()
+                        end function
+                    end model
+                    """)),
+                Is.Empty,
+                "an optional, which says absence is one of the things it holds");
+
+            Assert.That(
+                IdsOf(Check(
+                    """
+                    shared model Program
+                        integer[] gathered;
+
+                        function Main()
+                            Program.gathered = {};
+                        end function
+                    end model
+                    """)),
+                Is.EqualTo(new[] { "CM0408" }),
+                "assigning it somewhere is not the same as starting with a value");
+        });
+
+    [Test]
+    public void AConstructorThatAssignsEveryFieldIsFine()
+    {
+        Assert.That(IdsOf(Check(
+            """
+            model Point
+                integer x;
+                integer y;
+
+                public function Point(integer a, integer b)
+                    this.x = a;
+                    this.y = b;
+                end function
+            end model
+            """)), Is.Empty);
+    }
+
+    [Test]
+    public void AFieldWithAnInitializerNeedsNothingFromTheConstructor()
+    {
+        Assert.That(IdsOf(Check(
+            """
+            model Counter
+                integer count = 0;
+
+                public function Counter()
+                end function
+            end model
+            """)), Is.Empty);
+    }
+
+    /// <summary>
+    /// The exemption that makes a self-referential model constructible. A Node whose 'next'
+    /// had to be assigned would have no base case; an optional one is already a value.
+    /// </summary>
+    [Test]
+    public void AnOptionalFieldNeedsNothingFromTheConstructor()
+    {
+        Assert.That(IdsOf(Check(
+            """
+            model Node
+                integer value;
+                Node? next;
+
+                public function Node(integer v)
+                    this.value = v;
+                end function
+            end model
+            """)), Is.Empty);
+    }
+
+    // ---- Optional narrowing ----------------------------------------------------------------------
+
+    [Test]
+    public void AnOptionalCannotBeReadWithoutProvingPresence()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer? maybe;
+                    integer definite = maybe;
+            """)), Is.EqualTo(new[] { "CM0329" }));
+    }
+
+    /// <summary>
+    /// The point of the whole exercise: inside the guarded block the optional reads as its
+    /// underlying type, with no unwrapping written anywhere.
+    /// </summary>
+    [Test]
+    public void ProvingPresenceNarrowsInsideTheGuardedBlock()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer? maybe;
+                    if maybe.HasValue()
+                        integer definite = maybe;
+                    end if
+            """)), Is.Empty);
+    }
+
+    [Test]
+    public void NarrowingDoesNotEscapeTheBlockItWasProvenFor()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer? maybe;
+                    if maybe.HasValue()
+                        integer inside = maybe;
+                    end if
+                    integer outside = maybe;
+            """)), Is.EqualTo(new[] { "CM0329" }));
+    }
+
+    [Test]
+    public void NegationNarrowsTheOtherBranch()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer? maybe;
+                    if not maybe.HasValue()
+                        yield;
+                    else
+                        integer definite = maybe;
+                    end if
+            """)), Is.Empty);
+    }
+
+    [Test]
+    public void AnAndCarriesBothChecksIntoTheBody()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer? a;
+                    integer? b;
+                    if a.HasValue() and b.HasValue()
+                        integer x = a;
+                        integer y = b;
+                    end if
+            """)), Is.Empty);
+    }
+
+    [Test]
+    public void AnOrProvesOnlyWhatBothSidesShare()
+    {
+        // Either check may have been the one that held, so neither is certain.
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer? a;
+                    integer? b;
+                    if a.HasValue() or b.HasValue()
+                        integer x = a;
+                    end if
+            """)), Is.EqualTo(new[] { "CM0329" }));
+    }
+
+    [Test]
+    public void AWhileConditionNarrowsItsBody()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer? maybe;
+                    loop while maybe.HasValue()
+                        integer definite = maybe;
+                    end loop
+            """)), Is.Empty);
+    }
+
+    [Test]
+    public void TheConditionalExpressionNarrowsItsBranches()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer? maybe;
+                    integer value = if maybe.HasValue() then maybe else 0;
+            """)), Is.Empty);
+    }
+
+    /// <summary>
+    /// Narrowing is a convenience, not a removal. The optional's own members must stay
+    /// reachable, so writing the unwrapping out anyway still works.
+    /// </summary>
+    [Test]
+    public void TheOptionalMembersRemainAvailableInsideAGuardedBlock()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer? maybe;
+                    if maybe.HasValue()
+                        integer definite = maybe.Value();
+                    end if
+            """)), Is.Empty);
+    }
+
+    [Test]
+    public void AssigningAPlainValueProvesPresence()
+    {
+        Assert.That(IdsOf(CheckBody(
+            """
+                    integer? maybe;
+                    maybe = 1;
+                    integer definite = maybe;
+            """)), Is.Empty);
+    }
+
+    /// <summary>
+    /// A field is never narrowed. Any call in between could replace it, so a check made
+    /// before one says nothing about after it. Kotlin declines to narrow mutable properties
+    /// for the same reason.
+    /// </summary>
+    [Test]
+    public void AFieldIsNeverNarrowed()
+    {
+        Assert.That(IdsOf(Check(
+            """
+            model Holder
+                integer? maybe;
+
+                function Run()
+                    if this.maybe.HasValue()
+                        integer definite = this.maybe;
+                    end if
+                end function
+            end model
+            """)), Is.EqualTo(new[] { "CM0329" }));
+    }
+
+    [Test]
+    public void CopyingAFieldIntoALocalIsTheWayAround()
+    {
+        Assert.That(IdsOf(Check(
+            """
+            model Holder
+                integer? maybe;
+
+                function Run()
+                    let copy = this.maybe;
+                    if copy.HasValue()
+                        integer definite = copy;
+                    end if
+                end function
+            end model
+            """)), Is.Empty);
+    }
+
+    // ---- Robustness -------------------------------------------------------------------------------
+
+    [Test]
+    public void AnalysisNeverThrows()
+    {
+        string[] hostile =
+        [
+            "", "model M end model",
+            "model M function F() integer x; end function end model",
+            "model M function F() try finally end try end function end model",
+            "model M function F() switch 1 end switch end function end model",
+            "shared model Program function Main() let x = ; end function end model",
+        ];
+
+        foreach (string source in hostile)
+        {
+            Assert.DoesNotThrow(() => Check(source), $"analyzing \"{source}\" threw");
+        }
+    }
+
+    // ---- Reaching a result ---------------------------------------------------------------
+
+    /// <summary>Wraps a member in a program, for the cases about one function's shape.</summary>
+    private static DiagnosticBag CheckMember(string member) =>
+        Check($$"""
+            shared model Program
+            {{member}}
+                function Main()
+                end function
+            end model
+            """);
+
+    [Test]
+    public void AFunctionThatDeclaresAResultMustReachOne() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    string function Describe()
+                    end function
+                """)),
+            Is.EqualTo(new[] { "CM0404" }));
+
+    // ---- A loop with no condition ------------------------------------------------------------
+
+    /// <summary>
+    /// <para>A loop left only by <c>yield</c> has no way of falling out of the bottom, so a
+    /// function may end in one and still satisfy the rule that every path yields.</para>
+    /// <para>This is the whole of what the construct buys beyond reading well, and it is why it
+    /// is its own kind rather than a <c>while</c> whose condition happens to be <c>true</c>.
+    /// </para>
+    /// </summary>
+    [Test]
+    public void AConditionlessLoopLeftByYieldNeedsNothingAfterIt() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    integer function FirstBigEnough(integer[] values)
+                        integer at = 0;
+
+                        loop
+                            if values[at] > 10
+                                yield values[at];
+                            end if
+
+                            at = at + 1;
+                        end loop
+                    end function
+                """)),
+            Is.Empty);
+
+    /// <summary>
+    /// A <c>break</c> leaves the loop rather than the function, so what follows it runs and the
+    /// function must still produce a result.
+    /// </summary>
+    [Test]
+    public void AConditionlessLoopLeftByBreakStillHasToYieldAfterwards() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    integer function Counted()
+                        loop
+                            break;
+                        end loop
+                    end function
+                """)),
+            Is.EqualTo(new[] { "CM0404" }));
+
+    /// <summary>
+    /// <para>A loop nothing can end is an opinion, and it suppresses nothing.</para>
+    /// <para>Both are reported because they say different things: <c>CM0406</c> is about the
+    /// loop having no way out, and <c>CM0404</c> is about a function promising an integer and
+    /// having no path that produces one. Silencing the second because of the first would let a
+    /// broken promise compile clean.</para>
+    /// </summary>
+    [Test]
+    public void ALoopNothingCanEndIsAnOpinionAndStillBreaksThePromise() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    integer function Never()
+                        loop
+                            Console.WriteLine("on and on");
+                        end loop
+                    end function
+                """)),
+            Is.EqualTo(new[] { "CM0404", "CM0406" }));
+
+    /// <summary>
+    /// The same loop in a function promising nothing is the opinion alone — which is the case
+    /// a program that means to run until it is stopped from outside actually writes.
+    /// </summary>
+    [Test]
+    public void ALoopNothingCanEndIsOnlyAnOpinionWhereNothingWasPromised() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    function Serve()
+                        loop
+                            Console.WriteLine("on and on");
+                        end loop
+                    end function
+                """)),
+            Is.EqualTo(new[] { "CM0406" }));
+
+    /// <summary>
+    /// A <c>break</c> belonging to a nested loop does not count as a way out of the outer one,
+    /// which is the case that makes the check a walk rather than a search.
+    /// </summary>
+    [Test]
+    public void ABreakBelongingToANestedLoopDoesNotCountAsAWayOut() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    function Serve()
+                        loop
+                            loop for i = 1 to 3
+                                break;
+                            end loop
+                        end loop
+                    end function
+                """)),
+            Is.EqualTo(new[] { "CM0406" }));
+
+    /// <summary>
+    /// <para>A <c>break</c> inside a <c>switch</c> does count, because a switch is not something
+    /// a break ends — it runs one arm and stops, so the break belongs to the loop like any
+    /// other.</para>
+    /// <para>The pair with the test above: the walk stops at a nested loop and does not stop at
+    /// a switch, and stating only the first would leave the second to be guessed at.</para>
+    /// </summary>
+    [Test]
+    public void ABreakInsideASwitchIsAWayOutOfTheLoopAroundIt() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    function Serve()
+                        integer i = 0;
+
+                        loop
+                            i = i + 1;
+
+                            switch i
+                                case 3:
+                                    break;
+                                default:
+                                    Console.WriteLine("on we go");
+                            end switch
+                        end loop
+                    end function
+                """)),
+            Is.Empty);
+
+    /// <summary>
+    /// <para>A <c>break</c> or a <c>continue</c> with no loop around it is refused.</para>
+    /// <para>Not a nicety. Before this, the interpreter ended the function where the word stood
+    /// and said nothing, while the emitter reached for a loop that was not on its stack and
+    /// stopped with a fault of its own — so the same program had two answers and neither was
+    /// one it asked for.</para>
+    /// </summary>
+    [TestCase("break")]
+    [TestCase("continue")]
+    public void AWordThatNeedsALoopIsRefusedWithoutOne(string word) =>
+        Assert.That(
+            IdsOf(CheckMember($$"""
+                    function Serve()
+                        Console.WriteLine("before");
+                        {{word}};
+                    end function
+                """)),
+            Does.Contain("CM0407"));
+
+    /// <summary>
+    /// A <c>switch</c> is not a loop, so it does not satisfy the rule. This is the C# habit —
+    /// a break ending a case — written where there is no loop for it to mean anything in.
+    /// </summary>
+    [Test]
+    public void ASwitchIsNotSomethingABreakCanLeave() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    function Serve()
+                        switch 1
+                            case 1:
+                                Console.WriteLine("one");
+                                break;
+                        end switch
+                    end function
+                """)),
+            Does.Contain("CM0407"));
+
+    /// <summary>
+    /// The same break inside a loop is fine, wherever in the loop it sits. This is the pair to
+    /// the test above: what is refused is the absence of a loop, not the switch.
+    /// </summary>
+    [Test]
+    public void TheSameBreakInsideALoopIsFine() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    function Serve()
+                        loop for i = 1 to 3
+                            switch i
+                                case 1:
+                                    break;
+                                default:
+                                    Console.WriteLine("on we go");
+                            end switch
+                        end loop
+                    end function
+                """)),
+            Is.Empty);
+
+    /// <summary>
+    /// A lambda is a separate run, so a loop it was written inside is not one it is in. The
+    /// break below has a loop above it on the page and none at run time.
+    /// </summary>
+    [Test]
+    public void ALoopOutsideALambdaIsNotOneItsBreakCanLeave() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    function Serve()
+                        loop for i = 1 to 3
+                            delegate() escape = function()
+                                break;
+                            end function;
+
+                            escape();
+                        end loop
+                    end function
+                """)),
+            Does.Contain("CM0407"));
+
+    [Test]
+    public void YieldingOnOnlyOneBranchIsNotEnough() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    string function Grade(integer score)
+                        if score >= 60
+                            yield "pass";
+                        end if
+                    end function
+                """)),
+            Is.EqualTo(new[] { "CM0404" }));
+
+    [Test]
+    public void YieldingOnEveryBranchIsEnough() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    string function Grade(integer score)
+                        if score >= 60
+                            yield "pass";
+                        else
+                            yield "fail";
+                        end if
+                    end function
+                """)),
+            Is.Empty);
+
+    /// <summary>A function that always throws never reaches its end, so it needs no yield.</summary>
+    [Test]
+    public void ThrowingInsteadOfYieldingIsEnough() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    string function Never()
+                        throw new ArgumentException("no");
+                    end function
+                """)),
+            Is.Empty);
+
+    [Test]
+    public void AFunctionThatDeclaresNoResultNeedsNoYield() =>
+        Assert.That(
+            IdsOf(CheckMember("""
+                    function Shout()
+                        Console.WriteLine("hi");
+                    end function
+                """)),
+            Is.Empty);
+
+    /// <summary>A constructor produces its instance rather than a result, so it is exempt.</summary>
+    [Test]
+    public void AConstructorNeedsNoYield() =>
+        Assert.That(
+            IdsOf(Check("""
+                model Account
+                    integer balance;
+
+                    public function Account(integer opening)
+                        this.balance = opening;
+                    end function
+                end model
+                """)),
+            Is.Empty);
+
+    // ---- Nothing is not a value ------------------------------------------------------------
+
+    /// <summary>
+    /// <c>Console.WriteLine</c> takes a value of any kind, which still means a value. A call
+    /// that produced none is refused rather than shown as though it had one.
+    /// </summary>
+    [Test]
+    public void ACallThatProducedNothingCannotBeWritten() =>
+        Assert.That(
+            IdsOf(Check("""
+                shared model Program
+                    function Main()
+                        integer[] xs = {1, 2};
+                        Console.WriteLine(xs.InsertAt(0, 9));
+                    end function
+                end model
+                """)),
+            Is.EqualTo(new[] { "CM0332" }));
+
+    [Test]
+    public void ACallThatProducedNothingCannotBeAnArgument() =>
+        Assert.That(
+            IdsOf(Check("""
+                shared model Program
+                    function Shout()
+                    end function
+
+                    function Main()
+                        Console.Write(Program.Shout());
+                    end function
+                end model
+                """)),
+            Is.EqualTo(new[] { "CM0332" }));
+}

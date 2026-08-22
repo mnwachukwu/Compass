@@ -64,7 +64,7 @@ jobs:
 
       # The version lives in Directory.Build.props and the tag has to agree with it. Checked
       # rather than derived, because the two are written by hand at different moments: tagging
-      # v1.1.0 against a tree that still says 1.0.0 would publish archives whose `pc --version`
+      # v1.1.0 against a tree that still says 1.0.0 would publish archives whose `cm --version`
       # contradicts the release they came from, and nothing else would notice.
       - name: The tag and the version agree
         if: startsWith(github.ref, 'refs/tags/')
@@ -98,14 +98,14 @@ jobs:
 
             echo "::group::$rid"
             rm -rf staging
-            mkdir -p staging/profi-c
+            mkdir -p staging/compass
 
-            dotnet publish src/ProfiC.Cli.Alias \
+            dotnet publish src/Compass.Cli.Alias \
               --configuration Release \
               --runtime "$rid" \
               --self-contained true \
               -p:BuildNumber=${{ github.run_number }} \
-              --output staging/profi-c
+              --output staging/compass
 
             # Set rather than relied upon. A file extracted without it is a compiler that
             # answers "permission denied", which reads as a broken download rather than as a
@@ -113,23 +113,23 @@ jobs:
             # nothing about the file looked wrong.
             case "$name" in
               *.zip)
-                (cd staging && zip -qr "../artifacts/$name" profi-c)
+                (cd staging && zip -qr "../artifacts/$name" compass)
                 ;;
               *.tar.gz)
-                chmod +x staging/profi-c/pc staging/profi-c/profi-c
-                tar -czf "artifacts/$name" -C staging profi-c
+                chmod +x staging/compass/cm staging/compass/compass
+                tar -czf "artifacts/$name" -C staging compass
                 ;;
             esac
 
             echo "::endgroup::"
           }
 
-          publish win-x64     profi-c-win-x64.zip
-          publish win-arm64   profi-c-win-arm64.zip
-          publish linux-x64   profi-c-linux-x64.tar.gz
-          publish linux-arm64 profi-c-linux-arm64.tar.gz
-          publish osx-x64     profi-c-osx-x64.tar.gz
-          publish osx-arm64   profi-c-osx-arm64.tar.gz
+          publish win-x64     compass-win-x64.zip
+          publish win-arm64   compass-win-arm64.zip
+          publish linux-x64   compass-linux-x64.tar.gz
+          publish linux-arm64 compass-linux-arm64.tar.gz
+          publish osx-x64     compass-osx-x64.tar.gz
+          publish osx-arm64   compass-osx-arm64.tar.gz
 
           ls -lh artifacts
 
@@ -150,5 +150,5 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" \
             --title "$GITHUB_REF_NAME" \
-            --notes "Install instructions are at https://profi-c.pluperfect.dev/install — see CHANGELOG.md for what changed." \
+            --notes "Install instructions are at https://compass.pluperfect.dev/install — see CHANGELOG.md for what changed." \
             artifacts/*

@@ -1,6 +1,6 @@
-# Profi-C and C#: A Side by Side Comparison
+# Compass and C#: A Side by Side Comparison
 
-Every construct written both ways: Profi-C first, the nearest C# underneath.
+Every construct written both ways: Compass first, the nearest C# underneath.
 
 For the condensed reference and the prose comparison see
 [language-summary.md](language-summary.md); for the normative definition,
@@ -14,13 +14,13 @@ function around it. Where a whole program is wanted, [the samples](../samples) a
 and recorded.
 
 **The C# is the nearest equivalent rather than the best C#.** Where idiomatic C# would use a
-construct Profi-C has no counterpart to, the comparison shows the same job done rather than the
+construct Compass has no counterpart to, the comparison shows the same job done rather than the
 same style, and notes what that costs.
 
 **The last three sections keep score.**
-[§9](#9-where-profi-c-does-it-better) covers what both have and Profi-C does better;
+[§9](#9-where-compass-does-it-better) covers what both have and Compass does better;
 [§10](#10-where-c-does-it-better) covers what both have and C# does better; and
-[§11](#11-c-with-no-profi-c-equivalent) covers what C# has and Profi-C has no form for at all.
+[§11](#11-c-with-no-compass-equivalent) covers what C# has and Compass has no form for at all.
 The third is the longest of them.
 
 ## Contents
@@ -33,9 +33,9 @@ The third is the longest of them.
 - [6. Optionals, sets, and fractions](#6-optionals-sets-and-fractions)
 - [7. When something goes wrong](#7-when-something-goes-wrong)
 - [8. Files, names, and text](#8-files-names-and-text)
-- [9. Where Profi-C does it better](#9-where-profi-c-does-it-better)
+- [9. Where Compass does it better](#9-where-compass-does-it-better)
 - [10. Where C# does it better](#10-where-c-does-it-better)
-- [11. C# with no Profi-C equivalent](#11-c-with-no-profi-c-equivalent)
+- [11. C# with no Compass equivalent](#11-c-with-no-compass-equivalent)
   - [11.1 Shape and abstraction](#111-shape-and-abstraction)
   - [11.2 Data](#112-data)
   - [11.3 Control and sequence](#113-control-and-sequence)
@@ -49,7 +49,7 @@ The third is the longest of them.
 
 ### A model, and one extending it
 
-**Profi-C**
+**Compass**
 
 ```
 model Shape
@@ -92,7 +92,7 @@ C#.
 
 ### A shared model, which is where a program starts
 
-**Profi-C**
+**Compass**
 
 ```
 shared model Program
@@ -118,11 +118,11 @@ A `shared model`'s members are shared already, so writing `shared function Main(
 `Main` takes no arguments and yields nothing.
 
 C# has top-level statements, so `Console.WriteLine("Hello");` in a file by itself is a whole
-program. Profi-C has no equivalent.
+program. Compass has no equivalent.
 
 ### A structure, which is a value
 
-**Profi-C**
+**Compass**
 
 ```
 structure Point
@@ -157,7 +157,7 @@ Structures compare by their fields and copy on assignment. What they cannot do i
 
 ### An enumeration
 
-**Profi-C**
+**Compass**
 
 ```
 enumeration Color
@@ -187,7 +187,7 @@ nothing.
 
 ### Fields, and reaching them
 
-**Profi-C**
+**Compass**
 
 ```
 model Account
@@ -219,12 +219,12 @@ class Account
 touching object state says so. There is no `private` keyword: a member with no visibility word is
 private.
 
-The `+=` on the C# side is not stylistic: Profi-C has no compound assignment, so accumulation is
+The `+=` on the C# side is not stylistic: Compass has no compound assignment, so accumulation is
 always written out. See [§10](#10-where-c-does-it-better).
 
 ### Abstract, virtual, override
 
-**Profi-C**
+**Compass**
 
 ```
 abstract model Shape
@@ -267,7 +267,7 @@ is an opinion, since abstract already implies it.
 
 ### A constant
 
-**Profi-C**
+**Compass**
 
 ```
 shared model Program
@@ -302,7 +302,7 @@ an unchanging binding really means an unchanging value.
 
 ### Declaring one, and giving a result
 
-**Profi-C**
+**Compass**
 
 ```
 integer function Add(integer a, integer b)
@@ -328,12 +328,12 @@ void Announce(string text)
 }
 ```
 
-**`yield` means return.** C# uses `yield return` for iterators; Profi-C's `yield` has nothing to
+**`yield` means return.** C# uses `yield return` for iterators; Compass's `yield` has nothing to
 do with them. A function yielding nothing writes no type at all rather than `void`.
 
 ### A function declared among statements
 
-**Profi-C**
+**Compass**
 
 ```
 function Report()
@@ -362,11 +362,11 @@ void Report()
 
 A local function is in scope for the whole run it sits in, not from its own line onward, so a
 call may be written above it and two may call each other. What it names still comes into being
-in order, so calling one before a local it reads is `PC0405`.
+in order, so calling one before a local it reads is `CM0405`.
 
 ### A function as a value
 
-**Profi-C**
+**Compass**
 
 ```
 integer delegate(integer, integer) add = (a, b) yield a + b;
@@ -392,7 +392,7 @@ Console.WriteLine(add(2, 3));
 ```
 
 **`delegate` writes the type; `function` writes the thing.** Where C# needs `Func<>` for something
-yielding a value and `Action<>` for something not, Profi-C writes the result type in front or
+yielding a value and `Action<>` for something not, Compass writes the result type in front or
 leaves it off. `Function` is the root every function type descends from, and types a value as a
 function without fixing its shape.
 
@@ -402,7 +402,7 @@ function without fixing its shape.
 
 ### Counting
 
-**Profi-C**
+**Compass**
 
 ```
 loop for i = 1 to 10
@@ -434,11 +434,11 @@ to inside the body. **The bound and the step are read again on every turn**, exa
 header is.
 
 C#'s three-clause header does more: any initializer, any condition, any increment, and several
-of each. Profi-C's counts, and anything else is a different loop.
+of each. Compass's counts, and anything else is a different loop.
 
 ### Walking
 
-**Profi-C**
+**Compass**
 
 ```
 loop each grade in grades
@@ -456,17 +456,17 @@ foreach (int grade in grades)
 ```
 
 A `loop each` reads its sequence's length once, when the loop begins, so a change made during one
-cannot move with it. Where the compiler can see the change it refuses the program (`PC0243`);
+cannot move with it. Where the compiler can see the change it refuses the program (`CM0243`);
 where it cannot — a set reached through a parameter, say — the change raises
 `SequenceChangedException` as C# does. The difference is that the cases worth catching are caught
 before the program runs, rather than every one of them being left to run time.
 
 C#'s walks anything implementing `IEnumerable`, including things computed lazily as they are
-read. Profi-C's walks a set.
+read. Compass's walks a set.
 
 ### Asking before, asking after, and not asking
 
-**Profi-C**
+**Compass**
 
 ```
 loop while count < 10
@@ -507,7 +507,7 @@ while (true)
 `while (guess != secret)` becomes `until guess == secret`. **It is the only construct `end` does
 not close**, since the word carrying the condition closes it. **A loop with no condition is
 written with none**, rather than as a `while` over a constant; one that nothing inside can break,
-yield, or throw out of is `PC0406`.
+yield, or throw out of is `CM0406`.
 
 ---
 
@@ -515,7 +515,7 @@ yield, or throw out of is `PC0406`.
 
 ### Branching
 
-**Profi-C**
+**Compass**
 
 ```
 if score >= 90
@@ -549,7 +549,7 @@ truthiness to learn.
 
 ### Choosing a value
 
-**Profi-C**
+**Compass**
 
 ```
 string verdict = if score >= 60 then "pass" else "fail";
@@ -566,7 +566,7 @@ an `if` expression with no `else` has nothing to yield when the condition fails.
 
 ### Switching
 
-**Profi-C**
+**Compass**
 
 ```
 switch grade
@@ -602,7 +602,7 @@ switch (grade)
 fallthrough was used for. A `switch` over an enumeration that omits a member is a warning.
 
 C# switches on far more: type patterns, property patterns, ranges, `when` guards, and a switch
-*expression* yielding a value. Profi-C switches on a constant. See
+*expression* yielding a value. Compass switches on a constant. See
 [§10](#10-where-c-does-it-better).
 
 ---
@@ -611,7 +611,7 @@ C# switches on far more: type patterns, property patterns, ranges, `when` guards
 
 ### A value that may be absent
 
-**Profi-C**
+**Compass**
 
 ```
 string? nickname = Find(id);
@@ -641,11 +641,11 @@ reading one the compiler cannot prove is present does not compile. `HasValue()` 
 optional for the rest of the guarded block.
 
 C#'s nullable reference types are warnings over a runtime that still permits null, so the
-guarantee is advisory. Profi-C has no null to permit.
+guarantee is advisory. Compass has no null to permit.
 
 ### Sets, which are the one collection
 
-**Profi-C**
+**Compass**
 
 ```
 integer[] scores = {90, 85, 77};
@@ -669,12 +669,12 @@ One collection type, ordered and growable, with no array/list distinction to lea
 
 The cost is the rest of C#'s collections: arrays, `List<T>`, `Dictionary<K,V>`, `HashSet<T>`,
 `Queue<T>`, `Stack<T>` and the interfaces behind them. A program wanting a key-to-value lookup has
-one in C#; Profi-C has a set and no way to write another. See
+one in C#; Compass has a set and no way to write another. See
 [§11.2](#112-data).
 
 ### A set of sets
 
-**Profi-C**
+**Compass**
 
 ```
 integer[][] grid = {{1, 2, 3},
@@ -694,12 +694,12 @@ Console.WriteLine(grid[1][2]);
 
 `[]` means "a set of", and what it is said about may be a set already — nothing was added for
 this. Rows are sets in their own right and may differ in length. C# also has a rectangular form,
-`int[,]`, indexed `grid[row, column]` and fixed in shape; Profi-C does not, and it is on the v2
-list. See [matrices.pc](../samples/matrices.pc).
+`int[,]`, indexed `grid[row, column]` and fixed in shape; Compass does not, and it is on the v2
+list. See [matrices.cm](../samples/matrices.cm).
 
 ### Exact fractions
 
-**Profi-C**
+**Compass**
 
 ```
 fraction third = 1|3;
@@ -717,7 +717,7 @@ decimal third = 1m / 3m;
 Console.WriteLine(third + third + third);
 ```
 
-The Profi-C line prints exactly `1|1`. The C# prints `0.9999999999999999999999999999`. A fraction
+The Compass line prints exactly `1|1`. The C# prints `0.9999999999999999999999999999`. A fraction
 is a numerator and a denominator kept reduced, and arithmetic on it is exact. C# has no
 equivalent type.
 
@@ -727,7 +727,7 @@ equivalent type.
 
 ### Catching
 
-**Profi-C**
+**Compass**
 
 ```
 try
@@ -767,11 +767,11 @@ written for this language. `catch Exception` takes less than C#'s: it takes what
 caused, never a failure in the implementation.
 
 C# has exception filters — `catch (IOException e) when (e.HResult == 32)` — which decide without
-catching, so an unmatched exception keeps its original stack. Profi-C has no equivalent.
+catching, so an unmatched exception keeps its original stack. Compass has no equivalent.
 
 ### Declaring and throwing one
 
-**Profi-C**
+**Compass**
 
 ```
 model InsufficientFunds extends Exception
@@ -812,10 +812,10 @@ nothing else, so there is no stack trace for a program to read, keep or lose.
 
 ### Namespaces and reaching another file
 
-**Profi-C**
+**Compass**
 
 ```
-import "models/Product.pc";
+import "models/Product.cm";
 
 using Store.Models;
 
@@ -833,7 +833,7 @@ using Store.Models;
 ```
 
 **The order is the other way round from C#.** Both are statements about the whole file, so both
-go above the `namespace` rather than inside it (`PC0231`) — where C# puts its `using` directives
+go above the `namespace` rather than inside it (`CM0231`) — where C# puts its `using` directives
 under a file-scoped namespace and scopes them to it.
 
 `namespace` also takes a block form. `import` is the piece C# has no counterpart to: it names a
@@ -841,11 +841,11 @@ file to compile alongside this one, where C# leaves that to the project. `using 
 opinion, since Standard is already in scope.
 
 C# has more here: `using static`, aliases (`using Json = System.Text.Json;`), and global usings
-that apply across a project. Profi-C has the one form.
+that apply across a project. Compass has the one form.
 
 ### Text
 
-**Profi-C**
+**Compass**
 
 ```
 string greeting = "Hello, {{name}} — you are {{age}}";
@@ -870,13 +870,13 @@ rarer than escaping it. A run of three or more quotation marks holds text exactl
 the closing run's indentation comes off every line.
 
 A format specifier is written inline in both, after a colon: C#'s `{total:C2}` is
-`{{total:C2}}`, and the patterns are .NET's in both places. What C# has and Profi-C does not is
+`{{total:C2}}`, and the patterns are .NET's in both places. What C# has and Compass does not is
 the alignment before it — `{total,10:C2}` right-aligns a currency in ten columns, which here is a
 call to [`Format`](standard-library/numbers.md#writing-a-number-out) and then padding the result.
 
 ### Comments and documentation
 
-**Profi-C**
+**Compass**
 
 ```
 # a line comment
@@ -916,39 +916,39 @@ compiler holds a doc to what it documents**: naming a parameter that is not ther
 `@yields:` on a function yielding nothing, is reported. A missing doc never is.
 
 C#'s markup has a toolchain behind it: `<see cref="Other"/>` is a checked link, and the whole
-comment compiles to an XML file that IDEs and documentation generators read. Profi-C's labels are
+comment compiles to an XML file that IDEs and documentation generators read. Compass's labels are
 read by its own compiler and nothing else.
 
 ---
 
-## 9. Where Profi-C does it better
+## 9. Where Compass does it better
 
 Both languages have these. In several rows the difference is between a mistake the compiler
 refuses and one that surfaces at run time.
 
 **Reserved words.**
 
-| | Profi-C | C# |
+| | Compass | C# |
 |---|---|---|
 | Reserved everywhere | **63** | 77 |
 | Contextual — reserved only in one position | **0** | 46 |
 | Words that are special somewhere | **63** | 123 |
 
 C#'s figures are Roslyn's own, from `SyntaxFacts.GetReservedKeywordKinds` and
-`GetContextualKeywordKinds`, minus four undocumented `__`-prefixed ones it also counts. Profi-C's
+`GetContextualKeywordKinds`, minus four undocumented `__`-prefixed ones it also counts. Compass's
 is asserted by a test, so the number above cannot drift from the compiler.
 
 The second row is the one that shows up while writing. In C#, `value`, `var`, `record`, `await`
 and forty-odd others are keywords in one position and ordinary names everywhere else, so whether a
-word is reserved depends on where it sits. In Profi-C a word is reserved everywhere or nowhere,
+word is reserved depends on where it sits. In Compass a word is reserved everywhere or nowhere,
 and `@` takes one back as a name. The list is
 [§2.1 of the specification](language-spec.md#21-reserved-words).
 
-| | Profi-C | C# | Why it is better |
+| | Compass | C# | Why it is better |
 |---|---|---|---|
 | **A value that may be absent** | `string?`, and reading one unproven does not compile | `string?`, and reading one unproven is a warning | There is no `null` to permit. C#'s nullable reference types are analysis over a runtime that still allows it, so the guarantee is advice; here it is the type system |
 | **Arithmetic that will not fit** | checked always — `OverflowException`, naming the bound | wraps silently unless `checked` is written | The default is the safe one. A C# program that overflows carries on with a plausible wrong number, and nothing says so |
-| **Changing a set mid-walk** | refused while compiling (`PC0243`), naming the member that would change it | `InvalidOperationException`, partway through, at run time | Moved from run time to build time. The same rule reaches a set held under a second name at run time, so nothing slips through |
+| **Changing a set mid-walk** | refused while compiling (`CM0243`), naming the member that would change it | `InvalidOperationException`, partway through, at run time | Moved from run time to build time. The same rule reaches a set held under a second name at run time, so nothing slips through |
 | **Comparing two values** | `==` is deep and structural, and cycle-safe | reference identity unless `Equals`/`GetHashCode` is written, or the type is a `record` | Two models holding equal contents are equal, with nothing declared and nothing generated. A cyclic graph compares without looping forever |
 | **A `switch` missing an enumeration member** | a warning naming what was left out | silence | The usual cause is a member added to the enumeration later. C# reports nothing |
 | **Falling through a case** | impossible; labels stack instead | `break` required on every case, or it will not compile — except where it silently may | C#'s rule has an exception for empty labels, which is the case a reader is most likely to misread |
@@ -956,7 +956,7 @@ and `@` takes one back as a name. The list is
 | **Loops** | one `loop` opener, five forms, `end loop` closing all but one | `for`, `foreach`, `while`, `do` — four keywords, and `do`'s condition sits past the closing brace | One thing to learn and one shape to recognize |
 | **A field against a local** | `this.` is required, so every line touching state says so | a bare name may be either | A reader never has to look elsewhere to know what a name reaches |
 | **Reusing a name** | refused if a scope around it is using the name, lambdas included | permitted in a lambda, and permitted for a field | Reading a name is never a search for which one is meant |
-| **A field left unset** | an error before the constructor ends (`PC0402`) | a warning for non-nullable references (`CS8618`), and only where nullable analysis is switched on | An error rather than a warning, and on by default rather than opted into |
+| **A field left unset** | an error before the constructor ends (`CM0402`) | a warning for non-nullable references (`CS8618`), and only where nullable analysis is switched on | An error rather than a warning, and on by default rather than opted into |
 | **Exact fractions** | `1\|3 + 1\|3 + 1\|3` is exactly `1\|1` | no equivalent type; `decimal` is base ten | The one type C# cannot express. A third is exact rather than rounded |
 
 Two of these — checked arithmetic and no `null` — are defaults C# cannot change without breaking
@@ -966,28 +966,28 @@ existing programs. A language starting later can take them.
 
 Both languages have these, and C#'s version is better.
 
-| | Profi-C | C# | The trade |
+| | Compass | C# | The trade |
 |---|---|---|---|
 | **Accumulating** | `total = total + n;` | `total += n;` | Absent so that a beginner reads one form of assignment rather than eleven. It costs every counter and every accumulator an extra reading of the name |
 | **Counting up** | `n = n + 1;` | `n++;` | Same reasoning, and `++` carries a pre/post distinction that is a common source of error. The cost is that a very common statement is the longer one |
 | **Reading a member** | `scores.Count` | `scores.Count` | The same. A program cannot declare a property, but the library provides them, and a member that is a value is read rather than called |
 | **Matching a shape** | `if x is Dog` then `x as Dog` | `if (x is Dog d)` | No pattern variables, so a test and a cast are written separately. C#'s form cannot get them out of step |
-| **Choosing on a value** | `switch` over constants | switch expressions, type and property patterns, `when` guards | Profi-C's switch is a jump table with better defaults. C#'s is a small pattern language, and for anything past equality it is far less code |
-| **Returning two things** | a `structure` declared for it | `(int, string)` tuple, deconstructed at the call | Naming the pair is often the better design. When it is not, C# costs a line and Profi-C costs a type |
+| **Choosing on a value** | `switch` over constants | switch expressions, type and property patterns, `when` guards | Compass's switch is a jump table with better defaults. C#'s is a small pattern language, and for anything past equality it is far less code |
+| **Returning two things** | a `structure` declared for it | `(int, string)` tuple, deconstructed at the call | Naming the pair is often the better design. When it is not, C# costs a line and Compass costs a type |
 | **Numbers** | `integer` (64-bit), `real`, `float` (64-bit), `fraction` | `byte` through `ulong`, `float`, `double`, `decimal`, `BigInteger` | One type per idea rather than one per width: no width to choose and no unsigned surprises. `real` is C#'s `decimal` and is what a decimal point means, so money is exact by default rather than by remembering a suffix; `float` is C#'s `double`, named so that binary floating point is asked for. What is given up is wider-than-64 arithmetic and the narrow types a program that has to fit a wire format needs |
-| **Ending a scope** | `finally` | `using` on an `IDisposable` | Explicit and visible, versus a construct that guarantees it. A file left unclosed is a bug Profi-C cannot make impossible |
+| **Ending a scope** | `finally` | `using` on an `IDisposable` | Explicit and visible, versus a construct that guarantees it. A file left unclosed is a bug Compass cannot make impossible |
 | **Documentation** | `@summary:` labels | `///` XML with checked `cref` links | Nothing to balance and nothing to escape, against a format the whole .NET toolchain already reads |
 
 ---
 
-## 11. C# with no Profi-C equivalent
+## 11. C# with no Compass equivalent
 
 These are absent rather than worse. There is no way to write them, and a program that needs one
 needs a different approach.
 
 ### 11.1 Shape and abstraction
 
-| C# | What it does | Profi-C |
+| C# | What it does | Compass |
 |---|---|---|
 | `interface IShape { double Area(); }` | Gives unrelated types a shared static shape | Only `extends`. A type's shape comes from what it inherits, so two types share one by sharing a parent |
 | `class Box<T>` | A type parameterized by another | Nothing user-facing. `integer[]` and `Node?` are parameterized, but only the compiler may write such a type |
@@ -999,7 +999,7 @@ needs a different approach.
 
 ### 11.2 Data
 
-| C# | What it does | Profi-C |
+| C# | What it does | Compass |
 |---|---|---|
 | `Dictionary<K, V>` | Key-to-value lookup | Absent. On the v2 list |
 | `HashSet<T>`, `Queue<T>`, `Stack<T>` | Containers with their own guarantees | One set type, ordered and growable |
@@ -1011,7 +1011,7 @@ needs a different approach.
 
 ### 11.3 Control and sequence
 
-| C# | What it does | Profi-C |
+| C# | What it does | Compass |
 |---|---|---|
 | `async` / `await` | Work that waits without blocking | Absent entirely. There is no concurrency story |
 | `yield return` | A sequence produced as it is read | A function builds a set and hands it back |
@@ -1023,7 +1023,7 @@ needs a different approach.
 
 ### 11.4 Reaching other code
 
-| C# | What it does | Profi-C |
+| C# | What it does | Compass |
 |---|---|---|
 | `static int Twice(this int n)` | Add a member to a type you do not own | Absent |
 | `public static Money operator +(...)` | Give a user type an operator | Operators work on built-in types only |
@@ -1049,9 +1049,9 @@ rather than being justified only by the binder:
 | v4 | `async`/`await`/`Task` | very large on its own |
 | v5 | attributes, the CLR array type, variance, assembly references, the import mechanism | larger than the v1 compiler |
 
-**This is not a foreign function interface problem.** Profi-C compiles to CIL and runs on the CLR,
+**This is not a foreign function interface problem.** Compass compiles to CIL and runs on the CLR,
 so calling `System.Math.Sqrt` is CIL calling CIL with the same collector and calling convention.
-The obstacle is that Profi-C cannot *name* a generic type, an interface, or a property, so any .NET
+The obstacle is that Compass cannot *name* a generic type, an interface, or a property, so any .NET
 member using one is unreachable however the call is made. That is why those three head the v2 list.
 
 **Planned, but not yet placed in a version:** events, iterators, pattern matching, tuples, and
@@ -1078,7 +1078,7 @@ Every other section compares two ways of writing the same thing. This one lists 
 **the same source is legal in both languages and means something different**. None is reported,
 since each is a correct program in both.
 
-| Written | Profi-C | C# |
+| Written | Compass | C# |
 |---|---|---|
 | a `break` ending a `switch` case, inside a loop | leaves the **loop** | leaves the switch |
 | `2 ^ 3` | `8` — `^` raises to a power | `1` — `^` is exclusive-or |

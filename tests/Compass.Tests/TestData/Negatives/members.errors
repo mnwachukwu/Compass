@@ -1,0 +1,12 @@
+members.cm(34,41): error CM0300: Cannot use a string where an integer is expected. Write 'ToInteger()', or 'Integer.Parse(...)'.
+members.cm(35,27): error CM0308: 'Counter' takes 1 argument, but was given 2.
+members.cm(42,27): error CM0330: 'Distinct' is a function, so it has to be called: write 'Distinct()'.
+members.cm(45,27): error CM0331: 'count' belongs to each Counter rather than to the Counter type, so it cannot be reached through the name 'Counter'. Mark it 'shared', or read it from a value.
+members.cm(45,27): error CM0339: 'count' is private in Counter, so it cannot be reached here. Mark it 'public' to allow that, or 'internal' to allow it anywhere in this project.
+members.cm(51,27): error CM0348: 'ToString' needs a value on the left of the dot, not the type name 'Counter'.
+members.cm(52,27): error CM0348: 'Equals' needs a value on the left of the dot, not the type name 'Program'.
+members.cm(53,27): error CM0348: 'Year' needs a value on the left of the dot, not the type name 'DateTime'.
+members.cm(58,27): error CM0306: A DateTime has no member named 'Now'.
+members.cm(61,26): error CM0332: This produces no value, so there is nothing to use here.
+members.cm(64,27): error CM0332: This produces no value, so there is nothing to use here.
+members.cm(67,27): error CM0306: An integer[] has no member named 'Length'.

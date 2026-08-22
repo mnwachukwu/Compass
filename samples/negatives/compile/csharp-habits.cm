@@ -1,0 +1,52 @@
+##
+    Habits from other languages, and what Compass says about each.
+
+    This program does not compile. Every line below is a spelling a C#, Java, or Python
+    author reaches for without thinking, and each one is named rather than left to produce a
+    confusing parse error further down the file.
+##
+
+# Nothing here is run, so nothing reads what it declares and nothing keeps what it
+# works out. That is the shape of every negative, and not the lesson of this one.
+# ignore CM0409 in file
+# ignore CM0411 in file
+
+shared model Program
+    function Main()
+        integer count = 1;
+        boolean ready = true;
+
+        # '&&' and '||' are symbols; Compass spells them as words.
+        if ready && count > 0
+            Console.WriteLine("both");
+        end if
+
+        if ready || count > 0
+            Console.WriteLine("either");
+        end if
+
+        # '!' likewise.
+        if !ready
+            Console.WriteLine("negated");
+        end if
+
+        # There is no compound assignment and no increment.
+        count += 5;
+        count++;
+
+        # Python raises to a power with '**'; Compass uses '^'.
+        Console.WriteLine(2 ** 8);
+
+        # A lambda's body follows 'yield', not an arrow.
+        integer delegate(integer) twice = (integer n) => n * 2;
+        integer delegate(integer) thrice = (integer n) -> n * 3;
+
+        # Leaving a type out asks the surrounding code, and 'let' has nothing to say.
+        let unknown = (n) yield n + 1;
+
+        # A range loop's counter carries no type.
+        loop for integer i = 1 to 3
+            Console.WriteLine(i);
+        end loop
+    end function
+end model

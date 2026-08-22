@@ -1,0 +1,6 @@
+definite-assignment.cm(26,5): error CM0408: 'announce' is shared, so no constructor runs that could give it a value. Give it one where it is declared, or make it optional.
+definite-assignment.cm(27,5): error CM0408: 'gathered' is shared, so no constructor runs that could give it a value. Give it one where it is declared, or make it optional.
+definite-assignment.cm(33,27): error CM0400: 'total' is used here before it has been given a value. Give it one above this line.
+definite-assignment.cm(42,27): error CM0401: 'chosen' is not given a value on every path that reaches this point. Give it one on every branch, or where it is declared.
+definite-assignment.cm(50,31): error CM0400: 'attempted' is used here before it has been given a value. Give it one above this line.
+definite-assignment.cm(54,9): error CM0320: 'Limit' is a constant, so it must be given a value where it is declared. Write one, or drop 'constant'.

@@ -1,0 +1,15 @@
+throwaway.cm(27,5): error CM0255: '_' throws a value away, so it cannot name a field, which is reached by name. Give it a name.
+throwaway.cm(31,19): error CM0257: '_' cannot name a parameter: it is part of the signature a caller reads. Give it a name.
+throwaway.cm(42,9): error CM0256: '_' stands in for a name the language asks for, and nothing asks for one here. Write the value on its own, or remove the line.
+throwaway.cm(43,9): error CM0256: '_' stands in for a name the language asks for, and nothing asks for one here. Write the value on its own, or remove the line.
+throwaway.cm(44,9): error CM0256: '_' stands in for a name the language asks for, and nothing asks for one here. Write the value on its own, or remove the line.
+throwaway.cm(47,9): error CM0256: '_' stands in for a name the language asks for, and nothing asks for one here. Write the value on its own, or remove the line.
+throwaway.cm(50,27): error CM0254: '_' throws its value away, so there is nothing here to use. Give it a name.
+throwaway.cm(51,22): error CM0254: '_' throws its value away, so there is nothing here to use. Give it a name.
+throwaway.cm(55,50): error CM0257: '_' cannot name a parameter: it is part of the signature a caller reads. Give it a name.
+throwaway.cm(63,9): warning CM0409: Nothing reads 'forgotten'. Remove it, or write '_' if the value is not wanted.
+throwaway.cm(69,5): error CM0255: '_' throws a value away, so it cannot name a function, which is reached by name. Give it a name.
+throwaway.cm(75,5): warning CM0410: Nothing uses 'capacity'. Remove it, or widen it past 'private'.
+throwaway.cm(83,11): error CM0255: '_' throws a value away, so it cannot name a namespace, which is reached by name. Give it a name.
+throwaway.cm(84,5): error CM0255: '_' throws a value away, so it cannot name a model, which is reached by name. Give it a name.
+throwaway.cm(88,9): error CM0255: '_' throws a value away, so it cannot name an enumeration member, which is reached by name. Give it a name.

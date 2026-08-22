@@ -4,7 +4,7 @@
     Shared settings for every project in the repository.
 
     Note on <Nullable>: this is the C# compiler's nullable-reference-type analysis,
-    applied to the compiler's own source. It has nothing to do with Profi-C, which
+    applied to the compiler's own source. It has nothing to do with Compass, which
     has no null at all; optionals with a "?" suffix replace it. See the language
     specification, section on optionals.
   -->
@@ -23,9 +23,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Product>Profi-C</Product>
+    <Product>Compass</Product>
     <Authors>Matt Nwachukwu</Authors>
-    <Company>Profi-C</Company>
+    <Company>Pluperfect Development</Company>
     <Copyright>Copyright (c) Matt Nwachukwu</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
@@ -56,7 +56,7 @@
     command line reports when asked, and the only one of the three a reader ever sees.
   -->
   <PropertyGroup>
-    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionPrefix>1.0.1</VersionPrefix>
 
     <Version Condition="'$(BuildNumber)' != ''">$(VersionPrefix).$(BuildNumber)</Version>
 

@@ -1,0 +1,4 @@
+nesting.cm(23,9): error CM0201: There is no type named 'Node'. Check the spelling, or the 'using' that would reach it.
+nesting.cm(23,22): error CM0201: There is no type named 'Node'. Check the spelling, or the 'using' that would reach it.
+nesting.cm(28,9): error CM0339: 'Hidden' is private in Tree, so it cannot be reached here. Mark it 'public' to allow that, or 'internal' to allow it anywhere in this project.
+nesting.cm(28,28): error CM0339: 'Hidden' is private in Tree, so it cannot be reached here. Mark it 'public' to allow that, or 'internal' to allow it anywhere in this project.

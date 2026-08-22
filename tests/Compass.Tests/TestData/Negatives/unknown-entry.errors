@@ -1,0 +1,2 @@
+unknown-entry.cmp(15,1): error CM0604: 'include' is not something a project file says. A project names files with 'source' and other projects with 'reference'.
+unknown-entry.cmp(16,1): error CM0604: 'exclude' is not something a project file says. A project names files with 'source' and other projects with 'reference'.

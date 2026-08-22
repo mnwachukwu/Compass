@@ -1,19 +1,19 @@
 (* ==========================================================================
-   The Profi-C grammar.
+   The Compass grammar.
 
    WHAT THIS FILE IS. A description of the language's surface syntax, written
    for people and kept in step with the parser by hand.
 
-   WHAT IT IS NOT. No parser is generated from it. Profi-C is parsed by
+   WHAT IT IS NOT. No parser is generated from it. Compass is parsed by
    hand-written recursive descent -- one method per production, in
-   src/ProfiC.Compiler/Parsing -- with expressions handled by precedence
-   climbing against the table in src/ProfiC.Compiler/Ast/Operators.cs. That
+   src/Compass.Compiler/Parsing -- with expressions handled by precedence
+   climbing against the table in src/Compass.Compiler/Ast/Operators.cs. That
    table, not the one printed below, is what the compiler consults; the one
    below restates it for a reader.
 
    So the productions here can drift from the compiler without anything
    failing. What actually pins the syntax is the sample corpus, and above all
-   samples/reference/tour.pc, which holds nearly every construct here exactly
+   samples/reference/tour.cm, which holds nearly every construct here exactly
    once. Every sample is checked against a recorded token stream and a
    recorded tree on every build, and the tests assert that between them the
    samples reach every node the parser can build. Change a production here
@@ -29,7 +29,7 @@
    page.
 
    "Nearly", because the tour opens with block namespaces and so holds no
-   file-scoped one. samples/namespaces.pc writes that form, with blocks
+   file-scoped one. samples/namespaces.cm writes that form, with blocks
    nested inside it -- which is how the two combine.
 
    Everything below is implemented.
@@ -149,7 +149,7 @@ WhileStmt      = "loop" "while" Expr Body "end" "loop" ;
 (* Neither counted loop writes a type for the variable it binds. A range loop counts,
    and counting is done with integers; a for-each takes its element's type from the
    sequence. Both are fixed by the construct rather than inferred from a value, which
-   is why neither needs "let". Bounds and step must be integers -- see PC0317. *)
+   is why neither needs "let". Bounds and step must be integers -- see CM0317. *)
 ForStmt        = "loop" "for" Identifier "=" Expr ( "to" | "until" ) Expr
                  [ "stepby" Expr ] Body "end" "loop" ;
 
@@ -161,7 +161,7 @@ ForEachStmt    = "loop" "each" Identifier "in" Expr Body "end" "loop" ;
 UntilStmt      = "loop" Body "until" Expr ;
 
 (* No condition anywhere. Something in the body has to end it -- a break, a yield,
-   or a throw -- and one with none of the three is PC0406, an opinion. *)
+   or a throw -- and one with none of the three is CM0406, an opinion. *)
 ForeverStmt    = "loop" Body "end" "loop" ;
 
 SwitchStmt     = "switch" Expr { CaseGroup } [ DefaultClause ] "end" "switch" ;
@@ -182,7 +182,7 @@ ExprStmt       = Expr [ "=" Expr ] ";" ;
 
 (* ---- Types -------------------------------------------------------------- *)
 
-(* Two "?" in a row parse, and are then refused (PC0252): an optional of an
+(* Two "?" in a row parse, and are then refused (CM0252): an optional of an
    optional describes nothing a program can act on, since nothing an optional
    offers sees past the first level. Kept in the grammar rather than excluded
    from it, because refusing it while checking is what lets the message explain
@@ -395,7 +395,7 @@ NewExpr        = "new" Identifier "(" [ ArgList ] ")" ;
    minus signs, because unary minus exists and "x--1" is a valid subtraction
    of negative one that must keep working however it is spaced. The parser
    recognizes the shape "operand -- <token that cannot begin an operand>",
-   as in "i--;", and reports that Profi-C has no decrement operator. "++"
+   as in "i--;", and reports that Compass has no decrement operator. "++"
    needs no such handling and is rejected while scanning, since there is no
    unary plus for the second sign to belong to.
 
@@ -447,7 +447,7 @@ NewExpr        = "new" Identifier "(" [ ArgList ] ")" ;
    beginning with "-" computes a value and discards it, so nothing useful
    is lost there either.
 
-   Both are rejected with PC0106, which names the rewrite rather than
+   Both are rejected with CM0106, which names the rewrite rather than
    merely reporting an unexpected token.
 
    Requiring parentheses around conditions would not fix ForStmt or

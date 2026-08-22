@@ -1,0 +1,6 @@
+# What a book is. Built on its own, and used by whoever wants books.
+
+project Books
+    source Book.cm
+    source Wording.cm
+end project

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Compass.Cli.Alias</RootNamespace>
+    <AssemblyName>cm</AssemblyName>
+    <Description>The cm alias for the compass command.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Compass.Cli\Compass.Cli.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,3 @@
+imports.cm(13,1): error CM0611: There is no file at 'nowhere.cm', which is looked for beside imports.cm.
+imports.cm(14,1): error CM0612: '../runtime/notes.txt' is not a .cm file, so it cannot be compiled with this one.
+imports.cm(15,1): error CM0611: There is no file at 'sideways/Missing.cm', which is looked for beside imports.cm.

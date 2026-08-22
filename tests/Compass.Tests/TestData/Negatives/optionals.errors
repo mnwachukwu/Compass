@@ -1,0 +1,8 @@
+optionals.cm(27,25): error CM0329: This is an integer?, which may be empty. Use 'HasValue()' to check, 'Or(...)' for a fallback, or 'Value()' to insist.
+optionals.cm(30,27): error CM0306: An Account? has no member named 'Describe'.
+optionals.cm(33,27): error CM0303: '+' is not defined for an integer? and an integer. Convert one side, or use a member.
+optionals.cm(37,31): error CM0306: An Account? has no member named 'balance'.
+optionals.cm(43,27): error CM0349: An integer? may hold nothing, so there is nothing to write for it. Say what to write instead with 'Or', or prove it holds a value and write that.
+optionals.cm(44,39): error CM0349: An integer? may hold nothing, so there is nothing to write for it. Say what to write instead with 'Or', or prove it holds a value and write that.
+optionals.cm(45,35): error CM0349: An integer? may hold nothing, so there is nothing to write for it. Say what to write instead with 'Or', or prove it holds a value and write that.
+optionals.cm(50,9): error CM0252: This is already optional, so the second '?' says nothing new. Write one '?'.

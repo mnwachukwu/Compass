@@ -1,0 +1,14 @@
+types.cm(21,5): error CM0119: 'let' works inside a function, where the value it holds is written beside it. A field is read far from here, so it says its type: 'integer inferred = ...'.
+types.cm(31,25): error CM0300: Cannot use a string where an integer is expected. Write 'ToInteger()', or 'Integer.Parse(...)'.
+types.cm(34,18): error CM0301: A fraction does not become a real on its own, because the result would surprise you. Write 'ToReal()' to ask for it.
+types.cm(38,19): error CM0303: '*' is not defined for a boolean and an integer. Convert one side, or use a member.
+types.cm(42,22): error CM0303: '<' is not defined for a Circle and a Circle. Convert one side, or use a member.
+types.cm(45,20): error CM0300: Cannot use a Shape where a Circle is expected. Nothing converts one to the other.
+types.cm(48,19): error CM0300: Cannot use an integer where a Model is expected. A value is not a Model; there is no boxing here.
+types.cm(51,24): error CM0305: The branches of an if expression must have the same type, and these are an integer and a string. Make them agree, or write an 'if' statement.
+types.cm(54,31): error CM0324: This divides by zero.
+types.cm(59,31): error CM0324: This divides by zero.
+types.cm(64,17): error CM0117: 'function' declares a function or makes one on the spot. To write the type of one, use 'delegate' — 'integer delegate(string)' takes a string and yields an integer.
+types.cm(68,9): error CM0116: 'Function' takes no parentheses. For a particular shape write 'delegate(...)', with a result before it if it has one, as in 'integer delegate(string)'.
+types.cm(68,36): error CM0300: Cannot use an integer delegate(integer) where a delegate(integer) is expected. Nothing converts one to the other.
+types.cm(75,44): error CM0347: An integer is a value, so asking whether two of them are the same object has no answer. Use '==' to compare what they hold.

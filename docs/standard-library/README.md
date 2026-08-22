@@ -1,4 +1,4 @@
-# The Profi-C standard library
+# The Compass standard library
 
 Everything a program can use without declaring it. Nothing here is imported, and nothing is
 installed: these members exist in every file, and the models live in the `Standard` namespace,
@@ -81,7 +81,7 @@ each.
 | `ArgumentException` | A value a member cannot work with |
 | `OverflowException` | A number grown too large to hold |
 | `IOException` | Anything that goes wrong with a file except its absence |
-| `RecursionTooDeepException` | Recursion with no base case — **and the one nothing catches**, since there is nothing useful to do about it. A `catch` naming it is reported (`PC0344`) |
+| `RecursionTooDeepException` | Recursion with no base case — **and the one nothing catches**, since there is nothing useful to do about it. A `catch` naming it is reported (`CM0344`) |
 
 ## Every member, by what it is on
 
@@ -93,7 +93,7 @@ them**, so a group can be read straight down without having to know what else ex
 *On* column stays wherever a group has more than one owner, since `Insert` is one idea answered by
 both a string and a set and reading them apart would hide that.
 
-- [The Profi-C standard library](#the-profi-c-standard-library)
+- [The Compass standard library](#the-compass-standard-library)
   - [Every type](#every-type)
     - [Types you write down](#types-you-write-down)
     - [Names you reach members through](#names-you-reach-members-through)
@@ -358,7 +358,7 @@ back:
 Substring(integer start, integer length) -> string
 ```
 
-Names like `start` are for reading, not for writing: **Profi-C has no named arguments**, so what
+Names like `start` are for reading, not for writing: **Compass has no named arguments**, so what
 matters is the order and the types. A member with `-> nothing` yields no value and cannot be used
 where one is expected.
 
@@ -402,9 +402,9 @@ you read one without proving it is there.
 
 **The library keeps .NET's names and .NET's shapes wherever it can.** `Substring`, `IndexOf`,
 `TrimStart`, `Math.Atan2`, `AddDays`, `CompareTo` and the format patterns are all the ones a
-reader will type next in C#. Where Profi-C differs it is because the language does: `Insert` on a
-string yields a new string because a Profi-C `string` cannot be changed, and a set's `Union`
-appends rather than merging because a Profi-C set keeps its order.
+reader will type next in C#. Where Compass differs it is because the language does: `Insert` on a
+string yields a new string because a Compass `string` cannot be changed, and a set's `Union`
+appends rather than merging because a Compass set keeps its order.
 
 Three members are the language's own rather than .NET's, and each page says so where it comes up:
 `Capitalize`, `Fraction.Create`, and a set's `Distinct` reading of what a "set" is.

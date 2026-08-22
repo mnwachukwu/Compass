@@ -1,9 +1,9 @@
 # Where to find things
 
-Profi-C's documentation is four documents and a folder. This page says what each is for and which
+Compass's documentation is four documents and a folder. This page says what each is for and which
 one holds the answer to what, so nothing has to be searched for twice.
 
-**Profi-C is an introductory language.** It aims to make concepts legible to a beginner while
+**Compass is an introductory language.** It aims to make concepts legible to a beginner while
 staying close enough to C# that what a student learns transfers. That single goal is behind most
 of what looks unusual here, and the [README](../README.md#what-it-is-for) says why.
 
@@ -12,9 +12,9 @@ of what looks unusual here, and the [README](../README.md#what-it-is-for) says w
 | Document | What it is | Read it when |
 |---|---|---|
 | [language-spec.md](language-spec.md) | The normative definition. Every rule the language has, with the diagnostic that enforces it | You need to know what a construct *means*, or what the compiler will say |
-| [side-by-side.md](side-by-side.md) | Every construct written both ways, Profi-C then C#, and three sections keeping score | You already write C# |
+| [side-by-side.md](side-by-side.md) | Every construct written both ways, Compass then C#, and three sections keeping score | You already write C# |
 | [standard-library/](standard-library/README.md) | Every type and every member the language provides, indexed by name | You want to know what you can call |
-| [grammar.ebnf](grammar.ebnf) | The surface syntax as productions | You are writing a tool that reads Profi-C |
+| [grammar.ebnf](grammar.ebnf) | The surface syntax as productions | You are writing a tool that reads Compass |
 
 The [samples](../samples) are all runnable and their output is recorded, so anything shown there
 is a program that works rather than a fragment.
@@ -24,7 +24,7 @@ is a program that works rather than a fragment.
 **The words of the language.** All 63 reserved words, what `@` does to one, and the words a C#
 author expects and will not find: [specification §2.1](language-spec.md#21-reserved-words). How
 many words that is beside C#'s, and why the difference is bigger than the numbers:
-[side-by-side §9](side-by-side.md#9-where-profi-c-does-it-better).
+[side-by-side §9](side-by-side.md#9-where-compass-does-it-better).
 
 **How a program is laid out.** Comments, identifiers, literals, and escapes:
 [specification §1](language-spec.md#1-lexical-structure).
@@ -56,25 +56,25 @@ compiler reports, with its severity and what it says:
 
 **Documenting code.** The `@summary:` labels, what the compiler checks about them, and why the `@`
 is not decoration: [specification §1.3](language-spec.md#13-comments), and
-[documenting.pc](../samples/documenting.pc) for a program that does it.
+[documenting.cm](../samples/documenting.cm) for a program that does it.
 
 **What can be thrown, and what a `catch` takes:**
 [specification §10](language-spec.md#10-exceptions).
 
-**Where a program starts, and what a project is.** Entry points, files, folders, `.pcp` projects,
+**Where a program starts, and what a project is.** Entry points, files, folders, `.cmp` projects,
 namespaces and `using`:
 [specification §12](language-spec.md#12-execution-and-entry-point).
 
 ## If you are coming from C#
 
 Read [side-by-side.md](side-by-side.md) rather than this page — it writes every construct out both
-ways and ends with three sections keeping score: what Profi-C does better, what C# does better, and
-what C# has that Profi-C has no form for at all. The third is the longest of them.
+ways and ends with three sections keeping score: what Compass does better, what C# does better, and
+what C# has that Compass has no form for at all. The third is the longest of them.
 
 Four differences to know before anything else, stated in
 [specification §0.4](language-spec.md#04-relationship-to-c):
 
-- **`yield` means return.** C# uses the word for iterators; Profi-C's has nothing to do with them.
+- **`yield` means return.** C# uses the word for iterators; Compass's has nothing to do with them.
 - **There is no `null`.** Optionals replace it, and reading one the compiler cannot prove present
   does not compile.
 - **`==` is deep by default** on models, sets, and optionals, comparing structurally rather than

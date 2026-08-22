@@ -172,7 +172,7 @@ Console.WriteLine(opened == new Date(2026, 1, 5)); # true
 ```
 
 **Only these four types order themselves.** A model a program declares has no order to be in, so
-`<` on two of them is refused (`PC0303`) — deriving one from their fields would make it mean
+`<` on two of them is refused (`CM0303`) — deriving one from their fields would make it mean
 whatever order the fields happened to be declared in.
 
 ## Writing one out, and reading one back

@@ -1,4 +1,4 @@
-# The Profi-C Language Specification
+# The Compass Language Specification
 
 **Version 1.0.0 (draft).**
 
@@ -9,8 +9,8 @@ that the specification never describes more than the compiler does.
 
 Everything described here is implemented and runs.
 
-Profi-C has two back ends. A tree-walking interpreter runs a program where it stands (`pc run`),
-and a CIL emitter writes an assembly the .NET runtime executes (`pc build`). Nothing in this
+Compass has two back ends. A tree-walking interpreter runs a program where it stands (`cm run`),
+and a CIL emitter writes an assembly the .NET runtime executes (`cm build`). Nothing in this
 document depends on which of the two runs a program, and where a rule is enforced — while
 checking or while running — is stated wherever it matters.
 
@@ -106,14 +106,14 @@ This document is the normative one: where they disagree, this is right.
   - [12.2 A name belongs to one type](#122-a-name-belongs-to-one-type)
   - [12.3 Namespaces](#123-namespaces)
 - [Appendix A. Diagnostics](#appendix-a-diagnostics) — every identifier the compiler reports
-  - [PC0000 to PC0099](#pc0000-to-pc0099)
-  - [PC0100 to PC0199](#pc0100-to-pc0199)
-  - [PC0200 to PC0299](#pc0200-to-pc0299)
-  - [PC0300 to PC0399](#pc0300-to-pc0399)
-  - [PC0400 to PC0499](#pc0400-to-pc0499)
-  - [PC0500 to PC0599](#pc0500-to-pc0599)
-  - [PC0600 to PC0699](#pc0600-to-pc0699)
-  - [PC9000 and up](#pc9000-and-up)
+  - [CM0000 to CM0099](#cm0000-to-cm0099)
+  - [CM0100 to CM0199](#cm0100-to-cm0199)
+  - [CM0200 to CM0299](#cm0200-to-cm0299)
+  - [CM0300 to CM0399](#cm0300-to-cm0399)
+  - [CM0400 to CM0499](#cm0400-to-cm0499)
+  - [CM0500 to CM0599](#cm0500-to-cm0599)
+  - [CM0600 to CM0699](#cm0600-to-cm0699)
+  - [CM9000 and up](#cm9000-and-up)
 
 ## 0. Overview
 
@@ -121,14 +121,14 @@ This document is the normative one: where they disagree, this is right.
 
 | | |
 |---|---|
-| Name | Profi-C |
-| Source file extension | `.pc` |
+| Name | Compass |
+| Source file extension | `.cm` |
 | Target | CIL, on `net10.0` |
 | Implementation language | C# |
 
 ### 0.2 Purpose
 
-Profi-C is an **introductory language**. Its goal is to make programming concepts legible to a
+Compass is an **introductory language**. Its goal is to make programming concepts legible to a
 beginner while staying faithful to the patterns a C# developer uses daily, so that what a
 student learns transfers rather than has to be unlearned.
 
@@ -152,7 +152,7 @@ type. A bare identifier reaches only locals and parameters.
 what it means without a glossary.
 
 **What the language borrows keeps its source spelling.** The library surface mirrors .NET:
-`Math.Sqrt` is `Math.Sqrt`, not `Mathematics.SquareRoot`. Anything Profi-C defines is spelled
+`Math.Sqrt` is `Math.Sqrt`, not `Mathematics.SquareRoot`. Anything Compass defines is spelled
 out; anything it borrows is written the way its source writes it, so a name a reader already
 knows is the name they type.
 
@@ -179,7 +179,7 @@ not something anyone should have to think about while learning what a loop is.
 
 ### 0.4 Relationship to C#
 
-Profi-C compiles to CIL and runs on the CLR, so it shares C#'s runtime, garbage collector,
+Compass compiles to CIL and runs on the CLR, so it shares C#'s runtime, garbage collector,
 and calling convention. It matches C# on single inheritance, explicit `virtual`/`override`,
 exceptions, overloading, reference semantics for classes, private-by-default members, and
 truncating integer division.
@@ -187,10 +187,10 @@ truncating integer division.
 The differences that matter most to a C# reader:
 
 - **`yield` means return.** This is the single most dangerous difference, since C# uses
-  `yield return` for iterators. In Profi-C it is an ordinary return statement.
+  `yield return` for iterators. In Compass it is an ordinary return statement.
 - **There is no `null`.** Optionals replace it, and access is strict. Null and .NET coexist
-  because null is translated at the boundary and never enters Profi-C's type system: every .NET
-  reference-typed return maps to `T?` unless it is documented as never absent, so what a Profi-C
+  because null is translated at the boundary and never enters Compass's type system: every .NET
+  reference-typed return maps to `T?` unless it is documented as never absent, so what a Compass
   program sees is an empty optional. The curated wrappers therefore already do what an automatic
   binder would do, and no signature changes when one arrives.
 - **`==` is deep by default** on models, sets, and optionals, comparing structurally with
@@ -203,7 +203,7 @@ The differences that matter most to a C# reader:
 
 ### 0.5 Conformance and terminology
 
-An **implementation** is anything that reads Profi-C source: the compiler in this repository,
+An **implementation** is anything that reads Compass source: the compiler in this repository,
 the interpreter beside it, an editor's language server, or something written by someone else
 entirely. A **conforming** implementation is one that obeys every rule stated here.
 
@@ -221,7 +221,7 @@ Every other sentence is explanation and requires nothing. Where explanation and 
 to disagree, the rule governs and the explanation is at fault.
 
 A **diagnostic** is a message a conforming implementation produces about a source program.
-Diagnostics carry an identifier of the form `PC` followed by four digits, a severity, and a
+Diagnostics carry an identifier of the form `CM` followed by four digits, a severity, and a
 source span. Three severities exist, and what separates them is how much is known about what
 the program means. An **error** is reported where the meaning is genuinely unpredictable, and
 is the only severity that prevents compilation. A **warning** is reported where the meaning is
@@ -250,12 +250,12 @@ never absent:
 ```
 # ignore warning
 # ignore opinion
-# ignore PC0340
+# ignore CM0340
 ```
 
 Each covers the next line carrying code below it, passing over blank lines and further
 comments, and covers a diagnostic whose span begins on that line. So a directive above a
-`switch` covers `PC0337` however far the switch runs. Each also takes `in file`, which widens
+`switch` covers `CM0337` however far the switch runs. Each also takes `in file`, which widens
 it to every line of the file it is written in, wherever in that file it sits:
 
 ```
@@ -267,7 +267,7 @@ A project file widens it once more, over every file the project builds
 
 ```text
 project Library
-    source Program.pc
+    source Program.cm
     ignore opinion
 end project
 ```
@@ -279,9 +279,9 @@ too, so a directive may say why it is there. A `##` block is always prose, since
 inside one would not be visible where it applies.
 
 Naming an identifier asserts that a particular diagnostic is there, so one that reaches nothing
-reporting it is itself reported (`PC0024`). Naming a severity claims nothing, and stays silent
-where there is nothing to silence. An identifier no diagnostic carries is `PC0022`; one naming
-a diagnostic that stops compilation is `PC0023`, which exists so that a reader who silences an
+reporting it is itself reported (`CM0024`). Naming a severity claims nothing, and stays silent
+where there is nothing to silence. An identifier no diagnostic carries is `CM0022`; one naming
+a diagnostic that stops compilation is `CM0023`, which exists so that a reader who silences an
 error and meets it anyway is told why rather than concluding the mechanism is broken.
 
 **A comment may document a declaration**, and one that does opens with `@summary:`. Both comment
@@ -316,8 +316,8 @@ reads a label only at the start of a paragraph refuses labels written on consecu
 one that also accepts a line following a label refuses the label after a wrapped one.
 
 A conforming implementation holds documentation to what it documents. A comment above something
-that cannot carry one is `PC0244`; a parameter documented but not taken is `PC0245`; `@yields:`
-on a function yielding nothing is `PC0246`; a label written twice is `PC0247`. **A missing doc
+that cannot carry one is `CM0244`; a parameter documented but not taken is `CM0245`; `@yields:`
+on a function yielding nothing is `CM0246`; a label written twice is `CM0247`. **A missing doc
 is never reported**, since requiring one everywhere is how documentation becomes a tax rather
 than a help.
 
@@ -350,7 +350,7 @@ converts to `Model`, in this or any later version. See section 3.
 
 ### 1.1 Source files
 
-A source file is Unicode text. The conventional extension is `.pc`.
+A source file is Unicode text. The conventional extension is `.cm`.
 
 A **line terminator** is a carriage return followed by a line feed, or a line feed alone.
 Each counts as one terminator. A carriage return not followed by a line feed is whitespace
@@ -362,7 +362,7 @@ column by one.
 ### 1.2 Whitespace
 
 Space, tab, carriage return, line feed, and any other Unicode whitespace character separate
-tokens and are otherwise insignificant. Profi-C is not layout-sensitive: indentation carries
+tokens and are otherwise insignificant. Compass is not layout-sensitive: indentation carries
 no meaning, and no construct is terminated by a line break.
 
 ### 1.3 Comments
@@ -419,7 +419,7 @@ decimal digits, and underscores. So `count`, `_count`, `max_score`, `item2`, and
 all identifiers.
 
 **A digit cannot begin one**, and a name written against a number is reported as the single
-mistake it is (`PC0021`) rather than read as a number beside a name: nothing in the language
+mistake it is (`CM0021`) rather than read as a number beside a name: nothing in the language
 puts two values side by side, so `1each` and `40var` have no reading in which they are two
 things.
 
@@ -452,7 +452,7 @@ insignificant.
 
 A `0x` or `0b` prefix writes the same whole number in **hexadecimal or binary**: `0xFF` and
 `0b1111_1111` are both 255. Case is not significant in either the prefix or the digits, and a
-digit outside the base is reported (`PC0018`) rather than ending the number early. There is no
+digit outside the base is reported (`CM0018`) rather than ending the number early. There is no
 prefix for a real, since a base names how digits are written and a point is not one of them.
 
 The pairing is with `Format`, which already prints those bases: `n.Format("X")` gives `FF` and
@@ -469,7 +469,7 @@ rather than a count, so a literal carrying one is a real whether or not a point 
 
 **An underscore may separate digits**, in any literal and any base, and means nothing to the
 value: `1_000_000`, `0xFF_FF`, `3.141_592`, `1_500|1_000`. It has to sit between digits, since
-grouping is all it does, so `1_` is reported (`PC0020`) — and a name may still begin with one,
+grouping is all it does, so `1_` is reported (`CM0020`) — and a name may still begin with one,
 which is why `_1` is a name and not a number.
 
 **Fraction literals** are digits, a vertical bar, then digits, and denote an exact rational:
@@ -509,10 +509,10 @@ Two lengths that do not match are reported:
 
 - **A run longer than the delimiter** ends the block, with its last quotes closing and the rest
   held: `"""He said "hi""""` is `He said "hi"`. That is almost always what was meant, so it is a
-  warning (`PC0015`) rather than an error.
+  warning (`CM0015`) rather than an error.
 - **A closing run shorter than the delimiter** is text by the rule above, so the block does not
   end there and runs on to consume the rest of the file. The run that was meant as the closer is
-  reported (`PC0016`), rather than the opening quotes pages earlier.
+  reported (`CM0016`), rather than the opening quotes pages earlier.
 
 A block whose text ends in a quotation mark has no single-line form, since that quote sits
 against the closing run and lengthens it whatever the delimiter's length. Putting the closing
@@ -554,7 +554,7 @@ whole to the closing braces:
 
 The patterns are .NET's, unchanged, so what is learned here transfers. A pattern may only be
 given where the value answers `Format` — the measured and the dated types do, and asking it of
-anything else is `PC0341`. The same patterns are available without a string around them,
+anything else is `CM0341`. The same patterns are available without a string around them,
 through `Format` itself.
 
 **An interpolated string is a `string`**, whatever it holds, and means exactly the
@@ -562,7 +562,7 @@ concatenation it looks like: each hole becomes `ToString()`, or `Format(pattern)
 named, and the pieces are joined with `+`.
 
 **So a hole must hold something with text**, which is the same requirement the join it becomes
-already has. An optional answers no `ToString()`, so an optional in a hole is `PC0349` — as it
+already has. An optional answers no `ToString()`, so an optional in a hole is `CM0349` — as it
 is joined to a string, or written out with `Console.Write`. Say what to write with `Or`, or
 prove presence and write the value.
 
@@ -599,7 +599,7 @@ The set matches C#, so an escape a student learns here works unchanged there.
 
 ### 2.1 Reserved words
 
-Profi-C has **63** reserved words. A name may take one back by writing `@` in front of it —
+Compass has **63** reserved words. A name may take one back by writing `@` in front of it —
 `@end`, `@each` — which is the only place a name may begin with something other than a letter.
 
 ```words
@@ -627,9 +627,9 @@ is no `null`; and nothing the language defines is abbreviated — `enumeration` 
 **Every one of the 63 is reserved everywhere.** C# has a second
 kind: `value`, `var`, `record`, `await` and forty-odd others are keywords in one position and
 ordinary names in every other, so whether a word is reserved there depends on where it sits.
-Profi-C has none of those, and `@` takes any of the 63 back as a name — one rule, written at the
+Compass has none of those, and `@` takes any of the 63 back as a name — one rule, written at the
 point it applies. The
-[comparison with C#](side-by-side.md#9-where-profi-c-does-it-better) counts both languages.
+[comparison with C#](side-by-side.md#9-where-compass-does-it-better) counts both languages.
 
 ### 2.2 Operators and punctuation
 
@@ -649,7 +649,7 @@ fraction literal. `^` raises to a power.
 
 **There is no `=>`.** A lambda's body follows `yield`, the word every other function uses to
 say what it produces, so `(integer n) yield n + 1` is read with vocabulary already learned.
-Writing `=>` or `->` reports `PC0006` and names the word to use instead.
+Writing `=>` or `->` reports `CM0006` and names the word to use instead.
 
 **`^` is exponentiation, not exclusive-or.** In C# the same symbol is a bitwise operation,
 where `10 ^ 2` evaluates to 8, so the meaning does not carry across — the operation it names
@@ -664,7 +664,7 @@ increment or decrement (`++`, `--`). The role of the ternary is filled by the
 `if ... then ... else` expression; the others are written out in full.
 
 Two of these absences are diagnosed at different stages.
-`++` and the compound assignments have no possible reading in Profi-C — there is no unary
+`++` and the compound assignments have no possible reading in Compass — there is no unary
 `+`, and `=` can never follow an arithmetic operator — so they are rejected while scanning.
 `--` is different: unary `-` *does* exist, so `x--1` is a well-formed subtraction of negative
 one and **must remain valid however it is spaced**. Distinguishing that from an intended
@@ -678,7 +678,7 @@ zero-width position just past the final character.
 
 ### 2.4 Recovery
 
-Scanning never stops at the first error. Each lexical diagnostic — `PC0001` through `PC0021`,
+Scanning never stops at the first error. Each lexical diagnostic — `CM0001` through `CM0021`,
 listed in [Appendix A](#appendix-a-diagnostics) — has a defined recovery, so a file containing
 several mistakes reports all of them in one pass and still yields a usable token stream.
 
@@ -689,8 +689,8 @@ quote almost always means a missing quote on that line, and scanning to the end 
 would turn one real error into a hundred spurious ones. A partial token is emitted so the
 parser keeps its footing.
 
-**A C# operator with no reading here stands in for the Profi-C one.** `x += 1` scans as
-`x = 1` and reports `PC0006`; `=>` before a lambda's body scans as `yield`. The statement
+**A C# operator with no reading here stands in for the Compass one.** `x += 1` scans as
+`x = 1` and reports `CM0006`; `=>` before a lambda's body scans as `yield`. The statement
 keeps its shape, so the parser reports nothing further and the one message carries the
 rewrite.
 
@@ -758,8 +758,8 @@ a `real` form and a `float` form, so a whole number widening to both would leave
 with two readings and no way to choose.
 
 A `real` becoming a `fraction` is exact but can outgrow one, since a fraction's parts are whole
-numbers. Written down, that is `PC0346`; arriving in a variable, it stops when it runs — the
-same division `PC0324` draws around dividing by zero.
+numbers. Written down, that is `CM0346`; arriving in a variable, it stops when it runs — the
+same division `CM0324` draws around dividing by zero.
 
 ### 3.2 The two suffixes
 
@@ -775,7 +775,7 @@ Node[]?       an optional set
 `Node?[]` and `Node[]?` are different types and both are legal. Suffixes read left to right,
 so the one written last is the outermost.
 
-A **set** is Profi-C's one collection. It is ordered, indexed from zero, grows as you insert,
+A **set** is Compass's one collection. It is ordered, indexed from zero, grows as you insert,
 and holds one type. There is no array/list distinction to learn: `integer[] scores = {};`
 then `scores.Insert(60);`. [§11](#11-the-standard-library) lists its members.
 
@@ -803,7 +803,7 @@ grown inside the grid it came from. Squareness is a property of how a particular
 rather than of its type, so anything walking a grid must ask each row its own length rather than
 measuring one and assuming. A fixed-shape kind, indexed `grid[row, column]`, is deferred.
 
-`samples/matrices.pc` works through both, and then through what a grid of numbers is for.
+`samples/matrices.cm` works through both, and then through what a grid of numbers is for.
 
 ### 3.3 Function types
 
@@ -821,7 +821,7 @@ delegate(string)[]                    a set of them
 
 **Two words, two jobs.** `function` declares a function or makes one on the spot; `delegate`
 writes the type of one and does nothing else. Writing `function` where a type belongs is
-`PC0117`, which names the fix.
+`CM0117`, which names the fix.
 
 The split is what lets these nest. A result may itself be a function type, and since only
 `delegate` may follow a result, each one plainly begins another type rather than a
@@ -895,7 +895,7 @@ A conversion is **automatic** where no information is lost and no surprise is po
 
 Note that the two spellings do different jobs. **`as` follows inheritance**, so it takes a
 model to a descendant and yields an optional, because the value may not be one. Naming a
-value type after `as` is rejected by `PC0335`: value types have no inheritance for a cast to
+value type after `as` is rejected by `CM0335`: value types have no inheritance for a cast to
 follow, so the question is not one about identity at all. **A conversion between two value
 types is a member instead** — `ToReal`, `ToFraction`, `ToInteger` — which cannot fail and so
 yields a plain value rather than an optional. An enumeration is the exception in the other
@@ -990,16 +990,16 @@ rather than written, and it may be assigned again afterwards.
 
 **A name may not be reused while an earlier one is still visible.** A local, a parameter, a
 loop's binding, a lambda's parameter, or a caught exception may not take a name already in
-use by a scope around it (`PC0237`):
+use by a scope around it (`CM0237`):
 
 ```text
 let value = 1;
 begin
-    let value = 2;          PC0237: 'value' is already the name of something here
+    let value = 2;          CM0237: 'value' is already the name of something here
 end
 
 let items = {1, 2};
-let show = (integer items) yield items;    PC0237, for the same reason
+let show = (integer items) yield items;    CM0237, for the same reason
 ```
 
 Two scopes that cannot see one another are not in conflict, so the same name may be used in
@@ -1054,20 +1054,20 @@ anything.
 
 ```text
 loop each _ in numbers
-    loop for _ = 1 to 2         neither PC0202 nor PC0237 — nothing was bound
+    loop for _ = 1 to 2         neither CM0202 nor CM0237 — nothing was bound
     end loop
 end loop
 ```
 
-**Nowhere else takes one** (`PC0256`), because nowhere else is a name obliged. Any expression is
+**Nowhere else takes one** (`CM0256`), because nowhere else is a name obliged. Any expression is
 already a statement, so a value is dropped by writing it on its own. A throwaway written to drop
 the same value adds nothing:
 
 ```text
 Announce();                     drops what it yields
-let _ = Announce();             PC0256: the same thing, one line longer
-_ = Announce();                 PC0256, for the same reason
-integer _;                      PC0256 — and this one does nothing at all
+let _ = Announce();             CM0256: the same thing, one line longer
+_ = Announce();                 CM0256, for the same reason
+integer _;                      CM0256 — and this one does nothing at all
 ```
 
 That reasoning reaches a shape the language does not have yet. Destructuring several values at
@@ -1075,11 +1075,11 @@ once would be a fourth place a name is obliged, so a throwaway would belong ther
 not wanted — but not for *all* of them, since a left side that keeps nothing is a call written
 the long way round.
 
-Because it binds nothing, **it cannot be read** (`PC0254`), and it cannot name anything that is
+Because it binds nothing, **it cannot be read** (`CM0254`), and it cannot name anything that is
 reached by writing its name — a field, a function, a type, an enumeration member, a namespace
-(`PC0255`).
+(`CM0255`).
 
-**A parameter is not a place for one** (`PC0257`), and it is the one receiving position that is
+**A parameter is not a place for one** (`CM0257`), and it is the one receiving position that is
 not. Every other is invisible outside the body it sits in; a parameter is part of a signature a
 caller reads to work out what to pass, and is shown at every call. A function with no use for an
 argument should not ask for one.
@@ -1097,13 +1097,13 @@ shared constant real Pi = 3.14159;
 ```
 
 A constant requires an explicit type — `let` and `constant` do not combine — and an
-initializer the compiler can fold (`PC0320`, `PC0321`). Assigning to one afterwards is
-`PC0205`.
+initializer the compiler can fold (`CM0320`, `CM0321`). Assigning to one afterwards is
+`CM0205`.
 
 The permitted types are `integer`, `real`, `character`, `boolean`, `fraction`, `string`,
 enumerations, and structures whose fields cannot reach a model or a set. Every one of those
 is a type where an unchanging binding already means an unchanging value, so `constant` is
-deep on everything it accepts rather than shallow. Models and sets are rejected by `PC0322`
+deep on everything it accepts rather than shallow. Models and sets are rejected by `CM0322`
 for exactly that reason: `config.node.value = 5` would otherwise change something through a
 constant.
 
@@ -1123,10 +1123,10 @@ end model
 
 There is no `private` keyword, because private is what you get by writing nothing. `protected`,
 `internal`, and `public` each widen that, and only one of them may be written on a declaration
-(`PC0219`). `shared` is what other languages call `static`: there is one of the member for the
+(`CM0219`). `shared` is what other languages call `static`: there is one of the member for the
 whole program rather than one per instance, and it says nothing about who may reach it.
 
-Reaching a member from further away than it reaches is an error (`PC0339`), reported where the
+Reaching a member from further away than it reaches is an error (`CM0339`), reported where the
 member is named. See [§4.6](#46-visibility) for what each word means and where a project comes from.
 
 ### 4.4 Functions
@@ -1157,10 +1157,10 @@ end model
 ```
 
 Modifiers are `public`, `protected`, `internal`, `shared`, and `virtual` or `override`. [§7.2](#72-virtual-dispatch)
-covers the last two. **A function that declares a result must reach a `yield` on every path** — `PC0404`
+covers the last two. **A function that declares a result must reach a `yield` on every path** — `CM0404`
 — so a function cannot promise an integer and fall off the end without one. A constructor
-must leave every field assigned (`PC0402`), and **a `shared` field is given its value where it is
-declared** (`PC0408`) — the same obligation arriving in the only place it can, since a shared
+must leave every field assigned (`CM0402`), and **a `shared` field is given its value where it is
+declared** (`CM0408`) — the same obligation arriving in the only place it can, since a shared
 field belongs to the type rather than to any instance and no constructor runs that could fill it
 in.
 
@@ -1180,11 +1180,11 @@ references contradict that.
 own line onward, so a call may be written above it and two of them may call each other. Where a
 declaration sits says where to read it rather than when it exists — the same as for a member.
 
-What that costs is paid by `PC0405`. The locals such a function names come into being in order,
+What that costs is paid by `CM0405`. The locals such a function names come into being in order,
 so calling one from above a local it uses would read a place holding nothing yet:
 
 ```text
-Console.WriteLine(Doubled());       PC0405: 'Doubled' uses 'total', which is not ready
+Console.WriteLine(Doubled());       CM0405: 'Doubled' uses 'total', which is not ready
 integer total = 7;
 
 integer function Doubled()
@@ -1198,18 +1198,18 @@ calling it. Move the call below what it needs, or move what it needs above the c
 ### 4.5 Definite assignment
 
 **A variable must be assigned before it is read**, and the compiler proves it rather than
-zeroing anything. Two diagnostics say it, because the two cases read differently: `PC0400`
-where no path assigns it, and `PC0401` where only some do.
+zeroing anything. Two diagnostics say it, because the two cases read differently: `CM0400`
+where no path assigns it, and `CM0401` where only some do.
 
 ```text
 integer n;
-Console.WriteLine(n);       PC0400: n was never assigned
+Console.WriteLine(n);       CM0400: n was never assigned
 
 integer m;
 if ready
     m = 1;
 end if
-Console.WriteLine(m);       PC0401: only one path assigns m
+Console.WriteLine(m);       CM0401: only one path assigns m
 ```
 
 The proof runs forward through the program and joins at every merge point, so a variable is
@@ -1217,23 +1217,23 @@ assigned after an `if` only when *both* branches assign it. This is the same ana
 Java run, and it is here for the same reason: an uninitialized read is a bug that a default
 value hides rather than prevents.
 
-The same pass reports code nothing can reach, as a warning (`PC0403`).
+The same pass reports code nothing can reach, as a warning (`CM0403`).
 
-**A local nothing ever reads is reported too** (`PC0409`), as a warning. Reading is what
+**A local nothing ever reads is reported too** (`CM0409`), as a warning. Reading is what
 counts: a local assigned twice and read never has done as little as one nothing mentions again.
 
 ```text
-integer forgotten = Total();    PC0409: nothing reads forgotten
+integer forgotten = Total();    CM0409: nothing reads forgotten
 
 integer written = 1;
-written = 2;                    PC0409 as well — assigning is not reading
+written = 2;                    CM0409 as well — assigning is not reading
 ```
 
 It is a warning rather than a refusal because the program runs either way. It is reported because
 a result worked out and then forgotten is indistinguishable from one meant to be dropped, and
 [a throwaway](#41-variables) is how a program says which it is. `_` is therefore exempt.
 
-**A private member nothing reaches is reported the same way** (`PC0410`), for fields and
+**A private member nothing reaches is reported the same way** (`CM0410`), for fields and
 functions alike. Private is the only visibility this can be asked about: a private member is
 seen by its declaring type and no further, so the compilation holding that type holds every use
 it can ever have. Anything wider is reachable from code that is not here, and silence about it
@@ -1243,14 +1243,14 @@ Three are left out, because none of them is reached by writing its name: a const
 answers to `new`; an overridable function, which answers to whatever the value turns out to be;
 and the `Main` a program starts at.
 
-**A statement that does nothing whatever is reported too** (`PC0411`). A statement keeps nothing,
+**A statement that does nothing whatever is reported too** (`CM0411`). A statement keeps nothing,
 which is how a value is dropped on purpose — but where the value settles while compiling, or is
 a bare name, working it out cannot do anything either:
 
 ```text
-1 + 2;                          PC0411: nothing happens
-"hello";                        PC0411, the same
-count;                          PC0411, the same
+1 + 2;                          CM0411: nothing happens
+"hello";                        CM0411, the same
+count;                          CM0411, the same
 ```
 
 **Arithmetic in general is not one of these**, because arithmetic is checked. Written on its own,
@@ -1258,7 +1258,7 @@ count;                          PC0411, the same
 program may be written to do exactly that. So the test is what the compiler can settle, not what
 the line looks like.
 
-**Where the statement is a call that yields something, only the answer goes unheld** (`PC0412`),
+**Where the statement is a call that yields something, only the answer goes unheld** (`CM0412`),
 and that is an opinion rather than a warning, since the call still runs. It points at the
 function: one that both acts and answers, called for only half of that, is usually two functions.
 Where the function cannot be split, holding the value is the other fix — `Directory.Delete`
@@ -1287,15 +1287,15 @@ type's owner is its project, so silence means internal. Nothing has to be memori
 There is no `private` keyword: a member with no visibility word is private. Writing `internal` on
 a type is legal and states what silence already says.
 
-`protected` may not be written on a type (`PC0220`). It means "and anything extending the type
+`protected` may not be written on a type (`CM0220`). It means "and anything extending the type
 that declares this", which is a sentence about a member; a type has no declaring type, so the
 word has nothing to name.
 
-Reaching further than a declaration reaches is an error — `PC0339` for a member, `PC0221` for a
+Reaching further than a declaration reaches is an error — `CM0339` for a member, `CM0221` for a
 type — reported where the name is written. A constructor is a member like any other, so a
 private one is how a type says it makes its own instances.
 
-**Where a project comes from.** A project is a `.pcp` file and the files it lists ([§12.1](#121-what-a-compilation-is-made-of)). A
+**Where a project comes from.** A project is a `.cmp` file and the files it lists ([§12.1](#121-what-a-compilation-is-made-of)). A
 compilation not divided into projects is **one project**, so `internal` reaches everything in it
 and the
 rule costs a single-file program nothing. Projects begin to matter once one references another,
@@ -1347,7 +1347,7 @@ operator.
 ### 5.2 Operators
 
 `+` `-` `*` `/` `%` are arithmetic. `/` on two integers truncates toward zero, so `7 / 2` is
-`3` and `-7 / 2` is `-3`. Dividing by a literal zero is rejected while compiling (`PC0324`);
+`3` and `-7 / 2` is `-3`. Dividing by a literal zero is rejected while compiling (`CM0324`);
 dividing by a variable that turns out to be zero throws `DivideByZeroException`.
 
 **A `float` is exempt from both.** Dividing one by zero is defined rather than mistaken: it
@@ -1358,7 +1358,7 @@ the one type unable to ask. C# draws the line in the same place — `int` and `d
 
 `+` also joins strings, and converts the other side when one side is a string.
 
-`and` and `or` are the words; `&&` and `||` report `PC0006` and name the spelling to use.
+`and` and `or` are the words; `&&` and `||` report `CM0006` and name the spelling to use.
 Both short-circuit. `not` is the word for `!`.
 
 **There is no compound assignment, no increment, and no decrement.** `x += 1`, `x++`, and
@@ -1383,17 +1383,17 @@ flags shiftright 2          every bit two places down
 punctuation for the rest would have been the only symbol operators in a language that spells
 `and`, `or` and `not`. So `bitwise` qualifies the two words that already mean something.
 Nothing else claims `xor`, `shiftleft` or `shiftright`, so those stand alone, and a word after
-`bitwise` that is not `and` or `or` is reported (`PC0118`).
+`bitwise` that is not `and` or `or` is reported (`CM0118`).
 
 The three sit on three levels, in C#'s order among themselves — `or` loosest, then `xor`, then
 `and` — so `a bitwise or b bitwise and c` groups as `a bitwise or (b bitwise and c)`. A shift
 binds tighter than a comparison and looser than arithmetic.
 
-**Two booleans are refused** (`PC0342`) rather than treated as one bit each: `a != b` already
+**Two booleans are refused** (`CM0342`) rather than treated as one bit each: `a != b` already
 asks whether exactly one of them holds, and the language keeps one spelling for one idea. This
 is a deliberate divergence from C#, whose `^` covers both.
 
-**A shift of fewer than zero places, or of 64 or more, is an error** (`PC0343`) — an integer
+**A shift of fewer than zero places, or of 64 or more, is an error** (`CM0343`) — an integer
 holds 64 bits and a shift past all of them has nothing left to move. A literal amount is caught
 while compiling; one that arrives in a variable raises `ArgumentException`. C# folds the amount
 into range instead, so `x << 64` means `x << 0` there, with nothing reported.
@@ -1438,7 +1438,7 @@ a set of shapes may be written as the several kinds of shape it holds, and
 This is the same principle as C# array initializers. The element type is never inferred from
 a common ancestor: two unrelated models share only `Model`, which no value type converts to.
 
-`let xs = {};` is rejected (`PC0313`): an empty literal with nothing to take a type from
+`let xs = {};` is rejected (`CM0313`): an empty literal with nothing to take a type from
 names no type at all.
 
 ### 5.5 `is` and `as`
@@ -1458,8 +1458,8 @@ Both take a type name on the right rather than an expression, and both sit at re
 precedence, matching C#.
 
 Where the answer is fixed while compiling, the compiler says so rather than letting the test
-run: `PC0334` for a test that is always true, `PC0327` for one that never can be, and
-`PC0335` for a cast naming a value type, which has no inheritance for a cast to follow.
+run: `CM0334` for a test that is always true, `CM0327` for one that never can be, and
+`CM0335` for a cast naming a value type, which has no inheritance for a cast to follow.
 
 ### 5.6 The `if` expression
 
@@ -1470,7 +1470,7 @@ let label = if score > 50 then "pass" else "fail";
 ```
 
 The `else` is required — an expression must produce something on every path — and both
-branches must agree on a type. This is what Profi-C has instead of a ternary operator, and it
+branches must agree on a type. This is what Compass has instead of a ternary operator, and it
 is spelled with the same three words the statement uses.
 
 ### 5.7 Other primary expressions
@@ -1487,7 +1487,7 @@ removes the whole family of bugs where `=` was typed for `==`.
 
 **Every construct closes with `end` and the word that opened it** — `end if`, `end loop`,
 `end function`, `end model`. The parser records what opened and rejects a mismatched closer by
-naming both (`PC0104`), so a misplaced `end` is caught where it is written rather than at the
+naming both (`CM0104`), so a misplaced `end` is caught where it is written rather than at the
 end of the file.
 
 **One construct is closed by something other than `end`.** A `loop` with no qualifier is closed
@@ -1538,15 +1538,15 @@ switch suit
 end switch
 ```
 
-A label must be a constant (`PC0325`) and no two may be the same (`PC0326`). The value being
-switched on must be one a case can name (`PC0315`).
+A label must be a constant (`CM0325`) and no two may be the same (`CM0326`). The value being
+switched on must be one a case can name (`CM0315`).
 
 A label may be written out or may name a `constant`, since a `constant` is a value known while
 compiling and that is what a label requires. Naming one puts the reason for the number beside
 the number.
 
 **A `switch` over an enumeration that leaves members out and writes no `default` is a
-warning** (`PC0337`), naming the ones with no case. This is what makes adding a member to an
+warning** (`CM0337`), naming the ones with no case. This is what makes adding a member to an
 enumeration safe: every switch that has to change says so, at the place it has to change,
 rather than the new member falling through all of them unreported.
 
@@ -1583,12 +1583,12 @@ leave to remembering whether `<` or `<=` was written.
 counting is done with integers, so `loop for i = 1 to 10` has no type to write and writing one
 is an error; a `loop each` takes its element's type from the sequence. Both are fixed by the
 construct rather than inferred from a value, which is why neither needs `let`. A range loop's
-bounds and step must themselves be integers (`PC0317`), and its counter cannot be assigned to
-inside the loop (`PC0206`).
+bounds and step must themselves be integers (`CM0317`), and its counter cannot be assigned to
+inside the loop (`CM0206`).
 
 **A range loop that cannot work is reported where every part of it is known while compiling.** A
-step of zero never advances, so the loop runs forever (`PC0413`); a step carrying the counter away
-from its bound means the body never runs at all (`PC0414`), as does a bound already reached where
+step of zero never advances, so the loop runs forever (`CM0413`); a step carrying the counter away
+from its bound means the body never runs at all (`CM0414`), as does a bound already reached where
 `until` says to stop before it. Neither stops a build: each names exact behavior rather than the
 absence of any, which is what separates them from dividing by zero. Where any of the three is
 worked out while the program runs, nothing is said — a loop counting a number of times somebody
@@ -1608,11 +1608,11 @@ reason to stop is not a question that can be asked at the top or the bottom but 
 happens partway through, rather than as a condition that is always true.
 
 Something inside still has to end it — a `break`, a `yield`, or a `throw`. One with none of the
-three is `PC0406`, an **opinion** rather than an error: a program meant to run until stopped from
+three is `CM0406`, an **opinion** rather than an error: a program meant to run until stopped from
 outside is legitimate, and the language cannot tell the two apart.
 
 **The opinion suppresses nothing.** A function that yields a value and holds a loop nothing can
-end still gets `PC0404`, because that is not a question about the loop — it is a function
+end still gets `CM0404`, because that is not a question about the loop — it is a function
 promising a result and having no path that produces one. Both are reported, and they say
 different things.
 
@@ -1638,21 +1638,21 @@ A bound that moves the other way never ends the loop, which is allowed and is th
 
 The step is read at the same moment as the bound, so one turn reads the header once: whatever
 decided that this turn runs is what advances to the next. Only the counter is out of reach —
-it belongs to the loop and cannot be assigned to (`PC0206`).
+it belongs to the loop and cannot be assigned to (`CM0206`).
 
 This matches a C-style `for`, whose condition and increment are both live:
 `for (int i = 0; i < x; i++) x++;` never finishes there either.
 
 **A `loop each` takes its sequence as it stands.** It names a sequence rather than a bound, so
 its length is read once, when the loop begins. Modifying the sequence inside its own loop is
-refused (`PC0243`) rather than left to mean something subtle.
+refused (`CM0243`) rather than left to mean something subtle.
 
 **A loop variable is fresh on every turn.** A function made inside a loop closes over that
 turn's variable, so three functions made in three turns report three values. In a language where
 the loop variable is shared, all three would report the last value.
 
 `break` leaves the innermost loop and `continue` goes to its next turn. Neither may appear
-outside one, and writing one where there is no loop is refused (`PC0407`) rather than given a
+outside one, and writing one where there is no loop is refused (`CM0407`) rather than given a
 meaning it does not have.
 
 **A `switch` is not a loop, and neither word notices it.** A switch runs one arm and stops, so
@@ -1672,7 +1672,7 @@ end loop
 
 This is the one place the language deliberately reads differently from C#, where a `break` is
 required at the end of every case and ends the switch. It is required there because a case falls
-through into the next one without it; a Profi-C case never does, so the word was free to keep the
+through into the next one without it; a Compass case never does, so the word was free to keep the
 single meaning it has everywhere else, so a `break` written at the end of a case leaves the
 enclosing loop. A `break` with no loop around it at all is refused rather than given a meaning.
 
@@ -1737,14 +1737,14 @@ constructing.
 
 **A parent is finished before a child begins**, which fixes three things about construction:
 
-- **`base(...)` is the first statement in a constructor** (`PC0248`). Statements above it would
+- **`base(...)` is the first statement in a constructor** (`CM0248`). Statements above it would
   read the parent's fields before the parent had decided what they hold.
 - **A constructor reaches its parent's whether or not it says so.** Where nothing is written, the
   one that takes nothing is used — so `base()` with no arguments changes nothing about what runs.
-  Where the parent has nothing to choose between, writing it anyway is an opinion (`PC0251`)
+  Where the parent has nothing to choose between, writing it anyway is an opinion (`CM0251`)
   rather than a mistake; where the parent declares several constructors, `base()` says which one
   builds it and nothing is reported.
-- **A constructor must be able to reach one** (`PC0250`). Where the parent declares constructors
+- **A constructor must be able to reach one** (`CM0250`). Where the parent declares constructors
   and none of them takes nothing, the child has to write `base(...)`, since only the child knows
   what to pass. A parent that declares no constructor takes nothing, so nothing is required.
 - **Field initializers run before any constructor body**, nearest type first: a child's starting
@@ -1752,7 +1752,7 @@ constructing.
   sets ran first is observable only through a side effect, and the order is specified rather than
   left to the implementation.
 
-**`this` is not available in a field's starting value** (`PC0249`). Nothing is built yet — the
+**`this` is not available in a field's starting value** (`CM0249`). Nothing is built yet — the
 fields hold nothing until their own initializers have run — so a name reached through `this`
 would answer with whatever it happened to hold, and which fields had run would depend on the
 order they were written in. A field whose value depends on another belongs in a constructor.
@@ -1772,13 +1772,13 @@ end model
 It closes no block, so it takes no `end function`, and it is asked for no result here — that
 is the obligation of whatever writes it. Four rules follow, each with its own diagnostic:
 
-- Only an **abstract model** may carry one (`PC0240`). An instance of a model that could be
+- Only an **abstract model** may carry one (`CM0240`). An instance of a model that could be
   constructed would reach a function with no body.
 - A model that **can** be constructed must write every function still open above it
-  (`PC0241`), reported once on the model and naming each. An abstract descendant passes the
+  (`CM0241`), reported once on the model and naming each. An abstract descendant passes the
   obligation down instead; a descendant that writes one discharges it for everything below.
-- It carries **no body** (`PC0239`), and a function without `abstract` must have one
-  (`PC0238`).
+- It carries **no body** (`CM0239`), and a function without `abstract` must have one
+  (`CM0238`).
 
 Written with no visibility beside it, an abstract function is **protected** rather than
 private. [§4.6](#46-visibility) gives a declaration with no word to the smallest thing that
@@ -1787,7 +1787,7 @@ function. The narrowest reach the word admits is the type and everything extendi
 is what silence means. `public` and `internal` still say so where they are wanted.
 
 `abstract` is what offers the function for overriding, so `virtual` beside it says nothing
-further and is an opinion (`PC0242`).
+further and is an opinion (`CM0242`).
 
 **`this.` is required to reach an instance member.** `name` and `this.name` are not two ways
 to write one thing — the first is a local and the second is a field, and the difference is
@@ -1812,17 +1812,17 @@ repeating it. Four ways it can fail, and each is an error:
 
 | Written | Reported |
 |---|---|
-| `override` matching nothing above | `PC0222` |
-| `override` of a function that is not `virtual` | `PC0223` |
-| A function redeclaring one above without `override` | `PC0224` |
-| An `override` yielding something else | `PC0225` |
+| `override` matching nothing above | `CM0222` |
+| `override` of a function that is not `virtual` | `CM0223` |
+| A function redeclaring one above without `override` | `CM0224` |
+| An `override` yielding something else | `CM0225` |
 
 An unchecked `override` fails silently, which is why it is checked: a base function renamed, or a
 parameter type that changed, leaves a function still marked `override` and overriding nothing.
 The program compiles and runs, and every call through the base type reaches the base's version.
 
 A function differing in **parameter types** is an overload rather than an override, and
-overloading across a base and a derived model is ordinary. `PC0222` is what tells the two apart
+overloading across a base and a derived model is ordinary. `CM0222` is what tells the two apart
 when a type meant the second and wrote the first.
 
 **`ToString` and `Equals` are inherited from `Model`**, which every model extends whether or not
@@ -1886,7 +1886,7 @@ taken.x = 55;                the set still reads 99
 
 `Reference.Equals` may not be asked about a structure. "Are these two names reaching one thing"
 is a question only a reference can answer, and a value is not somewhere a name points — so it is
-`PC0347` rather than an answer, the same rule that refuses a structure in a `Model`-typed slot.
+`CM0347` rather than an answer, the same rule that refuses a structure in a `Model`-typed slot.
 `==` is the comparison that applies.
 
 > Readers coming from C# should note the first of these. A C# `struct` in a `List` cannot be
@@ -1955,7 +1955,7 @@ A bare name never reaches across the program, which is what lets two containers 
 a helper type belongs to the one type that uses it.
 
 **A nested type is a member, and carries a member's visibility.** Saying nothing means the
-declaring type alone (`PC0339` where something else names it), exactly as a field or a function
+declaring type alone (`CM0339` where something else names it), exactly as a field or a function
 does, and exactly as C# treats a nested class:
 
 ```text
@@ -1977,7 +1977,7 @@ the same thing there.
 it is a different type, so absence appears in the signature rather than lurking behind every
 reference.
 
-**One `?` and no more** (`PC0252`). `Node??` is refused, because the two ways of being empty it
+**One `?` and no more** (`CM0252`). `Node??` is refused, because the two ways of being empty it
 would create cannot be told apart: nothing an optional offers can see past the first level, so
 "absent" and "present, holding an absence" would answer alike to every question a program can
 ask. A language whose whole claim about absence is that the compiler can prove it should not
@@ -1995,12 +1995,12 @@ found.Value()         the value, throwing EmptyOptionalException if there is non
 
 Any value converts to an optional of its own type automatically, so `integer? n = 5;` is
 written directly. **The reverse is never automatic** — that strictness is the whole point.
-Reading a `T?` where a `T` is wanted is rejected by `PC0329`, whose message names all three
+Reading a `T?` where a `T` is wanted is rejected by `CM0329`, whose message names all three
 ways out rather than only reporting the mismatch.
 
 `Or` is the usual choice. `Value` is for where absence is impossible and the program says so.
 
-**Writing one out is a reading too**, and is rejected the same way (`PC0349`). Printing an
+**Writing one out is a reading too**, and is rejected the same way (`CM0349`). Printing an
 optional, joining it to a string, and putting it in a hole all ask it for its text, and an
 optional has none — what an absence prints as is a question with no answer worth guessing. A
 set of optionals is not itself one, so printing that is fine, and each element that holds
@@ -2065,7 +2065,7 @@ delegate() clear = function()
 end function;
 
 clear();
-Console.WriteLine(n + 1);       refused (PC0345), and rightly: n is empty here
+Console.WriteLine(n + 1);       refused (CM0345), and rightly: n is empty here
 ```
 
 Writing `HasValue()` does not help, and the message says so rather than sending its author to
@@ -2132,7 +2132,7 @@ Temperature? t = new Temperature(21.5);
 let unwrapped = t.Value();          # the optional's Value; unwrapped is a Temperature
 Console.WriteLine(unwrapped.Value());   # now the model's; 21.5
 
-let d = t.Describe();               # PC0306: a Temperature? has no member 'Describe'
+let d = t.Describe();               # CM0306: a Temperature? has no member 'Describe'
 ```
 
 The two names are in scope together only after narrowing, which is where the rule above
@@ -2214,9 +2214,9 @@ shared.
 
 Overloads are chosen by argument count first, then by exact match, then by what the arguments
 can convert to. Two versions reachable only by conversion is a tie, and a tie is reported
-(`PC0310`) rather than broken by a further rule.
+(`CM0310`) rather than broken by a further rule.
 
-**A name belongs to one member** (`PC0253`). Two members of a type share a name only when they
+**A name belongs to one member** (`CM0253`). Two members of a type share a name only when they
 are versions of one function, told apart by what they take — so two fields cannot, a field and a
 function cannot, and neither can two functions taking the same types. Without the rule the second
 declaration is simply unreachable: every use of the name finds the first, so calls intended for
@@ -2263,11 +2263,11 @@ yield (n) yield n + by;                                      # result
 An optional function type is a target like any other, since the lambda is wrapped on the way
 in and what it has to be is the type underneath.
 
-**Where the type is already said, writing it again is reported.** `PC0115` is an opinion: the
-program says one thing and says it twice, which is the same argument `PC0111` makes about a
+**Where the type is already said, writing it again is reported.** `CM0115` is an opinion: the
+program says one thing and says it twice, which is the same argument `CM0111` makes about a
 range loop's counter.
 
-**Where nothing says it, leaving it out is reported.** `PC0336` names the parameter that has
+**Where nothing says it, leaving it out is reported.** `CM0336` names the parameter that has
 no type.
 
 The two rules meet with no gap and no overlap, which leaves exactly one place a lambda writes
@@ -2338,7 +2338,7 @@ Being nameable and being catchable are separate things, and this is the one plac
 apart. The name exists so a reader can be told what stopped their program. It is not catchable:
 the depth is the implementation's number rather than a property of the program, so a handler
 would run at an arbitrary point with every frame beneath it abandoned part-way. Naming it in a
-`catch` is reported as `PC0344` rather than left as a clause that never runs.
+`catch` is reported as `CM0344` rather than left as a clause that never runs.
 
 **It is not a stack overflow, which is why it does not carry that name.** The limit is a count
 the language keeps, and it is reached long before the machine is near the end of its stack —
@@ -2410,20 +2410,20 @@ something the grammar can read.
 
 **`Standard` is in scope in every file with nothing written**, so the library is reached
 without importing anything, and `Standard.Math` is legal without a `using` too — qualifying a
-name never needed one. Writing `using Standard;` is legal and reported (`PC0230`, an opinion):
+name never needed one. Writing `using Standard;` is legal and reported (`CM0230`, an opinion):
 it brings nothing that is not already there.
 
 It sits at the same rank a `using` would put it at, rather than beneath. That matters once a
 second namespace can offer one of these names — .NET interop, in a later version. At equal rank a
-bare `DateTime` with both in scope is **ambiguous** (`PC0226`) and the program says which it
+bare `DateTime` with both in scope is **ambiguous** (`CM0226`) and the program says which it
 meant; at a lower rank the import would take the name silently. Nothing collides with `Standard`
 today, so the rule is settled now rather than once a program depends on the other behavior.
 
 **A program may declare these names.** A `Math` of your own is legal, wins over the library's
-by the ordinary nearest-name rule, and is warned about (`PC0203`) because losing `Math.Sqrt`
+by the ordinary nearest-name rule, and is warned about (`CM0203`) because losing `Math.Sqrt`
 is almost never what was meant. `Standard.Math` still reaches the other one.
 
-**A program may not declare `namespace Standard`** (`PC0229`). Namespaces merge, so it would
+**A program may not declare `namespace Standard`** (`CM0229`). Namespaces merge, so it would
 let a program add types that then read as the language's own, and `Standard.X` can only keep
 meaning "the language gives you this" if nothing else may write there.
 
@@ -2432,11 +2432,11 @@ rather than something the language does, and must be declared exactly once ([§1
 
 **Twelve of them hold no values** — `Boolean`, `Character`, `Console`, `Directory`, `File`,
 `Float`, `Fraction`, `Integer`, `Math`, `Real`, `Reference` and `String`. They are names to
-reach members through, and naming one where a value's type belongs is an error (`PC0233`), as
+reach members through, and naming one where a value's type belongs is an error (`CM0233`), as
 it is for any `shared model`, which has no instances by definition:
 
 ```text
-Math m;              PC0233: nothing can be of this type
+Math m;              CM0233: nothing can be of this type
 fraction half = 1|2;  the type; Fraction is the model beside it
 ```
 
@@ -2452,13 +2452,13 @@ values all the same, since every model converts to one and every function to the
 
 **`Random`, `DateTime`, `TimeSpan`, `Date` and `Time` are the ones a program may construct.**
 Every other name here is reached through the name itself; writing `new Math()` is reported
-(`PC0328`).
+(`CM0328`).
 
 **`DateTime`, `Date`, `Time` and `TimeSpan` order their own values**, so `<`, `>`, `<=` and
 `>=` may be written on two of the same type. Each is its `CompareTo` against zero, so the
 operator and the member cannot give different answers. No other model is ordered: two values of
 a declared type have no order to be in, and one taken from the fields would mean whatever order
-they happened to be declared in, so `PC0303` refuses it. Ordering and equality are separate
+they happened to be declared in, so `CM0303` refuses it. Ordering and equality are separate
 questions — `==` works on every model ([§7.4](#74-equality)) and orders nothing.
 
 ### 11.1 The reference
@@ -2494,7 +2494,7 @@ and left undocumented fails the build.
 
 **A member written without parentheses is a value rather than something to call.** `Math.Pi` and
 `landing.Year` are read; `word.ToUpper()` is called. Writing parentheses on a value is reported
-(`PC0338`), as is naming a function without them (`PC0330`), so either mistake is reported.
+(`CM0338`), as is naming a function without them (`CM0330`), so either mistake is reported.
 
 **A member that may have no answer yields an optional** rather than raising: `File.Read` yields
 `string?`, `"12".ToInteger()` yields `integer?`, `Console.Read` yields `string?`. Absence is an
@@ -2519,20 +2519,20 @@ as it is, without escaping.
 
 ## 12. Execution and entry point
 
-A program is run with `pc run`, which checks it and executes it:
+A program is run with `cm run`, which checks it and executes it:
 
 ```text
-pc run hello.pc                 one file, with the shared code beside it
-pc run bookshelf/Program.pc     the same rule across a folder — see §12.1
-pc run app.pcp                  a project file listing what to build
-pc check app.pcp                check without running
-pc tokens hello.pc              the token stream
-pc ast hello.pc                 the tree
+cm run hello.cm                 one file, with the shared code beside it
+cm run bookshelf/Program.cm     the same rule across a folder — see §12.1
+cm run app.cmp                  a project file listing what to build
+cm check app.cmp                check without running
+cm tokens hello.cm              the token stream
+cm ast hello.cm                 the tree
 ```
 
 Every command takes a **file**, never a folder — a folder is reached by naming a file in it,
-which [§12.1](#121-what-a-compilation-is-made-of) explains. The extension may be omitted: `pc run hello` finds `hello.pc`, and asks
-for the extension only where both a `.pc` and a `.pcp` of that name exist.
+which [§12.1](#121-what-a-compilation-is-made-of) explains. The extension may be omitted: `cm run hello` finds `hello.cm`, and asks
+for the extension only where both a `.cm` and a `.cmp` of that name exist.
 
 **`Program` may be declared exactly once in a compilation, and must be
 `shared model Program` containing `Main`.** This differs from `Model`, `Exception`, `Console`,
@@ -2569,32 +2569,32 @@ file may name a type another file declares, in either order, with nothing writte
 it. Which files form the set is settled before compiling begins, and there are two ways to
 settle it.
 
-**A source file names its folder.** Compiling `bookshelf/Program.pc` compiles it together with
-every other `.pc` directly in `bookshelf`, except those that declare `Program`. A file that
+**A source file names its folder.** Compiling `bookshelf/Program.cm` compiles it together with
+every other `.cm` directly in `bookshelf`, except those that declare `Program`. A file that
 declares `Program` is a program; a file that does not is shared code available to all of them.
 A folder may therefore hold several programs, each seeing the same shared code and none seeing
 the others. The rule does not descend into subfolders.
 
-**A project file names files and folders.** A `.pcp` lists what a build is made of, across as
+**A project file names files and folders.** A `.cmp` lists what a build is made of, across as
 many folders as it names:
 
 ```text
 # A storefront, spread across folders.
 
 project Storefront
-    source Program.pc
+    source Program.cm
     source models
     source pricing
 end project
 ```
 
-A `source` naming a folder takes every `.pc` directly inside it and does not descend, so a
+A `source` naming a folder takes every `.cm` directly inside it and does not descend, so a
 nested folder is named by its own `source` and what a project builds can be read off the file.
 Paths are relative to the project file and are written with forward slashes on every platform.
 Comments are marked as they are in a program — `#` to the end of a line, `##` opening a block —
 and a blank line is ignored.
 
-A project file is not Profi-C. It describes a build rather than a computation, nothing in it is
+A project file is not Compass. It describes a build rather than a computation, nothing in it is
 compiled, and its whole vocabulary is `project`, `source`, `reference`, `entry`, `output`,
 `ignore`, and `end project`.
 
@@ -2603,8 +2603,8 @@ available, exactly as though they were declared in this one:
 
 ```text
 project Storefront
-    reference ../Core/Core.pcp
-    source Program.pc
+    reference ../Core/Core.cmp
+    source Program.cm
     source models
 end project
 ```
@@ -2635,7 +2635,7 @@ reference.
 **A file names another file with `import`.**
 
 ```
-import "shared/Tally.pc";
+import "shared/Tally.cm";
 ```
 
 An import brings exactly one file, and whatever that file imports in turn — an imported file
@@ -2655,7 +2655,7 @@ declaration is.
 nothing about a circle is unbuildable: a compilation reads every file it gathers together, and
 reaching one twice adds nothing the first reach did not. The cost is to a reader, who has no file
 to open first. The compiler reports it at the import that closes the circle and reads the circle
-back as a sentence: `A.pc imports B.pc, which imports A.pc`. A file importing itself is the same
+back as a sentence: `A.cm imports B.cm, which imports A.cm`. A file importing itself is the same
 rule with one file in it.
 
 A circle can only be drawn across folders, since files beside one another are already compiled
@@ -2684,33 +2684,33 @@ its own file list.
 ```text
 project tools
     entry Tools.Program
-    source Tools.pc
-    source App.pc
+    source Tools.cm
+    source App.cm
 end project
 ```
 
 Written where the sources declare exactly one `Program`, the line decides nothing and is
-reported as an opinion (`PC0236`). Left out where they declare several, the compilation is rejected and
-the programs are named (`PC0234`). Naming something that is not one of them is `PC0235`, which
-lists what was there. A project starts in one place, so a second `entry` is `PC0627`.
+reported as an opinion (`CM0236`). Left out where they declare several, the compilation is rejected and
+the programs are named (`CM0234`). Naming something that is not one of them is `CM0235`, which
+lists what was there. A project starts in one place, so a second `entry` is `CM0627`.
 
-**`pc run <file>` needs none of this**: it runs the `Program` that file declares.
+**`cm run <file>` needs none of this**: it runs the `Program` that file declares.
 
 The name is written as a `using` would write it — the namespaces in front of the type, and the
 type — because that is the name the type has. It is not a path to a file.
 
 #### What a build makes, and where it goes
 
-`pc build` compiles a compilation to a .NET assembly. **Every program that checks is one that
+`cm build` compiles a compilation to a .NET assembly. **Every program that checks is one that
 builds**: the back end declines nothing, so the only thing that stops a build is a diagnostic
 from the front end.
 
 **A compilation declaring no `Program` builds a library.** That is what a project written to be
 referenced is, and there is nothing else it could be: an assembly with no entry point has
 nowhere to begin, so no launcher is made for it and no configuration naming a framework is
-written beside it. `pc build` says which of the two it made, because the difference between
+written beside it. `cm build` says which of the two it made, because the difference between
 them is a single declaration and a `Main` whose name went astray should read as something
-rather than as silence. `pc run` on the same file is still `PC0212` — building and running ask
+rather than as silence. `cm run` on the same file is still `CM0212` — building and running ask
 different questions, and a library is a good answer to the first and no answer to the second.
 
 **A loose source file builds into a `bin` beside it.** The folder is relative to the file rather
@@ -2723,15 +2723,15 @@ launcher — and mixing those with the source makes both harder to read.
 
 ```text
 project Storefront
-    source Program.pc
+    source Program.cm
     output ../artifacts/storefront
 end project
 ```
 
 The path is read relative to the project file, as a `source` and a `reference` are, so where a
 build lands does not depend on which directory it was started from. The folder is made if it is
-not there. A project is written to one place, so a second `output` is `PC0629`, and one naming
-nothing is `PC0628`.
+not there. A project is written to one place, so a second `output` is `CM0629`, and one naming
+nothing is `CM0628`.
 
 That a loose file has no such line is the point rather than an omission: it has nowhere to
 record the answer, so a folder holding several programs fills one `bin` with all of them. Where
@@ -2782,7 +2782,7 @@ anything outside it without a `using` either. The global namespace is on that pa
 namespace is not: a type declared outside every namespace is reachable from inside one, and a
 type inside one is not reachable from outside without saying so.
 
-Only a tie **among the namespaces in scope** is ambiguous (`PC0226`), because those name no
+Only a tie **among the namespaces in scope** is ambiguous (`CM0226`), because those name no
 order between themselves. It is reported where the name is read, not at the `using`.
 
 #### Qualifying
@@ -2828,12 +2828,12 @@ the file is, and a block inside it says where in the file.
 
 #### Two rules about writing them
 
-**`using` and `import` come above every namespace** (`PC0231`). Both are statements about the
+**`using` and `import` come above every namespace** (`CM0231`). Both are statements about the
 whole file — which names it reaches, and which files are compiled with it — and neither
 narrows to part of one, so writing one inside a namespace would say something the language has
 no way to mean.
 
-**A namespace repeating a name it sits inside is reported** (`PC0232`), whether written as
+**A namespace repeating a name it sits inside is reported** (`CM0232`), whether written as
 a nested block or as a dotted name repeating itself. `Shapes.Shapes.Circle` is what a reader
 has to write afterwards, and it reads as a slip rather than a distinction. An opinion rather
 than an error, because it is only a name and a program that means it works.
@@ -2895,238 +2895,238 @@ zero, which never reaches its bound. Nothing written in either is redundant — 
 or wrong — and the language says so as an opinion because a program meaning to run until it is
 stopped from outside is one somebody may write.
 
-### PC0000 to PC0099
+### CM0000 to CM0099
 
 | Identifier | | Reported when | What it says |
 |---|---|---|---|
-| `PC0001` | error | Unrecognized character | Unrecognized character '{0}'. Nothing in the language uses it; remove it. |
-| `PC0002` | error | Unterminated string literal | Unterminated string literal. Add a closing '"'. |
-| `PC0003` | error | Unterminated character literal | Unterminated character literal. Add a closing quote mark. |
-| `PC0004` | error | Malformed character literal | A character literal must contain exactly one character. For more than one, write a string with '"'. |
-| `PC0005` | error | Unterminated block comment | Unterminated block comment; expected '##'. |
-| `PC0006` | error | Not an operator in Profi-C | '{0}' is not an operator in Profi-C. {1} |
-| `PC0007` | error | Unrecognized escape sequence | Unrecognized escape sequence '\{0}'. The escapes are \n, \t, \\, \", \', \0 and \uFFFF. |
-| `PC0008` | error | Malformed Unicode escape sequence | A Unicode escape must be '\u' followed by four hexadecimal digits. |
-| `PC0009` | opinion | This name needs no '@' | '{0}' is not a reserved word, so the '@' does nothing. Write '{0}'. |
-| `PC0010` | error | Nothing to escape | '@' marks a reserved word being used as a name, so a name must follow it. |
-| `PC0011` | error | Unterminated interpolation | Unterminated interpolation; expected '}}'. |
-| `PC0012` | error | Nothing to interpolate | An interpolation holds an expression. Write '{{name}}', or a single brace for a literal one. |
-| `PC0013` | error | Unterminated block string | Unterminated block string; expected '{0}'. |
-| `PC0014` | error | Nothing to format by | A ':' in an interpolation is followed by how to format the value, as in '{{total:F2}}'. Leave it out to format the value the ordinary way. |
-| `PC0015` | warning | More quotes in a row than close the block | {0} quotes in a row, where {1} close the block string. The last {1} end it and the rest are held. Open and close it with '{2}' to hold all {0}. |
-| `PC0016` | error | Block string delimiters differ in length | {0} quotes do not close a block string opened with {1}, so this is text and the block runs on. Open it with '{2}', or close it with '{3}'. |
-| `PC0017` | error | This base has no digits | '{0}' says the number that follows is {1}, and none follows. |
-| `PC0018` | error | This digit is not in the base | '{0}' is not a {1} digit, which is {2}. |
-| `PC0019` | error | This exponent has no digits | An 'e' says how many places to move the point, so it needs digits after it — '1e3' is 1000.0. |
-| `PC0020` | error | This separator has no digits after it | An '_' in a number separates digits, so more have to follow it — '1_000' is a thousand. |
-| `PC0021` | error | A name cannot begin with a digit | '{0}' is written against the number before it. A name begins with a letter or an underscore, and nothing in the language puts two values side by side. |
-| `PC0022` | warning | This 'ignore' names no diagnostic | '{0}' is not something this compiler reports, so this line silences nothing. Check the identifier against the one in the message. |
-| `PC0023` | warning | That diagnostic cannot be ignored | '{0}' stops compilation, and only a warning or an opinion can be ignored. This line cannot do anything; what it names has to be fixed. |
-| `PC0024` | opinion | This 'ignore' silences nothing | Nothing it reaches reports '{0}', so this line has no effect. Remove it. |
-| `PC0025` | warning | This 'ignore' names neither a severity nor a diagnostic | '{0}' is not 'warning', not 'opinion', and not an identifier such as 'PC0340'. |
-| `PC0026` | error | Number too large to hold | {0} is too large for {1}. {2} |
-| `PC0027` | error | A fraction over zero | {0} is a fraction over zero. The bar is division, so what sits under it can be anything but zero. |
+| `CM0001` | error | Unrecognized character | Unrecognized character '{0}'. Nothing in the language uses it; remove it. |
+| `CM0002` | error | Unterminated string literal | Unterminated string literal. Add a closing '"'. |
+| `CM0003` | error | Unterminated character literal | Unterminated character literal. Add a closing quote mark. |
+| `CM0004` | error | Malformed character literal | A character literal must contain exactly one character. For more than one, write a string with '"'. |
+| `CM0005` | error | Unterminated block comment | Unterminated block comment; expected '##'. |
+| `CM0006` | error | Not an operator in Compass | '{0}' is not an operator in Compass. {1} |
+| `CM0007` | error | Unrecognized escape sequence | Unrecognized escape sequence '\{0}'. The escapes are \n, \t, \\, \", \', \0 and \uFFFF. |
+| `CM0008` | error | Malformed Unicode escape sequence | A Unicode escape must be '\u' followed by four hexadecimal digits. |
+| `CM0009` | opinion | This name needs no '@' | '{0}' is not a reserved word, so the '@' does nothing. Write '{0}'. |
+| `CM0010` | error | Nothing to escape | '@' marks a reserved word being used as a name, so a name must follow it. |
+| `CM0011` | error | Unterminated interpolation | Unterminated interpolation; expected '}}'. |
+| `CM0012` | error | Nothing to interpolate | An interpolation holds an expression. Write '{{name}}', or a single brace for a literal one. |
+| `CM0013` | error | Unterminated block string | Unterminated block string; expected '{0}'. |
+| `CM0014` | error | Nothing to format by | A ':' in an interpolation is followed by how to format the value, as in '{{total:F2}}'. Leave it out to format the value the ordinary way. |
+| `CM0015` | warning | More quotes in a row than close the block | {0} quotes in a row, where {1} close the block string. The last {1} end it and the rest are held. Open and close it with '{2}' to hold all {0}. |
+| `CM0016` | error | Block string delimiters differ in length | {0} quotes do not close a block string opened with {1}, so this is text and the block runs on. Open it with '{2}', or close it with '{3}'. |
+| `CM0017` | error | This base has no digits | '{0}' says the number that follows is {1}, and none follows. |
+| `CM0018` | error | This digit is not in the base | '{0}' is not a {1} digit, which is {2}. |
+| `CM0019` | error | This exponent has no digits | An 'e' says how many places to move the point, so it needs digits after it — '1e3' is 1000.0. |
+| `CM0020` | error | This separator has no digits after it | An '_' in a number separates digits, so more have to follow it — '1_000' is a thousand. |
+| `CM0021` | error | A name cannot begin with a digit | '{0}' is written against the number before it. A name begins with a letter or an underscore, and nothing in the language puts two values side by side. |
+| `CM0022` | warning | This 'ignore' names no diagnostic | '{0}' is not something this compiler reports, so this line silences nothing. Check the identifier against the one in the message. |
+| `CM0023` | warning | That diagnostic cannot be ignored | '{0}' stops compilation, and only a warning or an opinion can be ignored. This line cannot do anything; what it names has to be fixed. |
+| `CM0024` | opinion | This 'ignore' silences nothing | Nothing it reaches reports '{0}', so this line has no effect. Remove it. |
+| `CM0025` | warning | This 'ignore' names neither a severity nor a diagnostic | '{0}' is not 'warning', not 'opinion', and not an identifier such as 'CM0340'. |
+| `CM0026` | error | Number too large to hold | {0} is too large for {1}. {2} |
+| `CM0027` | error | A fraction over zero | {0} is a fraction over zero. The bar is division, so what sits under it can be anything but zero. |
 
-### PC0100 to PC0199
-
-| Identifier | | Reported when | What it says |
-|---|---|---|---|
-| `PC0100` | error | Unexpected token | Expected {0}, but found {1}. |
-| `PC0101` | error | Expected an expression | Expected an expression, but found {0}. |
-| `PC0102` | error | Expected a type | Expected a type, but found {0}. |
-| `PC0103` | error | Expected a name | Expected a name, but found {0}. |
-| `PC0104` | error | Mismatched block closer | Expected 'end {0}' to close the {0} beginning on line {1}, but found 'end {2}'. |
-| `PC0105` | error | Unterminated construct | The {0} beginning on line {1} is never closed; expected 'end {0}'. |
-| `PC0106` | error | Statement cannot start here | A statement may not begin with '{0}'. Give the value a name first, as in 'let value = ...;', and then use it. |
-| `PC0107` | error | Expected a statement | Expected a statement, but found {0}. |
-| `PC0108` | error | Expected a declaration | Expected a declaration, but found {0}. |
-| `PC0109` | error | Cannot assign to this expression | The left side of an assignment must be a name, an index, or a member access. |
-| `PC0110` | error | Type declared inside a function | A {0} cannot be declared inside a function. Move it out to the enclosing model or namespace. |
-| `PC0111` | opinion | A range loop's counter has no written type | A range loop counts with integers, so its counter takes no type. Remove the '{0}'. |
-| `PC0112` | error | An if expression has no 'else' | This if expression has no 'else'. It produces a value, so it must say what the value is when the condition is false. |
-| `PC0113` | error | Too many problems | Too many problems; stopped after {0}. Fixing the ones above may account for the rest. |
-| `PC0114` | error | This word is reserved | '{0}' is a reserved word, so it cannot be a name on its own. Write '@{0}' to use it as one. |
-| `PC0115` | opinion | This parameter's type is already known | The surrounding code already says what '{0}' holds, so writing its type says it twice. Leave the type out. |
-| `PC0116` | error | A function's type is written with 'delegate' | 'Function' takes no parentheses. For a particular shape write 'delegate(...)', with a result before it if it has one, as in 'integer delegate(string)'. |
-| `PC0117` | error | A function's type is written with 'delegate' | 'function' declares a function or makes one on the spot. To write the type of one, use 'delegate' — 'integer delegate(string)' takes a string and yields an integer. |
-| `PC0118` | error | Only 'and' or 'or' may follow 'bitwise' | 'bitwise' says which of two operations follows, and {0} is neither. Write 'bitwise and' or 'bitwise or' — 'xor', 'shiftleft' and 'shiftright' need no word before them. |
-| `PC0119` | error | 'let' declares a local, not a field | 'let' works inside a function, where the value it holds is written beside it. A field is read far from here, so it says its type: '{0} {1} = ...'. |
-| `PC0120` | error | A loop begins with 'loop' | Every loop opens with 'loop', so this is written 'loop {0}'. The word after 'loop' says which kind: 'for', 'each', 'while', or nothing at all. |
-
-### PC0200 to PC0299
+### CM0100 to CM0199
 
 | Identifier | | Reported when | What it says |
 |---|---|---|---|
-| `PC0200` | error | Name not found | '{0}' is not defined here. Check the spelling, or declare it above this line. |
-| `PC0201` | error | Type not found | There is no type named '{0}'. Check the spelling, or the 'using' that would reach it. |
-| `PC0202` | error | Name already declared | '{0}' is already declared in this scope. Rename one of them. |
-| `PC0203` | warning | This shadows a type the language provides | '{0}' is also the name of a type in Standard, and a name declared here wins over one in scope. Write 'Standard.{0}' to reach the other, or rename this. |
-| `PC0204` | error | Member access needs a receiver | '{0}' is a {1} of '{2}', so it must be written as '{3}.{0}'. A bare name reaches only locals and parameters. |
-| `PC0205` | error | Cannot assign to a constant | '{0}' is a constant and cannot be assigned to. Drop 'constant' from its declaration, or assign a different name. |
-| `PC0206` | error | Cannot assign to a loop variable | '{0}' is a loop variable and is read-only inside the loop. Each iteration binds a fresh one, so assigning to it would change nothing. |
-| `PC0207` | error | Circular inheritance | '{0}' cannot extend itself, directly or through its ancestors. Break the circle. |
-| `PC0208` | error | Cannot extend a sealed model | '{0}' is sealed and cannot be extended. Drop 'sealed' from it, or extend what it extends. |
-| `PC0209` | error | Cannot extend this type | '{0}' is a {1}, and only a model can be extended. Hold one as a field instead. |
-| `PC0210` | error | Sealed and abstract together | '{0}' cannot be both sealed and abstract; it could then be neither extended nor instantiated, so nothing could use it. |
-| `PC0212` | error | No entry point | A program needs a 'shared model Program' containing a function named 'Main'. |
-| `PC0213` | error | Program must be a shared model | 'Program' must be declared 'shared model', since there is no such thing as an instance of a running program. |
-| `PC0214` | error | '{0}' used outside a model | '{0}' can only be used inside a model's instance member. Drop 'shared' from this member, or reach what you want through its type name. |
-| `PC0215` | error | No parent to reach | 'base' needs a parent model, and '{0}' extends nothing. Give it one with 'extends', or write 'this' instead. |
-| `PC0216` | error | Cannot extend a built-in type | '{0}' is provided by the language and has nothing to inherit. Of the built-in types only 'Model' and the exceptions may follow 'extends'. |
-| `PC0217` | error | Type already declared | '{0}' is already declared {1}. Two types cannot share a name, whether they are written in one file or across several. Rename one of them. |
-| `PC0218` | error | Main declares no result or an integer | 'Main' must declare no result, or an integer, which becomes the program's exit code. |
-| `PC0219` | error | Two visibilities on one declaration | '{0}' is written {1}, and one declaration has one visibility. Keep the word that says how far this should reach. |
-| `PC0220` | error | A type cannot be protected | '{0}' is a type, and 'protected' is for members. Write 'internal' for its project, or 'public' for anywhere. |
-| `PC0221` | error | Type belongs to another project | '{0}' is internal to {1}, and this is {2}. Mark it 'public' if {2} is meant to use it. |
-| `PC0222` | error | Nothing to override | '{0}' is marked 'override', but {1} declares no '{0}' with these parameters. Check the name and the parameter types, or drop 'override' if this is a new function. |
-| `PC0223` | error | Overridden function is not virtual | '{0}' overrides a function in {1} that is not marked 'virtual', so {1} did not offer it for overriding. Mark the one in {1} 'virtual'. |
-| `PC0224` | error | This hides a function from the base | {1} already declares '{0}' with these parameters. Write 'override' to replace it, or rename this one. |
-| `PC0225` | error | Override yields a different result | '{0}' yields {1}, and the one it overrides in {2} yields {3}. An override yields what it overrides, since a caller holding a {2} reads the result as {2} declared it. |
-| `PC0226` | error | This name is offered by more than one namespace | '{0}' could mean {1}. Both are used here and neither is nearer, so write the one you mean in full. |
-| `PC0227` | error | No such namespace | No namespace named '{0}' is declared in this compilation. Check the spelling, or that the file declaring it is being compiled. |
-| `PC0228` | error | This namespace is already used here | '{0}' is already used in this file. Remove this line. |
-| `PC0229` | error | Standard belongs to the language | 'Standard' is the namespace the language's own types live in, and a program may not add to it. Name this namespace something else. |
-| `PC0230` | opinion | Standard is already in scope | Every file reaches Standard without saying so, so this line brings nothing. |
-| `PC0231` | error | This belongs above any namespace | '{0}' is a statement about the whole file, so it goes above every namespace in it. Move it to the top. |
-| `PC0232` | opinion | This namespace repeats one around it | '{0}' already sits inside a namespace of that name, so its types are reached as '{0}.{0}.…'. Rename this one if that was not meant. |
-| `PC0233` | error | Nothing can be of this type | '{0}' has no instances, so nothing can ever be held here. {1} |
-| `PC0234` | error | Which program starts? | These sources declare more than one Program: {0}. Write 'entry {1}' in the project file to say which one begins. |
-| `PC0235` | error | No such program | '{0}' is not a Program among these sources. {1} |
-| `PC0236` | opinion | This 'entry' decides nothing | Only '{0}' declares a Program, so it begins whether or not this line is here. |
-| `PC0237` | error | This name is already in use here | '{0}' is already the name of something in an enclosing scope, so this one would hide it. Give it a name of its own. |
-| `PC0238` | error | This function needs a body | '{0}' ends at the semicolon, so nothing says what it does. Give it a body, or mark it 'abstract' to leave it to whatever extends this model. |
-| `PC0239` | error | An abstract function has no body | '{0}' is abstract, so every model extending this one writes what it does and this body would never run. End the declaration at ';', or drop the 'abstract'. |
-| `PC0240` | error | Only an abstract model may leave a function open | '{0}' is abstract, but '{1}' can be constructed — so an instance of it would reach a function nothing ever wrote. Mark '{1}' abstract too. |
-| `PC0241` | error | An inherited function is still open | '{0}' can be constructed, so it must write every function left open above it. Still open: {1}. Override each, or mark '{0}' abstract. |
-| `PC0242` | opinion | An abstract function is already virtual | '{0}' is abstract, which is what offers it for overriding, so 'virtual' says nothing further. Remove it. |
-| `PC0243` | error | This changes the sequence being walked | '{0}' is the sequence this 'loop each' is walking, and '{1}' changes it. Collect the changes into another set, or count with a range loop. |
-| `PC0244` | warning | This documentation has nothing to document | Nothing follows this that an '@summary:' can document, so nothing will show it. Move it directly above a declaration, or make it an ordinary comment. |
-| `PC0245` | warning | This documents a parameter that is not there | '{0}' is documented, but '{1}' takes {2}. Rename the line or take it out. |
-| `PC0246` | warning | This describes a value that is never given back | '{0}' yields nothing, so there is no value for '@yields:' to describe. |
-| `PC0247` | opinion | This is documented twice | '{0}' already has a line above this one, and the first is the one that shows. For a second paragraph, leave a blank line and keep writing. |
-| `PC0248` | error | 'base' has to come first | 'base(...)' must be the first statement in a constructor, so that '{0}' is fully built before anything here runs. |
-| `PC0249` | error | '{0}' is not available yet | '{1}' is still being built here, so '{0}' cannot be reached from a field's starting value. Give '{2}' its value in a constructor instead. |
-| `PC0250` | error | Nothing here builds the parent | '{0}' extends '{1}', which cannot be built without being given something. Begin this constructor with 'base(...)': '{1}' takes {2}. |
-| `PC0251` | opinion | This 'base()' changes nothing | '{0}' is built before this constructor's body whether or not 'base()' is written, so this line does what would happen without it. Keep it if saying so helps. |
-| `PC0252` | error | An optional of an optional | This is already optional, so the second '?' says nothing new. Write one '?'. |
-| `PC0253` | error | Member name already taken | {0} already has a member named '{1}', declared on line {2}. Rename one, unless they are versions of one function taking different types. |
-| `PC0254` | error | A throwaway holds nothing | '_' throws its value away, so there is nothing here to use. Give it a name. |
-| `PC0255` | error | A throwaway cannot be a name | '_' throws a value away, so it cannot name {0}, which is reached by name. Give it a name. |
-| `PC0256` | error | Nothing here asks for a name | '_' stands in for a name the language asks for, and nothing asks for one here. Write the value on its own, or remove the line. |
-| `PC0257` | error | A parameter needs a name | '_' cannot name a parameter: it is part of the signature a caller reads. Give it a name. |
-| `PC0259` | opinion | This 'shared' is already implied | Every member of a shared model is shared already, so this says nothing. Remove it. |
+| `CM0100` | error | Unexpected token | Expected {0}, but found {1}. |
+| `CM0101` | error | Expected an expression | Expected an expression, but found {0}. |
+| `CM0102` | error | Expected a type | Expected a type, but found {0}. |
+| `CM0103` | error | Expected a name | Expected a name, but found {0}. |
+| `CM0104` | error | Mismatched block closer | Expected 'end {0}' to close the {0} beginning on line {1}, but found 'end {2}'. |
+| `CM0105` | error | Unterminated construct | The {0} beginning on line {1} is never closed; expected 'end {0}'. |
+| `CM0106` | error | Statement cannot start here | A statement may not begin with '{0}'. Give the value a name first, as in 'let value = ...;', and then use it. |
+| `CM0107` | error | Expected a statement | Expected a statement, but found {0}. |
+| `CM0108` | error | Expected a declaration | Expected a declaration, but found {0}. |
+| `CM0109` | error | Cannot assign to this expression | The left side of an assignment must be a name, an index, or a member access. |
+| `CM0110` | error | Type declared inside a function | A {0} cannot be declared inside a function. Move it out to the enclosing model or namespace. |
+| `CM0111` | opinion | A range loop's counter has no written type | A range loop counts with integers, so its counter takes no type. Remove the '{0}'. |
+| `CM0112` | error | An if expression has no 'else' | This if expression has no 'else'. It produces a value, so it must say what the value is when the condition is false. |
+| `CM0113` | error | Too many problems | Too many problems; stopped after {0}. Fixing the ones above may account for the rest. |
+| `CM0114` | error | This word is reserved | '{0}' is a reserved word, so it cannot be a name on its own. Write '@{0}' to use it as one. |
+| `CM0115` | opinion | This parameter's type is already known | The surrounding code already says what '{0}' holds, so writing its type says it twice. Leave the type out. |
+| `CM0116` | error | A function's type is written with 'delegate' | 'Function' takes no parentheses. For a particular shape write 'delegate(...)', with a result before it if it has one, as in 'integer delegate(string)'. |
+| `CM0117` | error | A function's type is written with 'delegate' | 'function' declares a function or makes one on the spot. To write the type of one, use 'delegate' — 'integer delegate(string)' takes a string and yields an integer. |
+| `CM0118` | error | Only 'and' or 'or' may follow 'bitwise' | 'bitwise' says which of two operations follows, and {0} is neither. Write 'bitwise and' or 'bitwise or' — 'xor', 'shiftleft' and 'shiftright' need no word before them. |
+| `CM0119` | error | 'let' declares a local, not a field | 'let' works inside a function, where the value it holds is written beside it. A field is read far from here, so it says its type: '{0} {1} = ...'. |
+| `CM0120` | error | A loop begins with 'loop' | Every loop opens with 'loop', so this is written 'loop {0}'. The word after 'loop' says which kind: 'for', 'each', 'while', or nothing at all. |
 
-### PC0300 to PC0399
+### CM0200 to CM0299
 
 | Identifier | | Reported when | What it says |
 |---|---|---|---|
-| `PC0300` | error | Cannot convert | Cannot use {0} where {1} is expected. {2} |
-| `PC0301` | error | Conversion must be written out | {0} does not become {1} on its own, because the result would surprise you. Write '{2}' to ask for it. |
-| `PC0302` | error | Condition must be a boolean | {0} must be a boolean, and this is {1}. Write a comparison. |
-| `PC0303` | error | Operator not defined for these types | '{0}' is not defined for {1} and {2}. Convert one side, or use a member. |
-| `PC0304` | error | Operator not defined for this type | '{0}' is not defined for {1}. Convert it, or use a member. |
-| `PC0305` | error | Branches of an if expression have different types | The branches of an if expression must have the same type, and these are {0} and {1}. Make them agree, or write an 'if' statement. |
-| `PC0306` | error | Member not found | {0} has no member named '{1}'. |
-| `PC0307` | error | Not something that can be called | {0} cannot be called. {1} |
-| `PC0308` | error | Wrong number of arguments | '{0}' takes {1}, but was given {2}. |
-| `PC0309` | error | No overload matches | No version of '{0}' accepts these arguments. Convert the ones that do not match. |
-| `PC0310` | error | Ambiguous call | Several versions of '{0}' match these arguments equally well. Give one argument the exact type a version takes. |
-| `PC0311` | error | Not something that can be indexed | {0} cannot be indexed. Only a set and a string can. |
-| `PC0312` | error | Index must be an integer | An index must be an integer, and this is {0}. Write a whole number. |
-| `PC0313` | error | Cannot infer the type of an empty set | The type of an empty set cannot be worked out from the set alone. Write the type, as in 'integer[] values = {};'. |
-| `PC0314` | error | Set elements have different types | The elements of a set must have one type, and these are {0} and {1}. Write the set's type, as in 'Shape[] values = {{...}};'. |
-| `PC0315` | error | Cannot switch on this type | A switch cannot examine {0}. A case label compares an integer, a character, a string, a boolean or an enumeration member, and nothing else. |
-| `PC0316` | error | Cannot iterate this type | 'loop each' needs a set or a string, and this is {0}. Ask it for one, or count with 'loop for'. |
-| `PC0317` | error | Range loop needs integers | A range loop counts with integers, and this is {0}. Count with whole numbers, or walk it with 'loop each'. |
-| `PC0318` | error | This function yields nothing | '{0}' declares no result, so 'yield' cannot carry a value. Declare a result, or write 'yield;'. |
-| `PC0319` | error | Missing value to yield | '{0}' yields a {1}, so 'yield' needs a value. Give it one, or drop the result type. |
-| `PC0320` | error | Constant needs a value | '{0}' is a constant, so it must be given a value where it is declared. Write one, or drop 'constant'. |
-| `PC0321` | error | Constant value must be known while compiling | The value of '{0}' must be worked out while compiling, so it can only be built from literals and other constants. |
-| `PC0322` | error | This type cannot be constant | {0} cannot be declared constant, because the binding could stay fixed while what it names changed. This may widen in a later version. |
-| `PC0323` | error | Nothing to infer from | 'let' works out the type from the value, so it needs one. Give it a value, or write the type instead. |
-| `PC0324` | error | Division by zero | This divides by zero. |
-| `PC0325` | error | Case label must be a constant | A case label must be known while compiling. |
-| `PC0326` | error | Duplicate case label | The value {0} is already handled by another case. |
-| `PC0327` | warning | This test is always false | {0} can never be {1}, so this is always false. |
-| `PC0328` | error | Cannot be instantiated | '{0}' is {1} and cannot be instantiated. |
-| `PC0329` | error | Optional must be unwrapped first | This is {0}, which may be empty. Use 'HasValue()' to check, 'Or(...)' for a fallback, or 'Value()' to insist. |
-| `PC0330` | error | This member is a function | '{0}' is a function, so it has to be called: write '{0}()'. |
-| `PC0331` | error | Member needs an instance | '{0}' belongs to each {1} rather than to the {1} type, so it cannot be reached through the name '{1}'. Mark it 'shared', or read it from a value. |
-| `PC0332` | error | This produces no value | This produces no value, so there is nothing to use here. |
-| `PC0333` | error | Negative exponent on an integer | An integer raised to the power {0} is not a whole number. Raise a fraction instead, as in '(1\|2) ^ {0}', or use 'Math.Pow(...)' for a real result. |
-| `PC0334` | warning | This test is always true | {0} is always {1}, so this is always true. |
-| `PC0335` | error | Cannot cast to a value type | {0} is a value type, and value types have no inheritance for a cast to follow. |
-| `PC0336` | error | Parameter needs a type | Nothing here says what '{0}' holds. Write its type, as in '(integer {0})'. |
-| `PC0337` | warning | Not every member is handled | This switch does not handle every {0}: {1} {2} no case. Add one for each, or a 'default' for everything else. |
-| `PC0338` | error | This member is a value | '{0}' is a value rather than a function, so it is written without '()'. |
-| `PC0339` | error | Member cannot be reached from here | '{0}' is {1} in {2}, so it cannot be reached here. {3} |
-| `PC0340` | opinion | This empty string does nothing | 'WriteLine' ends the line by itself. Write 'Console.WriteLine()'. |
-| `PC0341` | error | This cannot be formatted | {0} has no 'Format', so ':{1}' says nothing. Leave the ':' out to write it the ordinary way. |
-| `PC0342` | error | This works on bits, not on booleans | '{0}' works on the bits of a whole number. For two booleans, '!=' asks whether exactly one of them holds. |
-| `PC0343` | error | This shift is outside the width of an integer | An integer holds 64 bits, so a shift of {0} places moves past all of them. An amount from 0 to 63 is what there is to move. |
-| `PC0344` | warning | This exception cannot be caught | Nothing catches {0}, so this clause would never run. Remove it. |
-| `PC0345` | error | Optional is changed by something that captured it | This is {0}, and checking it proves nothing because a function that captured '{1}' may assign it at any point. Copy it into a local and check that, or use 'Or(...)'. |
-| `PC0346` | error | This real has no fraction to become | {0} needs a numerator or denominator larger than an integer holds. Up to eighteen places after the point will convert. |
-| `PC0347` | error | A value has no identity to compare | {0} is a value, so asking whether two of them are the same object has no answer. Use '==' to compare what they hold. |
-| `PC0348` | error | This member needs a value | '{0}' needs a value on the left of the dot, not the type name '{1}'. |
-| `PC0349` | error | An optional has no text to write | {0} may hold nothing, so there is nothing to write for it. Say what to write instead with 'Or', or prove it holds a value and write that. |
+| `CM0200` | error | Name not found | '{0}' is not defined here. Check the spelling, or declare it above this line. |
+| `CM0201` | error | Type not found | There is no type named '{0}'. Check the spelling, or the 'using' that would reach it. |
+| `CM0202` | error | Name already declared | '{0}' is already declared in this scope. Rename one of them. |
+| `CM0203` | warning | This shadows a type the language provides | '{0}' is also the name of a type in Standard, and a name declared here wins over one in scope. Write 'Standard.{0}' to reach the other, or rename this. |
+| `CM0204` | error | Member access needs a receiver | '{0}' is a {1} of '{2}', so it must be written as '{3}.{0}'. A bare name reaches only locals and parameters. |
+| `CM0205` | error | Cannot assign to a constant | '{0}' is a constant and cannot be assigned to. Drop 'constant' from its declaration, or assign a different name. |
+| `CM0206` | error | Cannot assign to a loop variable | '{0}' is a loop variable and is read-only inside the loop. Each iteration binds a fresh one, so assigning to it would change nothing. |
+| `CM0207` | error | Circular inheritance | '{0}' cannot extend itself, directly or through its ancestors. Break the circle. |
+| `CM0208` | error | Cannot extend a sealed model | '{0}' is sealed and cannot be extended. Drop 'sealed' from it, or extend what it extends. |
+| `CM0209` | error | Cannot extend this type | '{0}' is a {1}, and only a model can be extended. Hold one as a field instead. |
+| `CM0210` | error | Sealed and abstract together | '{0}' cannot be both sealed and abstract; it could then be neither extended nor instantiated, so nothing could use it. |
+| `CM0212` | error | No entry point | A program needs a 'shared model Program' containing a function named 'Main'. |
+| `CM0213` | error | Program must be a shared model | 'Program' must be declared 'shared model', since there is no such thing as an instance of a running program. |
+| `CM0214` | error | '{0}' used outside a model | '{0}' can only be used inside a model's instance member. Drop 'shared' from this member, or reach what you want through its type name. |
+| `CM0215` | error | No parent to reach | 'base' needs a parent model, and '{0}' extends nothing. Give it one with 'extends', or write 'this' instead. |
+| `CM0216` | error | Cannot extend a built-in type | '{0}' is provided by the language and has nothing to inherit. Of the built-in types only 'Model' and the exceptions may follow 'extends'. |
+| `CM0217` | error | Type already declared | '{0}' is already declared {1}. Two types cannot share a name, whether they are written in one file or across several. Rename one of them. |
+| `CM0218` | error | Main declares no result or an integer | 'Main' must declare no result, or an integer, which becomes the program's exit code. |
+| `CM0219` | error | Two visibilities on one declaration | '{0}' is written {1}, and one declaration has one visibility. Keep the word that says how far this should reach. |
+| `CM0220` | error | A type cannot be protected | '{0}' is a type, and 'protected' is for members. Write 'internal' for its project, or 'public' for anywhere. |
+| `CM0221` | error | Type belongs to another project | '{0}' is internal to {1}, and this is {2}. Mark it 'public' if {2} is meant to use it. |
+| `CM0222` | error | Nothing to override | '{0}' is marked 'override', but {1} declares no '{0}' with these parameters. Check the name and the parameter types, or drop 'override' if this is a new function. |
+| `CM0223` | error | Overridden function is not virtual | '{0}' overrides a function in {1} that is not marked 'virtual', so {1} did not offer it for overriding. Mark the one in {1} 'virtual'. |
+| `CM0224` | error | This hides a function from the base | {1} already declares '{0}' with these parameters. Write 'override' to replace it, or rename this one. |
+| `CM0225` | error | Override yields a different result | '{0}' yields {1}, and the one it overrides in {2} yields {3}. An override yields what it overrides, since a caller holding a {2} reads the result as {2} declared it. |
+| `CM0226` | error | This name is offered by more than one namespace | '{0}' could mean {1}. Both are used here and neither is nearer, so write the one you mean in full. |
+| `CM0227` | error | No such namespace | No namespace named '{0}' is declared in this compilation. Check the spelling, or that the file declaring it is being compiled. |
+| `CM0228` | error | This namespace is already used here | '{0}' is already used in this file. Remove this line. |
+| `CM0229` | error | Standard belongs to the language | 'Standard' is the namespace the language's own types live in, and a program may not add to it. Name this namespace something else. |
+| `CM0230` | opinion | Standard is already in scope | Every file reaches Standard without saying so, so this line brings nothing. |
+| `CM0231` | error | This belongs above any namespace | '{0}' is a statement about the whole file, so it goes above every namespace in it. Move it to the top. |
+| `CM0232` | opinion | This namespace repeats one around it | '{0}' already sits inside a namespace of that name, so its types are reached as '{0}.{0}.…'. Rename this one if that was not meant. |
+| `CM0233` | error | Nothing can be of this type | '{0}' has no instances, so nothing can ever be held here. {1} |
+| `CM0234` | error | Which program starts? | These sources declare more than one Program: {0}. Write 'entry {1}' in the project file to say which one begins. |
+| `CM0235` | error | No such program | '{0}' is not a Program among these sources. {1} |
+| `CM0236` | opinion | This 'entry' decides nothing | Only '{0}' declares a Program, so it begins whether or not this line is here. |
+| `CM0237` | error | This name is already in use here | '{0}' is already the name of something in an enclosing scope, so this one would hide it. Give it a name of its own. |
+| `CM0238` | error | This function needs a body | '{0}' ends at the semicolon, so nothing says what it does. Give it a body, or mark it 'abstract' to leave it to whatever extends this model. |
+| `CM0239` | error | An abstract function has no body | '{0}' is abstract, so every model extending this one writes what it does and this body would never run. End the declaration at ';', or drop the 'abstract'. |
+| `CM0240` | error | Only an abstract model may leave a function open | '{0}' is abstract, but '{1}' can be constructed — so an instance of it would reach a function nothing ever wrote. Mark '{1}' abstract too. |
+| `CM0241` | error | An inherited function is still open | '{0}' can be constructed, so it must write every function left open above it. Still open: {1}. Override each, or mark '{0}' abstract. |
+| `CM0242` | opinion | An abstract function is already virtual | '{0}' is abstract, which is what offers it for overriding, so 'virtual' says nothing further. Remove it. |
+| `CM0243` | error | This changes the sequence being walked | '{0}' is the sequence this 'loop each' is walking, and '{1}' changes it. Collect the changes into another set, or count with a range loop. |
+| `CM0244` | warning | This documentation has nothing to document | Nothing follows this that an '@summary:' can document, so nothing will show it. Move it directly above a declaration, or make it an ordinary comment. |
+| `CM0245` | warning | This documents a parameter that is not there | '{0}' is documented, but '{1}' takes {2}. Rename the line or take it out. |
+| `CM0246` | warning | This describes a value that is never given back | '{0}' yields nothing, so there is no value for '@yields:' to describe. |
+| `CM0247` | opinion | This is documented twice | '{0}' already has a line above this one, and the first is the one that shows. For a second paragraph, leave a blank line and keep writing. |
+| `CM0248` | error | 'base' has to come first | 'base(...)' must be the first statement in a constructor, so that '{0}' is fully built before anything here runs. |
+| `CM0249` | error | '{0}' is not available yet | '{1}' is still being built here, so '{0}' cannot be reached from a field's starting value. Give '{2}' its value in a constructor instead. |
+| `CM0250` | error | Nothing here builds the parent | '{0}' extends '{1}', which cannot be built without being given something. Begin this constructor with 'base(...)': '{1}' takes {2}. |
+| `CM0251` | opinion | This 'base()' changes nothing | '{0}' is built before this constructor's body whether or not 'base()' is written, so this line does what would happen without it. Keep it if saying so helps. |
+| `CM0252` | error | An optional of an optional | This is already optional, so the second '?' says nothing new. Write one '?'. |
+| `CM0253` | error | Member name already taken | {0} already has a member named '{1}', declared on line {2}. Rename one, unless they are versions of one function taking different types. |
+| `CM0254` | error | A throwaway holds nothing | '_' throws its value away, so there is nothing here to use. Give it a name. |
+| `CM0255` | error | A throwaway cannot be a name | '_' throws a value away, so it cannot name {0}, which is reached by name. Give it a name. |
+| `CM0256` | error | Nothing here asks for a name | '_' stands in for a name the language asks for, and nothing asks for one here. Write the value on its own, or remove the line. |
+| `CM0257` | error | A parameter needs a name | '_' cannot name a parameter: it is part of the signature a caller reads. Give it a name. |
+| `CM0259` | opinion | This 'shared' is already implied | Every member of a shared model is shared already, so this says nothing. Remove it. |
 
-### PC0400 to PC0499
+### CM0300 to CM0399
 
 | Identifier | | Reported when | What it says |
 |---|---|---|---|
-| `PC0400` | error | Used before it is given a value | '{0}' is used here before it has been given a value. Give it one above this line. |
-| `PC0401` | error | Not given a value on every path | '{0}' is not given a value on every path that reaches this point. Give it one on every branch, or where it is declared. |
-| `PC0402` | error | Field not given a value | '{0}' must be given a value before this constructor ends. Give it one here, or an initializer where it is declared, or make it optional. |
-| `PC0403` | warning | Unreachable code | This can never be reached. |
-| `PC0404` | error | Not every path yields a value | '{0}' yields {1}, but it can reach its end without yielding one. Yield on every path out. |
-| `PC0405` | error | Called before a name it uses is ready | '{0}' uses '{1}', which has not been given a value yet. Call it after '{1}' is set, or move what it needs above this line. |
-| `PC0406` | opinion | Nothing here can end this loop | Nothing here breaks, yields, or throws, so nothing will stop this loop. Add a 'break', or give it a condition with 'loop while' or 'until'. |
-| `PC0407` | error | Nothing here for this to leave | '{0}' needs a loop around it, and there is none here. A 'switch' is not one: it runs one arm and stops, so there is nothing about it to leave or to go on with. |
-| `PC0408` | error | Shared field not given a value | '{0}' is shared, so no constructor runs that could give it a value. Give it one where it is declared, or make it optional. |
-| `PC0409` | warning | This is never read | Nothing reads '{0}'. Remove it, or write '_' if the value is not wanted. |
-| `PC0410` | warning | Nothing uses this | Nothing uses '{0}'. Remove it, or widen it past 'private'. |
-| `PC0411` | warning | Nothing happens here | This works a value out and drops it, and nothing else happens. Remove the line. |
-| `PC0412` | opinion | This call's result is dropped | Nothing keeps what this yields. Keep it, or give the function a version that yields nothing. |
-| `PC0413` | opinion | This step never advances | A step of zero leaves the counter where it started, so this loop runs forever. Give it a step that moves, or write 'loop' where running forever is meant. |
-| `PC0414` | warning | This loop cannot run | Counting from {0} by {1} never reaches {2}, so nothing inside this loop runs. Check which way the step points. |
+| `CM0300` | error | Cannot convert | Cannot use {0} where {1} is expected. {2} |
+| `CM0301` | error | Conversion must be written out | {0} does not become {1} on its own, because the result would surprise you. Write '{2}' to ask for it. |
+| `CM0302` | error | Condition must be a boolean | {0} must be a boolean, and this is {1}. Write a comparison. |
+| `CM0303` | error | Operator not defined for these types | '{0}' is not defined for {1} and {2}. Convert one side, or use a member. |
+| `CM0304` | error | Operator not defined for this type | '{0}' is not defined for {1}. Convert it, or use a member. |
+| `CM0305` | error | Branches of an if expression have different types | The branches of an if expression must have the same type, and these are {0} and {1}. Make them agree, or write an 'if' statement. |
+| `CM0306` | error | Member not found | {0} has no member named '{1}'. |
+| `CM0307` | error | Not something that can be called | {0} cannot be called. {1} |
+| `CM0308` | error | Wrong number of arguments | '{0}' takes {1}, but was given {2}. |
+| `CM0309` | error | No overload matches | No version of '{0}' accepts these arguments. Convert the ones that do not match. |
+| `CM0310` | error | Ambiguous call | Several versions of '{0}' match these arguments equally well. Give one argument the exact type a version takes. |
+| `CM0311` | error | Not something that can be indexed | {0} cannot be indexed. Only a set and a string can. |
+| `CM0312` | error | Index must be an integer | An index must be an integer, and this is {0}. Write a whole number. |
+| `CM0313` | error | Cannot infer the type of an empty set | The type of an empty set cannot be worked out from the set alone. Write the type, as in 'integer[] values = {};'. |
+| `CM0314` | error | Set elements have different types | The elements of a set must have one type, and these are {0} and {1}. Write the set's type, as in 'Shape[] values = {{...}};'. |
+| `CM0315` | error | Cannot switch on this type | A switch cannot examine {0}. A case label compares an integer, a character, a string, a boolean or an enumeration member, and nothing else. |
+| `CM0316` | error | Cannot iterate this type | 'loop each' needs a set or a string, and this is {0}. Ask it for one, or count with 'loop for'. |
+| `CM0317` | error | Range loop needs integers | A range loop counts with integers, and this is {0}. Count with whole numbers, or walk it with 'loop each'. |
+| `CM0318` | error | This function yields nothing | '{0}' declares no result, so 'yield' cannot carry a value. Declare a result, or write 'yield;'. |
+| `CM0319` | error | Missing value to yield | '{0}' yields a {1}, so 'yield' needs a value. Give it one, or drop the result type. |
+| `CM0320` | error | Constant needs a value | '{0}' is a constant, so it must be given a value where it is declared. Write one, or drop 'constant'. |
+| `CM0321` | error | Constant value must be known while compiling | The value of '{0}' must be worked out while compiling, so it can only be built from literals and other constants. |
+| `CM0322` | error | This type cannot be constant | {0} cannot be declared constant, because the binding could stay fixed while what it names changed. This may widen in a later version. |
+| `CM0323` | error | Nothing to infer from | 'let' works out the type from the value, so it needs one. Give it a value, or write the type instead. |
+| `CM0324` | error | Division by zero | This divides by zero. |
+| `CM0325` | error | Case label must be a constant | A case label must be known while compiling. |
+| `CM0326` | error | Duplicate case label | The value {0} is already handled by another case. |
+| `CM0327` | warning | This test is always false | {0} can never be {1}, so this is always false. |
+| `CM0328` | error | Cannot be instantiated | '{0}' is {1} and cannot be instantiated. |
+| `CM0329` | error | Optional must be unwrapped first | This is {0}, which may be empty. Use 'HasValue()' to check, 'Or(...)' for a fallback, or 'Value()' to insist. |
+| `CM0330` | error | This member is a function | '{0}' is a function, so it has to be called: write '{0}()'. |
+| `CM0331` | error | Member needs an instance | '{0}' belongs to each {1} rather than to the {1} type, so it cannot be reached through the name '{1}'. Mark it 'shared', or read it from a value. |
+| `CM0332` | error | This produces no value | This produces no value, so there is nothing to use here. |
+| `CM0333` | error | Negative exponent on an integer | An integer raised to the power {0} is not a whole number. Raise a fraction instead, as in '(1\|2) ^ {0}', or use 'Math.Pow(...)' for a real result. |
+| `CM0334` | warning | This test is always true | {0} is always {1}, so this is always true. |
+| `CM0335` | error | Cannot cast to a value type | {0} is a value type, and value types have no inheritance for a cast to follow. |
+| `CM0336` | error | Parameter needs a type | Nothing here says what '{0}' holds. Write its type, as in '(integer {0})'. |
+| `CM0337` | warning | Not every member is handled | This switch does not handle every {0}: {1} {2} no case. Add one for each, or a 'default' for everything else. |
+| `CM0338` | error | This member is a value | '{0}' is a value rather than a function, so it is written without '()'. |
+| `CM0339` | error | Member cannot be reached from here | '{0}' is {1} in {2}, so it cannot be reached here. {3} |
+| `CM0340` | opinion | This empty string does nothing | 'WriteLine' ends the line by itself. Write 'Console.WriteLine()'. |
+| `CM0341` | error | This cannot be formatted | {0} has no 'Format', so ':{1}' says nothing. Leave the ':' out to write it the ordinary way. |
+| `CM0342` | error | This works on bits, not on booleans | '{0}' works on the bits of a whole number. For two booleans, '!=' asks whether exactly one of them holds. |
+| `CM0343` | error | This shift is outside the width of an integer | An integer holds 64 bits, so a shift of {0} places moves past all of them. An amount from 0 to 63 is what there is to move. |
+| `CM0344` | warning | This exception cannot be caught | Nothing catches {0}, so this clause would never run. Remove it. |
+| `CM0345` | error | Optional is changed by something that captured it | This is {0}, and checking it proves nothing because a function that captured '{1}' may assign it at any point. Copy it into a local and check that, or use 'Or(...)'. |
+| `CM0346` | error | This real has no fraction to become | {0} needs a numerator or denominator larger than an integer holds. Up to eighteen places after the point will convert. |
+| `CM0347` | error | A value has no identity to compare | {0} is a value, so asking whether two of them are the same object has no answer. Use '==' to compare what they hold. |
+| `CM0348` | error | This member needs a value | '{0}' needs a value on the left of the dot, not the type name '{1}'. |
+| `CM0349` | error | An optional has no text to write | {0} may hold nothing, so there is nothing to write for it. Say what to write instead with 'Or', or prove it holds a value and write that. |
 
-### PC0500 to PC0599
+### CM0400 to CM0499
+
+| Identifier | | Reported when | What it says |
+|---|---|---|---|
+| `CM0400` | error | Used before it is given a value | '{0}' is used here before it has been given a value. Give it one above this line. |
+| `CM0401` | error | Not given a value on every path | '{0}' is not given a value on every path that reaches this point. Give it one on every branch, or where it is declared. |
+| `CM0402` | error | Field not given a value | '{0}' must be given a value before this constructor ends. Give it one here, or an initializer where it is declared, or make it optional. |
+| `CM0403` | warning | Unreachable code | This can never be reached. |
+| `CM0404` | error | Not every path yields a value | '{0}' yields {1}, but it can reach its end without yielding one. Yield on every path out. |
+| `CM0405` | error | Called before a name it uses is ready | '{0}' uses '{1}', which has not been given a value yet. Call it after '{1}' is set, or move what it needs above this line. |
+| `CM0406` | opinion | Nothing here can end this loop | Nothing here breaks, yields, or throws, so nothing will stop this loop. Add a 'break', or give it a condition with 'loop while' or 'until'. |
+| `CM0407` | error | Nothing here for this to leave | '{0}' needs a loop around it, and there is none here. A 'switch' is not one: it runs one arm and stops, so there is nothing about it to leave or to go on with. |
+| `CM0408` | error | Shared field not given a value | '{0}' is shared, so no constructor runs that could give it a value. Give it one where it is declared, or make it optional. |
+| `CM0409` | warning | This is never read | Nothing reads '{0}'. Remove it, or write '_' if the value is not wanted. |
+| `CM0410` | warning | Nothing uses this | Nothing uses '{0}'. Remove it, or widen it past 'private'. |
+| `CM0411` | warning | Nothing happens here | This works a value out and drops it, and nothing else happens. Remove the line. |
+| `CM0412` | opinion | This call's result is dropped | Nothing keeps what this yields. Keep it, or give the function a version that yields nothing. |
+| `CM0413` | opinion | This step never advances | A step of zero leaves the counter where it started, so this loop runs forever. Give it a step that moves, or write 'loop' where running forever is meant. |
+| `CM0414` | warning | This loop cannot run | Counting from {0} by {1} never reaches {2}, so nothing inside this loop runs. Check which way the step points. |
+
+### CM0500 to CM0599
 
 Lowering and emission, which report nothing: every program that checks is a program that
 compiles.
 
-### PC0600 to PC0699
+### CM0600 to CM0699
 
 | Identifier | | Reported when | What it says |
 |---|---|---|---|
-| `PC0600` | error | Project file not found | There is no project file at '{0}'. |
-| `PC0601` | error | Project has no header | A project file opens with 'project' and a name. |
-| `PC0602` | error | Project has no name | 'project' must be followed by a name. |
-| `PC0603` | error | Project is not closed | This project is never closed. Add 'end project'. |
-| `PC0604` | error | Unrecognized project entry | '{0}' is not something a project file says. A project names files with 'source' and other projects with 'reference'. |
-| `PC0605` | error | Source with no path | 'source' must be followed by a file or folder path. |
-| `PC0606` | error | Source not found | There is no file or folder at '{0}'. |
-| `PC0607` | error | Source is not Profi-C | '{0}' is not a .pc file, so a project cannot build it. |
-| `PC0608` | error | Source listed more than once | '{0}' is already part of this project. Remove this line. |
-| `PC0609` | error | Folder holds no source | '{0}' holds no .pc files. |
-| `PC0610` | error | Project builds nothing | This project lists no source, so there is nothing to build. |
-| `PC0611` | error | Imported file not found | There is no file at '{0}', which is looked for beside {1}. |
-| `PC0612` | error | Import is not Profi-C | '{0}' is not a .pc file, so it cannot be compiled with this one. |
-| `PC0613` | warning | Import names an absolute path | '{0}' names a path from the root of a disk, so it resolves only on the machine it was written on. A path relative to this file travels with it. |
-| `PC0614` | warning | Imports form a circle | This import closes a circle: {0}. Files beside one another need no import between them, and a project file spans folders without one. |
-| `PC0620` | error | Reference with no path | 'reference' must be followed by the path of a project file. |
-| `PC0621` | error | Referenced project not found | There is no project file at '{0}'. |
-| `PC0622` | error | Reference is not a project | '{0}' is not a .pcp file. A project references projects; it names files with 'source'. |
-| `PC0623` | error | Project referenced more than once | '{0}' is already referenced by this project. Remove this line. |
-| `PC0624` | error | Projects reference each other | This reference closes a circle: {0}. Move what both need into a third project they both reference. |
-| `PC0625` | error | Two projects claim one file | '{0}' is listed by {1} and by {2}. A file belongs to one project. Let the project that owns it keep it, and have the other reference that project. |
-| `PC0626` | error | Nothing named to start at | 'entry' says which Program begins, so a name must follow it, as in 'entry Tools.Program'. |
-| `PC0627` | error | More than one 'entry' | A project starts in one place, so it names one 'entry'. |
-| `PC0628` | error | Nothing named to build into | 'output' says where a build is written, so a folder must follow it, as in 'output ../artifacts'. |
-| `PC0629` | error | More than one 'output' | A project is written to one place, so it names one 'output'. |
+| `CM0600` | error | Project file not found | There is no project file at '{0}'. |
+| `CM0601` | error | Project has no header | A project file opens with 'project' and a name. |
+| `CM0602` | error | Project has no name | 'project' must be followed by a name. |
+| `CM0603` | error | Project is not closed | This project is never closed. Add 'end project'. |
+| `CM0604` | error | Unrecognized project entry | '{0}' is not something a project file says. A project names files with 'source' and other projects with 'reference'. |
+| `CM0605` | error | Source with no path | 'source' must be followed by a file or folder path. |
+| `CM0606` | error | Source not found | There is no file or folder at '{0}'. |
+| `CM0607` | error | Source is not Compass | '{0}' is not a .cm file, so a project cannot build it. |
+| `CM0608` | error | Source listed more than once | '{0}' is already part of this project. Remove this line. |
+| `CM0609` | error | Folder holds no source | '{0}' holds no .cm files. |
+| `CM0610` | error | Project builds nothing | This project lists no source, so there is nothing to build. |
+| `CM0611` | error | Imported file not found | There is no file at '{0}', which is looked for beside {1}. |
+| `CM0612` | error | Import is not Compass | '{0}' is not a .cm file, so it cannot be compiled with this one. |
+| `CM0613` | warning | Import names an absolute path | '{0}' names a path from the root of a disk, so it resolves only on the machine it was written on. A path relative to this file travels with it. |
+| `CM0614` | warning | Imports form a circle | This import closes a circle: {0}. Files beside one another need no import between them, and a project file spans folders without one. |
+| `CM0620` | error | Reference with no path | 'reference' must be followed by the path of a project file. |
+| `CM0621` | error | Referenced project not found | There is no project file at '{0}'. |
+| `CM0622` | error | Reference is not a project | '{0}' is not a .cmp file. A project references projects; it names files with 'source'. |
+| `CM0623` | error | Project referenced more than once | '{0}' is already referenced by this project. Remove this line. |
+| `CM0624` | error | Projects reference each other | This reference closes a circle: {0}. Move what both need into a third project they both reference. |
+| `CM0625` | error | Two projects claim one file | '{0}' is listed by {1} and by {2}. A file belongs to one project. Let the project that owns it keep it, and have the other reference that project. |
+| `CM0626` | error | Nothing named to start at | 'entry' says which Program begins, so a name must follow it, as in 'entry Tools.Program'. |
+| `CM0627` | error | More than one 'entry' | A project starts in one place, so it names one 'entry'. |
+| `CM0628` | error | Nothing named to build into | 'output' says where a build is written, so a folder must follow it, as in 'output ../artifacts'. |
+| `CM0629` | error | More than one 'output' | A project is written to one place, so it names one 'output'. |
 
-### PC9000 and up
+### CM9000 and up
 
 Numbered well clear of the ranges above, because these are not about the program being compiled.
 Every other identifier names something a reader wrote; these name the compiler failing, and no
@@ -3139,5 +3139,5 @@ below it is for.
 
 | Identifier | | Reported when | What it says |
 |---|---|---|---|
-| `PC9000` | error | The compiler hit a problem it has no message for | {0}. This is a fault in the compiler rather than a mistake in this program, and there is nothing to write differently that would avoid it. The .NET stack trace below is what will fix it: please report it, along with the program that caused it. |
+| `CM9000` | error | The compiler hit a problem it has no message for | {0}. This is a fault in the compiler rather than a mistake in this program, and there is nothing to write differently that would avoid it. The .NET stack trace below is what will fix it: please report it, along with the program that caused it. |
 

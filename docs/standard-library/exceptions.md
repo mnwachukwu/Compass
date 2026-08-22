@@ -31,7 +31,7 @@ end try
 ```
 
 **The divisor arrives in a variable on purpose.** `10 / 0` written out does not compile at all —
-`PC0324` catches a zero the compiler can see, so there is nothing left to catch at run time. The
+`CM0324` catches a zero the compiler can see, so there is nothing left to catch at run time. The
 exception is for the zero it cannot see.
 
 ## Declaring your own
@@ -84,7 +84,7 @@ can take.
 **`RecursionTooDeepException` is nameable but not catchable.** It has a name so that a reader can
 be told what stopped their program, and it stops the program because there is nothing useful to
 do about it: the stack that would run the handler is the stack that just ran out. A `catch`
-naming it is reported (`PC0344`) rather than left sitting there looking like a handler.
+naming it is reported (`CM0344`) rather than left sitting there looking like a handler.
 
 **Absence is never an exception.** A file that is not there, text that does not read as a number,
 input that has run out — each of those yields an [optional](optionals.md) instead, because each is
