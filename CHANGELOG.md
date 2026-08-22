@@ -23,9 +23,6 @@ program refers to are `Compass*`.
 
 **Environment.** `COMPASS_UPDATE_GOLDEN` and `COMPASS_KEEP_ASSEMBLIES`.
 
-Renamed from Profi-C. A 1.0.0 program compiles once its extension and any `# ignore` comment are
-rewritten.
-
 ## 1.0.0
 
 The first release. The language is complete as the [specification](docs/language-spec.md)
