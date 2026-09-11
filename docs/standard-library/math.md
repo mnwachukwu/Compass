@@ -17,7 +17,7 @@ Reached through the name; there is no such thing as *a* `Math`.
 **Every member that takes a number takes a `real` or a `float`**, in two forms the argument
 chooses between. Neither type can answer for the other — a real has no infinity and a float has no
 twenty-eight digits — so a single version would force a conversion at every call. Three sections
-go further and each says so: `Abs`, `Min` and `Max` take all four number types, the rounding
+go further and each says so: `Abs`, `Min`, and `Max` take all four number types, the rounding
 members take the three that have a fractional part, and `Factorial` counts arrangements and so
 takes a whole number only.
 
@@ -69,7 +69,7 @@ Console.WriteLine(Math.Factorial(5));      # 120
 | `Math.Log10(real x)` | `real` | Base ten |
 | `Math.Log2(real x)` | `real` | Base two |
 
-`Log` with one argument is natural, as it is in C#, C and Java — not base ten.
+`Log` with one argument is natural, as it is in C#, C, and Java — not base ten.
 
 ```
 Console.WriteLine(Math.Log2(1024.0));       # 10
@@ -132,7 +132,7 @@ Console.WriteLine(Math.Max(2.5, 2.75));    # 2.75
 | `Math.Round(real x, integer places)` · `Math.Round(float x, integer places)` | the type given | To that many decimal places |
 
 **Rounding lands on a whole number**, so each yields an `integer` and can be used as a count, an
-index or a bound. These are the three ways from a `real`, a `float` or a `fraction` to an
+index, or a bound. These are the three ways from a `real`, a `float`, or a `fraction` to an
 `integer`, which is why no single `ToInteger` exists: it would have to pick one of the three
 without being told which.
 
@@ -150,7 +150,7 @@ Console.WriteLine(Math.Round(2.567, 2));   # 2.57 — a real, since it still has
 
 `Sqrt` is required by IEEE 754 to be correctly rounded, so it gives the same answer on every
 machine. **The rest of the transcendental members are not**, and may differ in the last bit
-between one machine and another. That is true of C, C#, Java and Python alike: each defers to the
+between one machine and another. That is true of C, C#, Java, and Python alike: each defers to the
 arithmetic library the platform ships, and those are permitted to disagree by a fraction of an
 ulp.
 

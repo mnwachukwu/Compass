@@ -574,7 +574,7 @@ a project builds can always be read off the file. An `output` says where the bui
 the only way to say so — a loose `.cm` has nowhere to record one, which is why the forty
 programs in `samples/` all land in the same `bin` and this one does not. Paths are relative to
 the project file. The whole vocabulary is `project`, `source`, `reference`, `entry`, `output`,
-`ignore` and `end project`; the format is deliberately small and is not Compass, since it
+`ignore`, and `end project`; the format is deliberately small and is not Compass, since it
 describes a build rather than a computation and nothing in it compiles.
 
 **A project builds on another with `reference`**, which brings that project's types:
@@ -646,7 +646,7 @@ Five more exist for editors rather than for reading:
   open. The others read a file, answer, and exit, so none of them can see an editor buffer that
   has not been saved.
   This holds what the editor holds, so diagnostics arrive as the code is written rather than when
-  a button is pressed, and hover, go-to-definition, renaming, coloring and the outline answer
+  a button is pressed, and hover, go-to-definition, renaming, coloring, and the outline answer
   about what is on screen rather than what was last saved.
 
 None of the five is a convenience. Each answers a question about Compass that an editor would
@@ -785,7 +785,7 @@ only way anything reaches it.
 
 "Every construct" is a test rather than an aspiration: `TourCoverageTests` reads the tour alone
 and holds it against every reserved word, every symbol, every node the parser can build, and
-every modifier, operator, literal form and receiver. The one exception is stated there too — a
+every modifier, operator, literal form, and receiver. The one exception is stated there too — a
 file-scoped namespace claims the whole file it is written in, so no file can hold one alongside
 the block form, and the tour opens with blocks. [namespaces.cm](samples/namespaces.cm) writes
 that form, with blocks nested inside it, which is how the two combine.
@@ -838,7 +838,7 @@ Programs the compiler rejects:
 | [naming.cm](samples/negatives/compile/naming.cm) | One name claimed by two members — two fields, a field beside a function, two functions taking the same types — alongside the overloads that are correct |
 | [overloads.cm](samples/negatives/compile/overloads.cm) | Calls that do not settle which version they mean: two reachable only by widening, a lambda fitting both its shape and `Function`, an argument no version takes, a count no version has, and a fraction that does not become a real on its own |
 | [nesting.cm](samples/negatives/compile/nesting.cm) | A nested type reached by a bare name from outside the type holding it, and another named correctly but kept private by its container |
-| [throwaway.cm](samples/negatives/compile/throwaway.cm) | A `_` written where no name was asked for, read back, handed on, and used to name a field, a function, a parameter, a type and a namespace — beside a local nothing reads and a private member nothing reaches |
+| [throwaway.cm](samples/negatives/compile/throwaway.cm) | A `_` written where no name was asked for, read back, handed on, and used to name a field, a function, a parameter, a type, and a namespace — beside a local nothing reads and a private member nothing reaches |
 | [blocks.cm](samples/negatives/compile/blocks.cm) | An `end` that closes the wrong construct |
 | [switching.cm](samples/negatives/compile/switching.cm) | A switch on a real, a label that is not constant, one value handled twice, and a member left unhandled |
 | [results.cm](samples/negatives/compile/results.cm) | A function that never reaches the result it promises, and a call that yields nothing used as a value |

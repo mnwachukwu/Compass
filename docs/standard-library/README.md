@@ -35,7 +35,7 @@ A value can have one of these, so you can declare a variable of it.
 | `Model` | The root of every type | [Every value](every-value.md) |
 | `Function` | The root of every `delegate` type, so a function can be held without naming its signature | Only [what every value has](every-value.md#members) |
 
-The five that a program may build with `new` are `DateTime`, `Date`, `Time`, `TimeSpan` and
+The five that a program may build with `new` are `DateTime`, `Date`, `Time`, `TimeSpan`, and
 `Random`. `Model` and `Exception` are the only two a program may `extend`.
 
 ### Names you reach members through
@@ -48,7 +48,7 @@ one could never be filled, and declaring it is reported.
 | `Console` | Writing to the screen and reading a line back | [Console](input-output.md#console) |
 | `File` | Reading and writing whole files | [File](input-output.md#reading) |
 | `Directory` | The folders files sit in | [Directory](input-output.md#directory) |
-| `Math` | Roots, logarithms, angles, rounding and sizing | [Math](math.md) |
+| `Math` | Roots, logarithms, angles, rounding, and sizing | [Math](math.md) |
 | `Reference` | The one way to ask whether two names reach the same object | [Reference.Equals](every-value.md#referenceequals) |
 | `Integer` | Where an `integer` runs out, and reading one from text | [What each type knows](numbers.md#what-each-type-knows-about-itself) |
 | `Real` | Where a `real` runs out, and reading one from text | [What each type knows](numbers.md#what-each-type-knows-about-itself) |
@@ -342,11 +342,11 @@ One, and every exception carries it. The list of exceptions is [above](#names-fo
 | [Text](text.md) | Everything a `string` answers: searching, cutting, trimming, changing case, and reading a value back out of text |
 | [Sets](sets.md) | Everything a `T[]` answers: counting, adding, removing, taking a run, and the four ways to drop empties |
 | [Optionals](optionals.md) | The three members of a `T?`, and which of them the compiler makes you use |
-| [Numbers](numbers.md) | What an `integer`, `real`, `float` and `fraction` answer, what each knows about itself, and every conversion between them |
-| [Math](math.md) | Roots, logarithms, angles, rounding and sizing |
+| [Numbers](numbers.md) | What an `integer`, `real`, `float`, and `fraction` answer, what each knows about itself, and every conversion between them |
+| [Math](math.md) | Roots, logarithms, angles, rounding, and sizing |
 | [Random](random.md) | Chance, held or drawn through the name |
-| [Dates and times](dates-and-times.md) | `DateTime`, `Date`, `Time` and `TimeSpan` — four types for four different questions |
-| [Input and output](input-output.md) | `Console`, `File` and `Directory` |
+| [Dates and times](dates-and-times.md) | `DateTime`, `Date`, `Time`, and `TimeSpan` — four types for four different questions |
+| [Input and output](input-output.md) | `Console`, `File`, and `Directory` |
 | [Exceptions](exceptions.md) | `Message`, and every exception the language itself raises |
 
 ## How to read a signature
@@ -378,7 +378,7 @@ answers the same members whatever it holds.
 These belong to a model that has no instances — there is no such thing as *a* `Math` — so the
 name on the left is the type itself.
 
-**Five models are both.** `Random`, `DateTime`, `Date`, `Time` and `TimeSpan` each have members
+**Five models are both.** `Random`, `DateTime`, `Date`, `Time`, and `TimeSpan` each have members
 reached through the name (`DateTime.Now`) and members reached through a value you are holding
 (`landing.Year`) — and they are the five a program may construct with `new`. Each page says which
 member is which.
@@ -401,7 +401,7 @@ you read one without proving it is there.
 ## Where the shapes come from
 
 **The library keeps .NET's names and .NET's shapes wherever it can.** `Substring`, `IndexOf`,
-`TrimStart`, `Math.Atan2`, `AddDays`, `CompareTo` and the format patterns are all the ones a
+`TrimStart`, `Math.Atan2`, `AddDays`, `CompareTo`, and the format patterns are all the ones a
 reader will type next in C#. Where Compass differs it is because the language does: `Insert` on a
 string yields a new string because a Compass `string` cannot be changed, and a set's `Union`
 appends rather than merging because a Compass set keeps its order.

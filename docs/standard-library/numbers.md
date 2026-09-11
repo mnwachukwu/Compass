@@ -8,7 +8,7 @@
 |---|---|---|
 | `integer` | A whole number, 64 bits | `42` |
 | `real` | A number with a decimal point, counted **in tens** and exact about them | `3.14` |
-| `float` | Binary floating point: `float` or `double` in C, C#, Java and Go | `3.14f` |
+| `float` | Binary floating point: `float` or `double` in C, C#, Java, and Go | `3.14f` |
 | `fraction` | An **exact** ratio of two whole numbers | `22|7` |
 
 | Section | Members |
@@ -23,7 +23,7 @@
 | [Crossing between a real and a float](#crossing-between-a-real-and-a-float) | `ToFloat` `ToReal` `ToFraction` |
 
 Arithmetic reached through a name lives on its own page: [`Math`](math.md) for roots, logarithms,
-angles and rounding, and [`Random`](random.md) for chance.
+angles, and rounding, and [`Random`](random.md) for chance.
 
 **`real` is not floating point.** A tenth cannot be written exactly in binary, so writing `0.1`
 elsewhere usually gets you the nearest binary number to a tenth rather than a tenth. Here the
@@ -193,7 +193,7 @@ are the same.
 
 ### Writing one too large
 
-A number written past its type's edge is reported (`CM0026`) rather than wrapping, saturating or
+A number written past its type's edge is reported (`CM0026`) rather than wrapping, saturating, or
 converting to something else. The digits scan as a number; only storing them fails, so the
 refusal comes after scanning rather than during it.
 
@@ -228,7 +228,7 @@ Read a row as *from*, a column as *to*. **Bold** happens on its own; anything el
 | **`fraction`** | `Math.Round(x)` | `.ToReal()` | `.ToFloat()` | — |
 
 The table names `Math.Round`, but [`Math.Floor` and `Math.Ceiling`](math.md#rounding) also yield
-an `integer`. Each of the three takes a real, a float or a fraction and answers with a whole
+an `integer`. Each of the three takes a real, a float, or a fraction and answers with a whole
 number, and each names the direction it rounds — which is what a cast could not do.
 
 ### One rule, and its two exceptions

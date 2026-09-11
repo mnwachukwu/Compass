@@ -48,7 +48,7 @@ This document is the normative one: where they disagree, this is right.
   - [2.2 Operators and punctuation](#22-operators-and-punctuation)
   - [2.3 End of file](#23-end-of-file)
   - [2.4 Recovery](#24-recovery)
-- [3. Types](#3-types) — base types, suffixes, function types, values and references
+- [3. Types](#3-types) — base types, suffixes, function types, values, and references
   - [3.1 The base types](#31-the-base-types)
   - [3.1a Converting between numbers](#31a-converting-between-numbers)
   - [3.2 The two suffixes](#32-the-two-suffixes)
@@ -625,7 +625,7 @@ is no `null`; and nothing the language defines is abbreviated — `enumeration` 
 `enum`, `constant` rather than `const`, `boolean` rather than `bool`.
 
 **Every one of the 63 is reserved everywhere.** C# has a second
-kind: `value`, `var`, `record`, `await` and forty-odd others are keywords in one position and
+kind: `value`, `var`, `record`, `await`, and forty-odd others are keywords in one position and
 ordinary names in every other, so whether a word is reserved there depends on where it sits.
 Compass has none of those, and `@` takes any of the 63 back as a name — one rule, written at the
 point it applies. The
@@ -656,7 +656,7 @@ where `10 ^ 2` evaluates to 8, so the meaning does not carry across — the oper
 there is spelled `xor` here.
 
 The boolean operators are the reserved words `and`, `or`, and `not`, not symbols. So are the
-ones that work on bits: `bitwise and`, `bitwise or`, `xor`, `shiftleft` and `shiftright`
+ones that work on bits: `bitwise and`, `bitwise or`, `xor`, `shiftleft`, and `shiftright`
 ([§5.2](#52-operators)).
 
 There is **no** ternary conditional, no compound assignment (`+=` and its family), and no
@@ -716,7 +716,7 @@ digits are held as digits. A real stops at its bounds rather than passing into a
 which is the same choice `integer` makes, and it has no value meaning "not a number".
 
 **`float` is binary floating point**, and is in the language to be met rather than avoided. It
-is what C, C#, Java and Go spell `float` or `double`, and it keeps every behavior that comes
+is what C, C#, Java, and Go spell `float` or `double`, and it keeps every behavior that comes
 with that: a tenth that does not round-trip, a division by zero that produces an infinity, and
 `Float.NotANumber`, which is not equal to itself.
 
@@ -1168,7 +1168,7 @@ in.
 primitive starts at a zero of its own — a counter at nought, a flag at `false`, a string empty,
 a fraction at `0|1` — and an optional starts empty, which is a value like any other and is what
 makes a self-referential model constructible. Everything else has no such value: a model, a set,
-a function or an enumeration left alone would hold nothing, and nothing for those is the null
+a function, or an enumeration left alone would hold nothing, and nothing for those is the null
 [§8](#8-optionals) exists to do without. So they are asked for, or written as an optional so
 that absence is in the type and the reader is made to prove it away.
 
@@ -1381,8 +1381,8 @@ flags shiftright 2          every bit two places down
 
 `&` and `|` were not available to be borrowed: `|` already writes a fraction, and adding
 punctuation for the rest would have been the only symbol operators in a language that spells
-`and`, `or` and `not`. So `bitwise` qualifies the two words that already mean something.
-Nothing else claims `xor`, `shiftleft` or `shiftright`, so those stand alone, and a word after
+`and`, `or`, and `not`. So `bitwise` qualifies the two words that already mean something.
+Nothing else claims `xor`, `shiftleft`, or `shiftright`, so those stand alone, and a word after
 `bitwise` that is not `and` or `or` is reported (`CM0118`).
 
 The three sit on three levels, in C#'s order among themselves — `or` loosest, then `xor`, then
@@ -2028,7 +2028,7 @@ end if
 Console.WriteLine(found + 1);          narrowed for everything after
 ```
 
-An arm that always leaves — by `yield`, `throw`, `break` or `continue` — never arrives at the
+An arm that always leaves — by `yield`, `throw`, `break`, or `continue` — never arrives at the
 join after it, so it has no say in what holds there. That is what makes the example above work,
 and it is not only about guards: where one arm leaves, what the other one stored is what holds.
 
@@ -2401,7 +2401,7 @@ satisfy the compiler rather than to handle the failure.
 The library is small, and lives in a namespace named **`Standard`**: `Model`, `Function`,
 `Exception` and its subtypes, `Console`, `Reference`, `Math`, `Random`, `DateTime`, `TimeSpan`,
 `Date`, `Time`, `File`, `Directory`, and the capitalized name beside each primitive — `Integer`,
-`Real`, `Float`, `Fraction`, `Boolean`, `Character` and `String`. Of these only `Exception` may
+`Real`, `Float`, `Fraction`, `Boolean`, `Character`, and `String`. Of these only `Exception` may
 be extended.
 
 That last group is there because **a reserved word cannot stand in front of a dot**. `integer`
@@ -2431,7 +2431,7 @@ meaning "the language gives you this" if nothing else may write there.
 rather than something the language does, and must be declared exactly once ([§12](#12-execution-and-entry-point)).
 
 **Twelve of them hold no values** — `Boolean`, `Character`, `Console`, `Directory`, `File`,
-`Float`, `Fraction`, `Integer`, `Math`, `Real`, `Reference` and `String`. They are names to
+`Float`, `Fraction`, `Integer`, `Math`, `Real`, `Reference`, and `String`. They are names to
 reach members through, and naming one where a value's type belongs is an error (`CM0233`), as
 it is for any `shared model`, which has no instances by definition:
 
@@ -2450,11 +2450,11 @@ values all the same, since every model converts to one and every function to the
 
 `Model` and `Function` are the two roots ([§3.3](#33-function-types), [§3.4](#34-values-and-references)) rather than things to call.
 
-**`Random`, `DateTime`, `TimeSpan`, `Date` and `Time` are the ones a program may construct.**
+**`Random`, `DateTime`, `TimeSpan`, `Date`, and `Time` are the ones a program may construct.**
 Every other name here is reached through the name itself; writing `new Math()` is reported
 (`CM0328`).
 
-**`DateTime`, `Date`, `Time` and `TimeSpan` order their own values**, so `<`, `>`, `<=` and
+**`DateTime`, `Date`, `Time`, and `TimeSpan` order their own values**, so `<`, `>`, `<=`, and
 `>=` may be written on two of the same type. Each is its `CompareTo` against zero, so the
 operator and the member cannot give different answers. No other model is ordered: two values of
 a declared type have no order to be in, and one taken from the fields would mean whatever order
@@ -2474,7 +2474,7 @@ This section says what the library *is*; that says what is *in* it.
 | [Sets](standard-library/sets.md) | Every member of a `T[]` |
 | [Optionals](standard-library/optionals.md) | The three members of a `T?` |
 | [Numbers](standard-library/numbers.md) | The members of a number, `Fraction`, what each type knows about itself, and every conversion between them |
-| [Math](standard-library/math.md) | Roots, logarithms, angles, rounding and sizing |
+| [Math](standard-library/math.md) | Roots, logarithms, angles, rounding, and sizing |
 | [Random](standard-library/random.md) | Chance, held or drawn through the name |
 | [Dates and times](standard-library/dates-and-times.md) | `DateTime`, `Date`, `Time`, `TimeSpan` |
 | [Input and output](standard-library/input-output.md) | `Console`, `File`, `Directory` |
@@ -2905,7 +2905,7 @@ stopped from outside is one somebody may write.
 | `CM0004` | error | Malformed character literal | A character literal must contain exactly one character. For more than one, write a string with '"'. |
 | `CM0005` | error | Unterminated block comment | Unterminated block comment; expected '##'. |
 | `CM0006` | error | Not an operator in Compass | '{0}' is not an operator in Compass. {1} |
-| `CM0007` | error | Unrecognized escape sequence | Unrecognized escape sequence '\{0}'. The escapes are \n, \t, \\, \", \', \0 and \uFFFF. |
+| `CM0007` | error | Unrecognized escape sequence | Unrecognized escape sequence '\{0}'. The escapes are \n, \t, \\, \", \', \0, and \uFFFF. |
 | `CM0008` | error | Malformed Unicode escape sequence | A Unicode escape must be '\u' followed by four hexadecimal digits. |
 | `CM0009` | opinion | This name needs no '@' | '{0}' is not a reserved word, so the '@' does nothing. Write '{0}'. |
 | `CM0010` | error | Nothing to escape | '@' marks a reserved word being used as a name, so a name must follow it. |
@@ -2949,7 +2949,7 @@ stopped from outside is one somebody may write.
 | `CM0115` | opinion | This parameter's type is already known | The surrounding code already says what '{0}' holds, so writing its type says it twice. Leave the type out. |
 | `CM0116` | error | A function's type is written with 'delegate' | 'Function' takes no parentheses. For a particular shape write 'delegate(...)', with a result before it if it has one, as in 'integer delegate(string)'. |
 | `CM0117` | error | A function's type is written with 'delegate' | 'function' declares a function or makes one on the spot. To write the type of one, use 'delegate' — 'integer delegate(string)' takes a string and yields an integer. |
-| `CM0118` | error | Only 'and' or 'or' may follow 'bitwise' | 'bitwise' says which of two operations follows, and {0} is neither. Write 'bitwise and' or 'bitwise or' — 'xor', 'shiftleft' and 'shiftright' need no word before them. |
+| `CM0118` | error | Only 'and' or 'or' may follow 'bitwise' | 'bitwise' says which of two operations follows, and {0} is neither. Write 'bitwise and' or 'bitwise or' — 'xor', 'shiftleft', and 'shiftright' need no word before them. |
 | `CM0119` | error | 'let' declares a local, not a field | 'let' works inside a function, where the value it holds is written beside it. A field is read far from here, so it says its type: '{0} {1} = ...'. |
 | `CM0120` | error | A loop begins with 'loop' | Every loop opens with 'loop', so this is written 'loop {0}'. The word after 'loop' says which kind: 'for', 'each', 'while', or nothing at all. |
 
@@ -3035,7 +3035,7 @@ stopped from outside is one somebody may write.
 | `CM0312` | error | Index must be an integer | An index must be an integer, and this is {0}. Write a whole number. |
 | `CM0313` | error | Cannot infer the type of an empty set | The type of an empty set cannot be worked out from the set alone. Write the type, as in 'integer[] values = {};'. |
 | `CM0314` | error | Set elements have different types | The elements of a set must have one type, and these are {0} and {1}. Write the set's type, as in 'Shape[] values = {{...}};'. |
-| `CM0315` | error | Cannot switch on this type | A switch cannot examine {0}. A case label compares an integer, a character, a string, a boolean or an enumeration member, and nothing else. |
+| `CM0315` | error | Cannot switch on this type | A switch cannot examine {0}. A case label compares an integer, a character, a string, a boolean, or an enumeration member, and nothing else. |
 | `CM0316` | error | Cannot iterate this type | 'loop each' needs a set or a string, and this is {0}. Ask it for one, or count with 'loop for'. |
 | `CM0317` | error | Range loop needs integers | A range loop counts with integers, and this is {0}. Count with whole numbers, or walk it with 'loop each'. |
 | `CM0318` | error | This function yields nothing | '{0}' declares no result, so 'yield' cannot carry a value. Declare a result, or write 'yield;'. |

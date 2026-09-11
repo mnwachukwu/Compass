@@ -2,7 +2,7 @@
 
 [← Back to the index](README.md)
 
-Three models, all reached through their names: there is no such thing as *a* `Console`, *a* `File`
+Three models, all reached through their names: there is no such thing as *a* `Console`, *a* `File`,
 or *a* `Directory`. A file is not a thing a program holds — it is somewhere a program puts text
 and takes it back.
 

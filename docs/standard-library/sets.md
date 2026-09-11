@@ -19,7 +19,7 @@ A set's members deliberately mirror [a string's](text.md), so that the two read 
 | [Sets of sets](#sets-of-sets) | — |
 
 Unlike a string, **a set can be changed**. `Insert` and `Remove` alter the set you called them on;
-`Subset`, `Union` and the rest give back a new one and leave the original alone. The table says
+`Subset`, `Union`, and the rest give back a new one and leave the original alone. The table says
 which is which.
 
 ## Asking about it
@@ -65,7 +65,7 @@ Console.WriteLine(queue.Remove("Ada")); # true
 Console.WriteLine(queue.Remove("Ada")); # false — there was only one
 ```
 
-**A set cannot be changed while a `loop each` is walking it.** Inserting, removing or clearing
+**A set cannot be changed while a `loop each` is walking it.** Inserting, removing, or clearing
 mid-walk raises `SequenceChangedException`, and where the compiler can see it happening it is an
 error instead. Collect what to remove and do it afterwards.
 

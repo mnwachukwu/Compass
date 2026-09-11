@@ -668,7 +668,7 @@ Console.WriteLine(scores.Count);
 One collection type, ordered and growable, with no array/list distinction to learn.
 
 The cost is the rest of C#'s collections: arrays, `List<T>`, `Dictionary<K,V>`, `HashSet<T>`,
-`Queue<T>`, `Stack<T>` and the interfaces behind them. A program wanting a key-to-value lookup has
+`Queue<T>`, `Stack<T>`, and the interfaces behind them. A program wanting a key-to-value lookup has
 one in C#; Compass has a set and no way to write another. See
 [§11.2](#112-data).
 
@@ -804,7 +804,7 @@ class Program
 There is no bare `throw` to re-raise: the caught exception is a value with a name, so it is thrown
 the way anything is. C# has both forms, and which one is written decides whether the original
 stack trace survives. That choice does not arise here — an `Exception` carries a `Message` and
-nothing else, so there is no stack trace for a program to read, keep or lose.
+nothing else, so there is no stack trace for a program to read, keep, or lose.
 
 ---
 
@@ -938,7 +938,7 @@ C#'s figures are Roslyn's own, from `SyntaxFacts.GetReservedKeywordKinds` and
 `GetContextualKeywordKinds`, minus four undocumented `__`-prefixed ones it also counts. Compass's
 is asserted by a test, so the number above cannot drift from the compiler.
 
-The second row is the one that shows up while writing. In C#, `value`, `var`, `record`, `await`
+The second row is the one that shows up while writing. In C#, `value`, `var`, `record`, `await`,
 and forty-odd others are keywords in one position and ordinary names everywhere else, so whether a
 word is reserved depends on where it sits. In Compass a word is reserved everywhere or nowhere,
 and `@` takes one back as a name. The list is
@@ -1060,7 +1060,7 @@ partial types.
 Three of the absences are **present under another name.** A `structure` is what C# spells
 `struct`. `real` is C#'s `decimal` and `float` is C#'s `double`, so base-ten money arithmetic and
 binary floating point are both here — see the numbers row in
-[§10](#10-where-c-does-it-better). And an optional covers a value type, so `integer?`, `boolean?`
+[§10](#10-where-c-does-it-better). And an optional covers a value type, so `integer?`, `boolean?`,
 and `fraction?` each hold a number or nothing: nullable value types are reached through
 [§6](#6-optionals-sets-and-fractions) rather than through a second kind of type.
 

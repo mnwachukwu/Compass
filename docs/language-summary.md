@@ -62,7 +62,7 @@ is not decoration: [specification §1.3](language-spec.md#13-comments), and
 [specification §10](language-spec.md#10-exceptions).
 
 **Where a program starts, and what a project is.** Entry points, files, folders, `.cmp` projects,
-namespaces and `using`:
+namespaces, and `using`:
 [specification §12](language-spec.md#12-execution-and-entry-point).
 
 ## If you are coming from C#

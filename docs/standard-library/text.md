@@ -209,7 +209,7 @@ Console.WriteLine(year);
 
 ## Writing a number into text
 
-See [`Format`](numbers.md#writing-a-number-out) on `integer`, `real` and `fraction`, and the
+See [`Format`](numbers.md#writing-a-number-out) on `integer`, `real`, and `fraction`, and the
 [interpolated string](../language-spec.md#10-strings) form `"{{ value }}"`, which is usually what
 you want instead of joining with `+`.
 

@@ -108,7 +108,7 @@ public static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor UnrecognizedEscape = Error(
         "CM0007",
         "Unrecognized escape sequence",
-        "Unrecognized escape sequence '\\{0}'. The escapes are \\n, \\t, \\\\, \\\", \\', \\0 "
+        "Unrecognized escape sequence '\\{0}'. The escapes are \\n, \\t, \\\\, \\\", \\', \\0, "
         + "and \\uFFFF.");
 
     public static readonly DiagnosticDescriptor MalformedUnicodeEscape = Error(
@@ -454,7 +454,7 @@ public static class DiagnosticDescriptors
         "CM0118",
         "Only 'and' or 'or' may follow 'bitwise'",
         "'bitwise' says which of two operations follows, and {0} is neither. Write 'bitwise "
-        + "and' or 'bitwise or' — 'xor', 'shiftleft' and 'shiftright' need no word before "
+        + "and' or 'bitwise or' — 'xor', 'shiftleft', and 'shiftright' need no word before "
         + "them.");
 
     /// <summary>
@@ -1366,7 +1366,7 @@ public static class DiagnosticDescriptors
         "CM0315",
         "Cannot switch on this type",
         "A switch cannot examine {0}. A case label compares an integer, a character, a string, "
-        + "a boolean or an enumeration member, and nothing else.");
+        + "a boolean, or an enumeration member, and nothing else.");
 
     public static readonly DiagnosticDescriptor ForEachNeedsSequence = Error(
         "CM0316",

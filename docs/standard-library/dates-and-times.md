@@ -153,7 +153,7 @@ Console.WriteLine(moment.Day);                   # 2 — a moment does not
 |---|---|---|
 | `CompareTo(same type)` | `integer` | Negative if earlier, zero if equal, positive if later |
 
-Every one of the four answers it against its own type. **`<`, `>`, `<=` and `>=` work too**, and
+Every one of the four answers it against its own type. **`<`, `>`, `<=`, and `>=` work too**, and
 are what to write when the question is which came first — each is `CompareTo` against zero, so
 the two can never disagree. `CompareTo` itself is for when the three-way answer is wanted in one
 go, as when sorting.
