@@ -9,7 +9,7 @@
 | `integer` | A whole number, 64 bits | `42` |
 | `real` | A number with a decimal point, counted **in tens** and exact about them | `3.14` |
 | `float` | Binary floating point: `float` or `double` in C, C#, Java, and Go | `3.14f` |
-| `fraction` | An **exact** ratio of two whole numbers | `22|7` |
+| `fraction` | An **exact** ratio of two whole numbers | `22\|7` |
 
 | Section | Members |
 |---|---|
