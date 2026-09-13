@@ -17,6 +17,7 @@ public sealed class ReservedWordTests : LexerTestBase
         "abstract", "and", "as", "base", "begin", "bitwise", "boolean", "break", "case", "catch",
         "character", "constant", "continue", "default", "delegate", "each", "else", "end",
         "enumeration",
+        "exclusive",
         "extends", "false", "finally", "float", "for", "fraction", "function", "if", "import",
         "in",
         "integer", "internal", "is", "let", "loop", "model", "namespace", "new", "not", "or",
@@ -25,7 +26,7 @@ public sealed class ReservedWordTests : LexerTestBase
         "string",
         "structure", "switch",
         "then", "this", "throw", "to", "true", "try", "until", "using", "virtual", "while",
-        "xor", "yield",
+        "yield",
     ];
 
     /// <summary>Words a C# author might expect to be reserved, which deliberately are not.</summary>

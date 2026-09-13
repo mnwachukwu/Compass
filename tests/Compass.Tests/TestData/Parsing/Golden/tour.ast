@@ -440,7 +440,7 @@ CompilationUnit
             LiteralExpr 0b1100 [Integer]
             LiteralExpr 0b1010 [Integer]
         VarDeclStmt 'differing' [inferred]
-          BinaryExpr 'xor'
+          BinaryExpr 'bitwise exclusive or'
             LiteralExpr 0b1100 [Integer]
             LiteralExpr 0b1010 [Integer]
         VarDeclStmt 'doubled' [inferred]

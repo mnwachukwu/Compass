@@ -1,6 +1,8 @@
-bits.cm(27,27): error CM0342: 'xor' works on the bits of a whole number. For two booleans, '!=' asks whether exactly one of them holds.
-bits.cm(35,27): error CM0303: 'bitwise and' is not defined for a real and an integer. Convert one side, or use a member.
-bits.cm(36,27): error CM0303: 'shiftleft' is not defined for a fraction and an integer. Convert one side, or use a member.
-bits.cm(44,39): error CM0343: An integer holds 64 bits, so a shift of 64 places moves past all of them. An amount from 0 to 63 is what there is to move.
-bits.cm(45,40): error CM0343: An integer holds 64 bits, so a shift of -1 places moves past all of them. An amount from 0 to 63 is what there is to move.
-bits.cm(50,37): error CM0118: 'bitwise' says which of two operations follows, and 'not' is neither. Write 'bitwise and' or 'bitwise or' — 'xor', 'shiftleft', and 'shiftright' need no word before them.
+bits.cm(28,27): error CM0342: 'bitwise exclusive or' works on the bits of a whole number. For two booleans, '!=' asks whether exactly one of them holds.
+bits.cm(36,27): error CM0303: 'bitwise and' is not defined for a real and an integer. Convert one side, or use a member.
+bits.cm(37,27): error CM0303: 'shiftleft' is not defined for a fraction and an integer. Convert one side, or use a member.
+bits.cm(45,39): error CM0343: An integer holds 64 bits, so a shift of 64 places moves past all of them. An amount from 0 to 63 is what there is to move.
+bits.cm(46,40): error CM0343: An integer holds 64 bits, so a shift of -1 places moves past all of them. An amount from 0 to 63 is what there is to move.
+bits.cm(54,37): error CM0118: 'bitwise' says which of three operations follows, and 'not' begins none of them. Write 'bitwise and', 'bitwise or', or 'bitwise exclusive or' — 'shiftleft' and 'shiftright' take no word before them.
+bits.cm(55,47): error CM0121: 'exclusive' is the middle word of 'bitwise exclusive or', and 'and' is not 'or'.
+bits.cm(56,29): error CM0122: Every operation on bits says so: 'bitwise and', 'bitwise or', 'bitwise exclusive or'. Add 'bitwise' in front of this one.

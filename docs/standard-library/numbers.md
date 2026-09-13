@@ -25,21 +25,21 @@
 Arithmetic reached through a name lives on its own page: [`Math`](math.md) for roots, logarithms,
 angles, and rounding, and [`Random`](random.md) for chance.
 
-**`real` is not floating point.** A tenth cannot be written exactly in binary, so writing `0.1`
-elsewhere usually gets you the nearest binary number to a tenth rather than a tenth. Here the
-digits are held as digits, and the arithmetic comes out as written:
+**`real` is not floating point.** A tenth cannot be written exactly in binary, so `0.1` in most
+languages is the nearest binary number to a tenth rather than a tenth. A `real` holds the digits
+as digits, and the arithmetic comes out as written:
 
 ```
 Console.WriteLine((0.1 + 0.2) == 0.3);      # true
 Console.WriteLine((0.1f + 0.2f) == 0.3f);   # false
 ```
 
-Which is why both exist. `real` is what a decimal point means in this language; `float` is the
-same thing every other language gives you for it, offered by name so that its behavior can be
-met on purpose rather than by accident.
+Both exist for that reason. `real` is what a decimal point means in this language. `float` is
+what a decimal point means in most others, and it is named rather than implied so that binary
+floating point is asked for deliberately.
 
-`fraction` is exact where neither can be — a third has no decimal form that ends and no binary
-one either:
+`fraction` is exact where neither can be. A third has no decimal form that ends and no binary one
+either:
 
 ```
 Console.WriteLine(1|3 + 1|3 + 1|3);   # 1|1
@@ -67,8 +67,8 @@ A `real` has no `ToFraction()`, and needs none: it counts in tens, so it already
 over a power of ten and converts on its own. The [chart below](#the-whole-conversion-chart) has
 every direction in one place.
 
-**`Reciprocal` is exact where a real's is only nearly so.** A third turned over is three; but
-`1.0 / (1.0 / 3.0)` is not quite one, in tens any more than in binary.
+**`Reciprocal` is exact where dividing is not.** A third turned over is three, while
+`1.0 / (1.0 / 3.0)` is not quite one, in tens or in binary.
 
 ```
 fraction third = 1|3;
@@ -78,9 +78,8 @@ Console.WriteLine(third.ToReal());       # 0.3333333333333333333333333333
 ```
 
 **`Numerator` and `Denominator` answer for the reduced fraction, not for what was written.** A
-fraction reduces when it is made, so `2|4` is not a fraction that remembers being written that
-way — it is `1|2`, and there is nothing left to ask about the `2` and the `4`. The sign is kept
-above the line, which is why a denominator is never negative.
+fraction reduces when it is made, so `2|4` is `1|2` and the `2` and the `4` are not kept. The sign
+is held on the numerator, so a denominator is never negative.
 
 Both are read without parentheses. Nothing is worked out to answer them: a fraction is already
 kept as these two numbers.
@@ -95,10 +94,10 @@ Console.WriteLine((5|1).Denominator);    # 1
 
 ## Writing a number out
 
-`Format` takes **.NET's own patterns, unchanged** — `F2` is two decimal places, `N0` is a whole
-number with separators, `P1` is a percentage. What a reader learns here is what they will type
-next somewhere else. A pattern the runtime does not recognize raises `FormatException` rather
-than producing a silent oddity.
+`Format` takes **.NET's own patterns, unchanged**: `F2` is two decimal places, `N0` is a whole
+number with separators, `P1` is a percentage. A pattern learned here is the same pattern .NET
+takes. A pattern the runtime does not recognize raises `FormatException` rather than producing
+unexpected output.
 
 ```
 real price = 1234.5678;
@@ -119,15 +118,15 @@ beside it, holding what a fraction needs that is not a member of one.
 | `Fraction.Create(integer whole)` | `fraction` | That whole number over one |
 
 A fraction literal is two numerals fixed when the program is written, so `Create` is the only way
-to make one from values that exist only while it runs. What comes back is an ordinary fraction —
-reduced, with its sign carried on the numerator.
+to build one from values that exist while it runs. The result is an ordinary fraction: reduced,
+with its sign on the numerator.
 
 **A denominator of zero is rejected while compiling where it can be seen**, exactly as `1 / 0` is.
 Written as a literal it always can be, so `1|0` is `CM0027`; built from values it cannot, so
 `Fraction.Create(top, 0)` raises `DivideByZeroException`.
 
-The one-argument form earns its place only where nothing else says a fraction is wanted:
-`let f = 3;` holds an integer, and `let f = Fraction.Create(3);` holds `3|1`.
+The one-argument form is for where nothing else states the type: `let f = 3;` holds an integer,
+and `let f = Fraction.Create(3);` holds `3|1`.
 
 ```
 integer top = 22;
@@ -139,15 +138,14 @@ Console.WriteLine(Fraction.Create(4, 8));          # 1|2 — reduced
 
 ## What each type knows about itself
 
-Each number has a capitalized name beside its keyword, holding the facts about it. The
-keyword names the type and the capital names where those facts live — a reserved word cannot
-stand in front of a dot, so `integer.MaxValue` is not something the grammar can read and
-`Integer.MaxValue` is. `Fraction` already read this way beside `fraction`.
+Each number has a capitalized name beside its keyword, holding the facts about it. The keyword
+names the type and the capital names where those facts live. A reserved word cannot stand in
+front of a dot, so `integer.MaxValue` does not parse and `Integer.MaxValue` does. `Fraction`
+already reads this way beside `fraction`.
 
-Bounds are a number's business. Where a number runs out is a fact about that number, and
-meeting it is how you learn a type has an edge at all. A `character` has no such fact to
-tell — where the alphabet stops is a fact about how text is stored rather than about the
-language — so `Character` carries only the way in from text that every one of these has.
+Bounds belong to the numbers. Where a number runs out is a fact about that number. A `character`
+has no equivalent, since where the alphabet stops is a fact about how text is stored rather than
+about the language, so `Character` carries only the `Parse` that all of these have.
 
 | Member | Yields | What it is |
 |---|---|---|
@@ -162,14 +160,15 @@ language — so `Character` carries only the way in from text that every one of 
 | `Float.Parse(string)` | `float?` | The same, as a `float` |
 | `Fraction.Parse(string)` | `fraction?` | The ratio the text spells, or nothing |
 
-`Parse` is the other spelling of the string's own [`ToInteger` and its
-family](text.md#reading-a-value-back-out) — one method answers both, so neither can drift from
-the other. Which reads better is a matter of where the text is: in hand it answers
-`typed.ToInteger()`, and arriving from elsewhere it reads as `Integer.Parse(typed)`.
+`Parse` is the other spelling of the string's own
+[`ToInteger` and its family](text.md#reading-a-value-back-out). One method answers both, so the
+two cannot disagree. A string already held reads as `typed.ToInteger()`; text arriving from
+elsewhere reads as `Integer.Parse(typed)`.
 
-A `string` has a capitalized name too, holding [`String.Empty`](text.md#string) — not a bound, but
-the same idea: a fact about the type, kept where a reserved word cannot reach. So do `boolean`
-and `character`, each holding [nothing but a `Parse`](text.md#boolean-and-character).
+A `string` has a capitalized name too, holding [`String.Empty`](text.md#string). That is not a
+bound, but it is the same arrangement: a fact about the type, kept where a reserved word cannot
+reach. So do `boolean` and `character`, each holding
+[nothing but a `Parse`](text.md#boolean-and-character).
 
 ### What only a `float` has
 
@@ -179,13 +178,13 @@ and `character`, each holding [nothing but a `Parse`](text.md#boolean-and-charac
 | `Float.NegativeInfinity` | `float` | What `-1.0f / 0.0f` produces |
 | `Float.NotANumber` | `float` | What `0.0f / 0.0f` produces — and the one value **not equal to itself**, so comparing against this name is always false |
 
-Each is the value a float's own arithmetic gives back, so `1.0f / 0.0f == Float.Infinity` is
-true. **A float is the one type allowed to divide by a zero written down**: for every other,
-`CM0324` refuses it while compiling, because for every other there is no answer. Here there is
-one, so the expression is left alone and the constant merely names what it produces.
+Each is the value a float's own arithmetic produces, so `1.0f / 0.0f == Float.Infinity` is true.
+**A float is the one type allowed to divide by a zero written down.** For every other type
+`CM0324` refuses it while compiling, since there is no answer to give. A float has one, so the
+expression stands and the constant names the result.
 
-A `real` has none of them: it counts in tens and there is nothing in it to hold them, so where a
-float carries on into an infinity a real stops — the same choice an `integer` makes.
+A `real` has none of these. It counts in tens and has nowhere to hold them, so it stops where a
+float continues into an infinity, as an `integer` does.
 
 `NotANumber` is written out rather than abbreviated, the way this language writes `shiftleft`
 and `bitwise and`. It prints as that word too, so what a reader sees and what they would write
@@ -202,14 +201,13 @@ integer counted = 9223372036854775808;   # CM0026 — one past Integer.MaxValue
 real measured = 1e400;                   # CM0026 — past Real.MaxValue
 ```
 
-**The most negative integer has no literal at all.** The minus sign is a separate operator, so
-`-9223372036854775808` is a minus applied to a number one past the largest, and both halves of
-that are reported together. `Integer.MinValue` is the way to write it, and is the reason the name
-exists.
+**The most negative integer has no literal.** The minus sign is a separate operator, so
+`-9223372036854775808` is a minus applied to a number one past the largest, and both halves are
+reported together. `Integer.MinValue` is how it is written, and is why the name exists.
 
-**A float is the exception, and deliberately.** It is the one type with a value for a number too
-large, so a float literal past its edge becomes that value rather than being refused — which
-agrees with what its own arithmetic already does:
+**A float is the exception.** It is the one type with a value for a number too large, so a float
+literal past its edge becomes that value rather than being refused, which matches what its own
+arithmetic does:
 
 ```
 Console.WriteLine(1e400f);          # Infinity
@@ -229,7 +227,7 @@ Read a row as *from*, a column as *to*. **Bold** happens on its own; anything el
 
 The table names `Math.Round`, but [`Math.Floor` and `Math.Ceiling`](math.md#rounding) also yield
 an `integer`. Each of the three takes a real, a float, or a fraction and answers with a whole
-number, and each names the direction it rounds — which is what a cast could not do.
+number, and each names the direction it rounds. A cast would name none of them.
 
 ### One rule, and its two exceptions
 
@@ -237,17 +235,17 @@ number, and each names the direction it rounds — which is what a cast could no
 whole number is a real and is a ratio over one, and a real counts in tens, so it already *is* a
 ratio over a power of ten.
 
-Two conversions lose nothing and are still written out, because each answer is surprising:
+Two conversions lose nothing and are still written out, because the result does not look like the
+value that produced it:
 
-- **`fraction.ToReal()`** — a third has no decimal that ends, so `1|3` becomes `0.3333…` and
-  does not multiply back to one.
-- **`float.ToFraction()`** — `0.1f` is really `3602879701896397|36028797018963968`, which is the
-  clearest answer there is to why binary floating point surprises people.
+- **`fraction.ToReal()`** — a third has no decimal that ends, so `1|3` becomes `0.3333…` and does
+  not multiply back to one.
+- **`float.ToFraction()`** — `0.1f` is `3602879701896397|36028797018963968`, which is the exact
+  value a binary float holds for a tenth.
 
-**And one that is written out for a plainer reason: nothing reaches a `float` on its own.** Not
-even an integer. If a whole number widened to both a real and a float, every member of `Math`
-would have two readings and `Math.Sqrt(2)` would have no answer — so widening to a real is what
-happens, and a float is asked for by name.
+**Nothing reaches a `float` on its own**, an integer included. If a whole number widened to both a
+real and a float, every member of `Math` would have two readings and `Math.Sqrt(2)` would be
+ambiguous. Widening goes to a real, and a float is asked for by name.
 
 ### What each conversion can cost
 
@@ -259,31 +257,29 @@ happens, and a float is asked for by name.
 | `fraction → real`, `fraction → float` | no | thirds and the like stop being exact |
 | `float → real` | **yes**, three ways | see below |
 | `float → fraction` | **yes**, on an infinity or a value that is not a number | nothing otherwise — the ratio is exact |
-| `float → integer` | **yes**, on an infinity or a value that is not a number | everything after the point, which is what you asked for |
-| `real → integer`, `fraction → integer` | no | everything after the point, which is what you asked for |
+| `float → integer` | **yes**, on an infinity or a value that is not a number | everything after the point, which is what rounding was asked for |
+| `real → integer`, `fraction → integer` | no | everything after the point, which is what rounding was asked for |
 
 **Failing is not the same as being written out.** `real → fraction` is the one conversion that
-happens on its own and can still stop: it loses nothing, which is why it needs no asking, but a
+happens on its own and can still stop. It loses nothing, which is why it needs no asking, but a
 real carrying more places than a fraction's two whole numbers can hold has no fraction to become.
-Where the value is on the page the compiler says so; where it is not, the program stops on the
-line that converts.
+Where the compiler can see the value it reports `CM0346`; otherwise the program stops on the line
+that converts.
 
-**A float is the only type any of this applies to.** A real and a fraction have no infinity and no
-not-a-number between them, so every value of either is a number and every conversion out of one
-either loses digits or loses nothing. A float has three values that name no number at all, and
-each of the three stops whichever way it is asked to leave: `ToReal`, `ToFraction`, and rounding
-to an `integer` all refuse them rather than inventing a number to stand in.
+**Only a float can fail this way.** A real and a fraction have no infinity and no not-a-number, so
+every value of either is a number and every conversion out of one loses digits or loses nothing. A
+float has three values that name no number, and `ToReal`, `ToFraction`, and rounding to an
+`integer` all refuse them rather than substituting a number.
 
 ## Crossing between a `real` and a `float`
 
-Both directions are written out. Neither loses accuracy in the ordinary sense; each changes the
-value in a way the table below states.
+Both directions are written out. Each changes the value in the way the table below states.
 
 | Member | Yields | What it does |
 |---|---|---|
 | `real.ToFloat()` | `float` | The same number in binary. **Always answers**: every real fits well inside a float's range. What is lost is digits — a real holds about twenty-eight and a float sixteen |
 | `float.ToReal()` | `real` | The same number in tens. **Can fail three ways**, and silently changes what it does convert |
-| `float.ToFraction()` | `fraction` | The ratio the float is really holding, which is the clearest look at what binary floating point does. **Stops on an infinity or a value that is not a number**, neither of which is a ratio |
+| `float.ToFraction()` | `fraction` | The exact ratio the float holds. **Stops on an infinity or a value that is not a number**, neither of which is a ratio |
 
 A `real` needs no `ToFraction()`: it counts in tens, so it already is a fraction over a power of
 ten and widens on its own.
@@ -298,13 +294,13 @@ Console.WriteLine((0.1f).ToFraction());     # 3602879701896397|36028797018963968
 Console.WriteLine((0.1f).ToReal());         # 0.1
 ```
 
-The last two lines are one value. Asked for its fraction it gives what it is really holding;
-asked for a real it gives `0.1`, the shortest decimal it rounds to. **Nothing is reported**, and
-the number that comes back is not the number that went in. That is why the conversion is written
-out rather than applied automatically.
+The last two lines read one value. `ToFraction` yields the exact ratio it holds; `ToReal` yields
+`0.1`, the shortest decimal that rounds to it. **Nothing is reported**, and the value that comes
+back is not the value that went in, which is why the conversion is written out rather than
+applied automatically.
 
-The three failures are ordinary by comparison: a float larger than a real can hold, an infinity,
-and a value that is not a number. A real has no form for any of them, so each stops.
+The three failures are simpler: a float larger than a real can hold, an infinity, and a value
+that is not a number. A real has no form for any of them, so each stops.
 
 ## Also on every number
 

@@ -1,18 +1,18 @@
 # Where to find things
 
-Compass's documentation is four documents and a folder. This page says what each is for and which
-one holds the answer to what, so nothing has to be searched for twice.
+Compass's documentation is four documents and a folder. This page says what each one is for and
+which questions it answers.
 
 **Compass is an introductory language.** It aims to make concepts legible to a beginner while
-staying close enough to C# that what a student learns transfers. That single goal is behind most
-of what looks unusual here, and the [README](../README.md#what-it-is-for) says why.
+staying close enough to C# that what a student learns transfers. Most of what looks unusual here
+follows from that goal; the [README](../README.md#what-it-is-for) says why.
 
 ## The four documents
 
 | Document | What it is | Read it when |
 |---|---|---|
 | [language-spec.md](language-spec.md) | The normative definition. Every rule the language has, with the diagnostic that enforces it | You need to know what a construct *means*, or what the compiler will say |
-| [side-by-side.md](side-by-side.md) | Every construct written both ways, Compass then C#, and three sections keeping score | You already write C# |
+| [side-by-side.md](side-by-side.md) | Every construct written both ways, Compass then C#, and three sections comparing the two | You already write C# |
 | [standard-library/](standard-library/README.md) | Every type and every member the language provides, indexed by name | You want to know what you can call |
 | [grammar.ebnf](grammar.ebnf) | The surface syntax as productions | You are writing a tool that reads Compass |
 
@@ -22,8 +22,8 @@ is a program that works rather than a fragment.
 ## Which one holds what
 
 **The words of the language.** All 63 reserved words, what `@` does to one, and the words a C#
-author expects and will not find: [specification §2.1](language-spec.md#21-reserved-words). How
-many words that is beside C#'s, and why the difference is bigger than the numbers:
+author expects and will not find: [specification §2.1](language-spec.md#21-reserved-words). The
+count beside C#'s, and what the two counts do and do not measure:
 [side-by-side §9](side-by-side.md#9-where-compass-does-it-better).
 
 **How a program is laid out.** Comments, identifiers, literals, and escapes:
@@ -54,9 +54,9 @@ thrown and what a `catch` takes: [exceptions.md](standard-library/exceptions.md)
 compiler reports, with its severity and what it says:
 [Appendix A](language-spec.md#appendix-a-diagnostics).
 
-**Documenting code.** The `@summary:` labels, what the compiler checks about them, and why the `@`
-is not decoration: [specification §1.3](language-spec.md#13-comments), and
-[documenting.cm](../samples/documenting.cm) for a program that does it.
+**Documenting code.** The `@summary:` labels, what the compiler checks about them, and what the
+`@` does: [specification §1.3](language-spec.md#13-comments), and
+[documenting.cm](../samples/documenting.cm) for a program that uses them.
 
 **What can be thrown, and what a `catch` takes:**
 [specification §10](language-spec.md#10-exceptions).
@@ -67,9 +67,9 @@ namespaces, and `using`:
 
 ## If you are coming from C#
 
-Read [side-by-side.md](side-by-side.md) rather than this page — it writes every construct out both
-ways and ends with three sections keeping score: what Compass does better, what C# does better, and
-what C# has that Compass has no form for at all. The third is the longest of them.
+Read [side-by-side.md](side-by-side.md) rather than this page. It writes every construct out both
+ways and ends with three sections: what Compass does better, what C# does better, and what C# has
+that Compass has no form for. The third is the longest.
 
 Four differences to know before anything else, stated in
 [specification §0.4](language-spec.md#04-relationship-to-c):

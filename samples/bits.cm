@@ -2,8 +2,9 @@
     Working on the bits of a whole number.
 
     Everything here is spelled as a word. '&' and '|' would have been new punctuation, and '|'
-    was not available in any case: it already writes a fraction. So 'bitwise' qualifies the
-    'and' and 'or' that already mean something, and the rest stand alone.
+    was not available in any case: it already writes a fraction. Every operation on bits says
+    'bitwise', because 'and', 'or', and 'exclusive or' each mean something on their own. The
+    two shifts claim words nothing else uses, so they stand alone.
 ##
 
 shared model Program
@@ -55,27 +56,34 @@ shared model Program
     ##
         @summary: Exclusive or, which is its own undo.
 
-        @remarks: 'xor' needs no 'bitwise' in front of it, because nothing else claims the
-        word. On booleans there is nothing for it to do that '!=' does not already say.
-        Applying the same mask twice gives back what it started with.
+        @remarks: All three operations on bits are written with 'bitwise' in front, because
+        'and', 'or', and 'exclusive or' each name a boolean operation on their own. On
+        booleans there is nothing this one does that '!=' does not already say. Applying the
+        same mask twice gives back what it started with.
     ##
     function TheThreeOperations()
-        Console.WriteLine("== and, or, xor ==");
+        Console.WriteLine("== and, or, exclusive or ==");
 
         integer left = 0b1100;
         integer right = 0b1010;
 
-        Console.WriteLine("  1100 and 1010: " + (left bitwise and right).Format("B"));
-        Console.WriteLine("  1100 or  1010: " + (left bitwise or right).Format("B"));
-        Console.WriteLine("  1100 xor 1010: " + (left xor right).Format("B"));
+        Console.WriteLine("  1100 bitwise and          1010: "
+                            + (left bitwise and right).Format("B"));
+        Console.WriteLine("  1100 bitwise or           1010: "
+                            + (left bitwise or right).Format("B"));
+        Console.WriteLine("  1100 bitwise exclusive or 1010: "
+                            + (left bitwise exclusive or right).Format("B"));
 
-        Console.WriteLine("  xor undoes it: " + ((left xor right xor right) == left));
+        Console.WriteLine("  a second pass undoes it:        "
+                            + ((left bitwise exclusive or right
+                                bitwise exclusive or right) == left));
 
         ##
-            The three sit on three levels, as they do in C#: 'or' is loosest, then 'xor', then
-            'and'. So the line below is 1100 or (0011 and 0001), which is 1101.
+            The three sit on three levels, as they do in C#: 'bitwise or' is loosest, then
+            'bitwise exclusive or', then 'bitwise and'. So the line below is
+            1100 or (0011 and 0001), which is 1101.
         ##
-        Console.WriteLine("  levels:        "
+        Console.WriteLine("  levels:                         "
                             + (0b1100 bitwise or 0b0011 bitwise and 0b0001).Format("B"));
     end function
 
@@ -86,8 +94,8 @@ shared model Program
         is nothing to work out.
 
         An amount below zero or past 63 is refused: an integer holds 64 bits, and a shift
-        further than that has nothing left to move. C# quietly wraps the amount instead, which
-        is a result nothing in the line suggests.
+        further than that has nothing left to move. C# wraps the amount instead and reports
+        nothing, which is a result the line does not suggest.
     ##
     function Shifting()
         Console.WriteLine("== moving the bits along ==");

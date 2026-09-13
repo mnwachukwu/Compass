@@ -46,7 +46,7 @@ public sealed class OperatorResultTests
         ["7 / 2"] = "3", ["7 % 2"] = "1", ["7 ^ 2"] = "49",
 
         // On the bits: 7 is 111 and 2 is 010.
-        ["7 bitwise and 2"] = "2", ["7 bitwise or 2"] = "7", ["7 xor 2"] = "5",
+        ["7 bitwise and 2"] = "2", ["7 bitwise or 2"] = "7", ["7 bitwise exclusive or 2"] = "5",
         ["7 shiftleft 2"] = "28", ["7 shiftright 2"] = "1",
 
         // Reals. Division does not truncate, which is the difference from an integer.

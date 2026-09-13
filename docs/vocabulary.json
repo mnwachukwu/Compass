@@ -21,6 +21,7 @@
     "else",
     "end",
     "enumeration",
+    "exclusive",
     "extends",
     "false",
     "finally",
@@ -63,7 +64,6 @@
     "using",
     "virtual",
     "while",
-    "xor",
     "yield"
   ],
 

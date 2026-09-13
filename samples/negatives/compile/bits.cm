@@ -5,9 +5,10 @@
     nothing else: a real or a fraction holds a value, and how that value is stored is the
     runtime's business rather than the program's.
 
-    The interesting refusal is the first. In C# the same symbol covers exclusive-or on booleans
-    and on bits alike, so reaching for 'xor' on two booleans is the mistake a C# reader makes —
-    and '!=' already asks that question, which is what the message says.
+    The first refusal is the one a C# reader is most likely to meet. In C# the same symbol
+    covers exclusive-or on booleans and on bits alike, so 'exclusive or' on two booleans is the
+    mistake that follows from it — and '!=' already asks that question, which is what the
+    message says.
 ##
 
 shared model Program
@@ -24,7 +25,7 @@ shared model Program
         boolean ready = true;
         boolean willing = false;
 
-        Console.WriteLine(ready xor willing);
+        Console.WriteLine(ready bitwise exclusive or willing);
     end function
 
     # A real and a fraction have no bits to speak of.
@@ -45,9 +46,14 @@ shared model Program
         Console.WriteLine(1 shiftright -1);
     end function
 
-    # Only 'and' and 'or' need qualifying, because only those two already mean something.
+    ##
+        'bitwise' takes 'and', 'or', or 'exclusive or', and nothing else. The last line leaves
+        the qualifier off an operation that requires it, which is its own message.
+    ##
     function TheWrongWord()
         Console.WriteLine(6 bitwise not 3);
+        Console.WriteLine(6 bitwise exclusive and 3);
+        Console.WriteLine(6 exclusive or 3);
     end function
 
 end model

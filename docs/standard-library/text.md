@@ -2,9 +2,9 @@
 
 [← Back to the index](README.md)
 
-Everything a `string` answers. Every member here yields a **new** string and leaves the original
-exactly as it was — a Compass `string` cannot be changed once it exists, which is why `Insert`
-gives you something back rather than doing something.
+Everything a `string` answers. A Compass `string` cannot be changed once it exists, so every
+member here yields a **new** string and leaves the original as it was. `Insert` is named for what
+it produces rather than for an edit in place.
 
 | Section | Members |
 |---|---|
@@ -19,15 +19,15 @@ gives you something back rather than doing something.
 | [String](#string) | `String.Empty` |
 | [Boolean and Character](#boolean-and-character) | `Boolean.Parse` `Character.Parse` |
 
-A string's members deliberately mirror [a set's](sets.md), so that the two read alike: a string is
-a run of characters, and asking how long it is, whether it contains something, or for a piece of
-it are the same questions in both places.
+A string's members mirror [a set's](sets.md). A string is a run of characters, so its length,
+whether it contains something, and taking a piece of it are the same questions asked in both
+places.
 
-**Text that is empty changes nothing.** Asked to replace nothing, remove nothing, or trim nothing
-from an end, a string comes back as it was — and the questions answer the way an empty argument
-should: `"ab".Contains("")` is `true`, `"ab".IndexOf("")` is `0`, and `"ab".Split("")` is one
-piece holding the whole string. One rule covers the family, so no member here raises on an empty
-argument and none treats one as a special case:
+**Text that is empty changes nothing.** Replacing nothing, removing nothing, or trimming nothing
+from an end yields the string as it was. The questions answer to match: `"ab".Contains("")` is
+`true`, `"ab".IndexOf("")` is `0`, and `"ab".Split("")` is one piece holding the whole string. One
+rule covers the family, so no member here raises on an empty argument or treats one as a special
+case:
 
 ```
 string pair = "ab";
@@ -39,9 +39,9 @@ Console.WriteLine(pair.Contains(""));       # true
 Console.WriteLine(pair.IndexOf(""));        # 0
 ```
 
-C# refuses the first two outright, and Python and JavaScript read an empty search as matching
-between every character, so `"ab".Replace("", "X")` is `"XaXbX"` there. Neither is what somebody
-writing it means, and neither agrees with `Trim("")` leaving a string alone.
+C# refuses the first two outright. Python and JavaScript read an empty search as matching between
+every character, so `"ab".Replace("", "X")` is `"XaXbX"` there. Neither behavior agrees with
+`Trim("")` leaving a string alone, so neither is used here.
 
 ## Asking about it
 
@@ -72,7 +72,7 @@ Console.WriteLine(greeting.IndexOf("moon"));    # -1
 takes *how many*; `Subset` takes *where to stop*. Use whichever matches the number already at
 hand. `Substring` exists because it is the name a reader arriving from C# will type.
 
-`Subset`'s end is exclusive — the same reading `until` has in a loop — so `Subset(0, n)` and
+`Subset`'s end is exclusive, the same reading `until` has in a loop, so `Subset(0, n)` and
 `Subset(n, count)` put the whole string back together.
 
 ```
@@ -103,10 +103,9 @@ Console.WriteLine("banana".Remove("na"));          # ba — both of them
 ```
 
 **`Remove` takes out every appearance, where [a set's `Remove`](sets.md#changing-it) takes out
-the first.** The two are not the same question: a set answers whether there was one to remove and
-alters the set it was called on, while a string cannot be altered at all, so removing from one
-builds a new string and there is nothing to report back. Taking the first only would need a
-position to say which, and that is what `RemoveAt` is for.
+the first.** A set's `Remove` alters the set it is called on and answers whether there is one to
+remove. A string cannot be altered, so a string's builds a new string and has nothing to report.
+Removing one appearance takes a position, which is `RemoveAt`.
 
 ## Trimming
 
@@ -154,9 +153,8 @@ Console.WriteLine("hello".Capitalize());     # Hello
 | `Split(string separator)` | `string[]` | The pieces between each `separator` |
 | `ToCharacters()` | `character[]` | Every character as a set |
 
-**Joining is a member of the set, not of the string** — see [`Join`](sets.md#joining). The thing
-being joined is the collection, and reading it off the separator would put the sentence the wrong
-way round.
+**Joining is a member of the set, not of the string.** See [`Join`](sets.md#joining). The
+collection is what is joined, so it is the receiver and the separator is the argument.
 
 ```
 string[] words = "one,two,three".Split(",");
@@ -167,8 +165,8 @@ Console.WriteLine(words.Join(" & "));  # one & two & three
 
 ## Reading a value back out
 
-Each of these yields an [optional](optionals.md) rather than raising, because text that will not
-read is the ordinary case — most of it was typed by somebody.
+Each of these yields an [optional](optionals.md) rather than raising. Text that does not read as a
+value is an ordinary outcome, since most of it was typed by a person.
 
 | Member | Yields | Written the other way | What it does |
 |---|---|---|---|
@@ -179,17 +177,15 @@ read is the ordinary case — most of it was typed by somebody.
 | `ToCharacter()` | `character?` | `Character.Parse(text)` | The one character the text holds, or nothing |
 | `ToFraction()` | `fraction?` | `Fraction.Parse(text)` | The ratio the text spells, or nothing |
 
-**Both spellings are the same question**, and the same one method answers each pair, so they
-cannot come to disagree. Which one reads better depends on where you are: a string already in
-hand answers `typed.ToInteger()`, and text arriving from somewhere else reads more directly as
-`Integer.Parse(Console.Read().Or(""))`. Neither is the preferred form.
+**Both spellings are the same question**, and one method answers each pair, so the two cannot
+disagree. A string already held reads as `typed.ToInteger()`; text arriving from elsewhere reads
+as `Integer.Parse(Console.Read().Or(""))`. Neither is the preferred form.
 
-**`ToCharacter` wants exactly one character.** Two is as empty an answer as none — there is no
-reason to think a reader meant the first of them — so `"ab"` yields nothing rather than `'a'`.
+**`ToCharacter` takes exactly one character.** `"ab"` yields nothing rather than `'a'`, because
+two characters no more name one than none does.
 
-**`ToFraction` reads either mark between the halves.** The language writes `22|7`, because a slash
-already means division; a person writes `22/7`, because that is what a fraction looks like
-everywhere outside a compiler. Reading takes both.
+**`ToFraction` reads either mark between the halves.** The language writes `22|7`, since a slash
+already means division. A person writes `22/7`. Reading accepts both.
 
 ```
 string typed = Console.Read().Or("");
@@ -210,8 +206,8 @@ Console.WriteLine(year);
 ## Writing a number into text
 
 See [`Format`](numbers.md#writing-a-number-out) on `integer`, `real`, and `fraction`, and the
-[interpolated string](../language-spec.md#10-strings) form `"{{ value }}"`, which is usually what
-you want instead of joining with `+`.
+[interpolated string](../language-spec.md#10-strings) form `"{{ value }}"`, which reads more
+directly than joining with `+`.
 
 ## `String`
 
@@ -222,8 +218,9 @@ word; **`String` is the model** beside it, and it holds one thing.
 |---|---|---|
 | `String.Empty` | `string` | The string with nothing in it |
 
-Not a bound, unlike the [capitalized names beside the numbers](numbers.md#what-each-type-knows-about-itself)
-— a name for the emptiness, which reads better than `""` wherever the emptiness is the point.
+Not a bound, unlike the
+[capitalized names beside the numbers](numbers.md#what-each-type-knows-about-itself). It is a name
+for the empty string, which reads more clearly than `""` where emptiness is the subject.
 
 ```
 string typed = String.Empty;
@@ -232,18 +229,18 @@ Console.WriteLine(typed.Count);   # 0
 
 ## `Boolean` and `Character`
 
-The same two spellings again, and these two capitals hold one thing each: the way in from text.
+The same two spellings again. Each of these models holds one member, which reads a value from
+text.
 
 | Member | Yields | What it does |
 |---|---|---|
 | `Boolean.Parse(string)` | `boolean?` | `true` or `false`, or nothing |
 | `Character.Parse(string)` | `character?` | The one character the text holds, or nothing |
 
-They exist for the sake of the convention rather than for anything they add. `Integer.Parse` and
-`Real.Parse` are there because a number has bounds to keep beside them; a boolean and a character
-have no such fact, and leaving these two out would have left a reader who found the first pair to
-guess that the other two simply cannot be read from text — which is the guess a half-applied
-convention invites, and it would be wrong.
+They exist to complete the convention rather than to add anything. `Integer.Parse` and
+`Real.Parse` sit beside the bounds each number type keeps; a boolean and a character have no
+bounds. Omitting these two would leave a reader who found the first pair to conclude that a
+boolean and a character cannot be read from text, which is false.
 
 The numbers keep their own capitals, holding [where each one runs
 out](numbers.md#what-each-type-knows-about-itself) as well as a `Parse`.

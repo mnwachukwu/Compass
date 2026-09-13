@@ -444,18 +444,39 @@ public static class DiagnosticDescriptors
         + "use 'delegate' — 'integer delegate(string)' takes a string and yields an integer.");
 
     /// <summary>
-    /// <para>A word after <c>bitwise</c> that is not <c>and</c> or <c>or</c>.</para>
-    /// <para>Those two are the only ones that need qualifying, because they already mean
-    /// something on their own. Everything else the language does to bits — <c>xor</c>,
-    /// <c>shiftleft</c>, <c>shiftright</c> — is a word nothing else claims, so it stands
-    /// alone.</para>
+    /// <para>A word after <c>bitwise</c> that begins none of the three operations.</para>
+    /// <para><c>and</c>, <c>or</c>, and <c>exclusive or</c> all name boolean operations on
+    /// their own, so each takes the qualifier. <c>shiftleft</c> and <c>shiftright</c> claim
+    /// words nothing else uses, so each stands alone.</para>
     /// </summary>
     public static readonly DiagnosticDescriptor BitwiseNeedsAndOrOr = Error(
         "CM0118",
-        "Only 'and' or 'or' may follow 'bitwise'",
-        "'bitwise' says which of two operations follows, and {0} is neither. Write 'bitwise "
-        + "and' or 'bitwise or' — 'xor', 'shiftleft', and 'shiftright' need no word before "
-        + "them.");
+        "'and', 'or', or 'exclusive or' may follow 'bitwise'",
+        "'bitwise' says which of three operations follows, and {0} begins none of them. Write "
+        + "'bitwise and', 'bitwise or', or 'bitwise exclusive or' — 'shiftleft' and "
+        + "'shiftright' take no word before them.");
+
+    /// <summary>
+    /// <para>A word after <c>exclusive</c> that is not <c>or</c>. Only one word completes the
+    /// operator, so a different one is named here rather than read as the right-hand side.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor ExclusiveNeedsOr = Error(
+        "CM0121",
+        "Only 'or' may follow 'exclusive'",
+        "'exclusive' is the middle word of 'bitwise exclusive or', and {0} is not 'or'.");
+
+    /// <summary>
+    /// <para><c>exclusive or</c> written without its qualifier.</para>
+    /// <para>Every operation on bits is written with <c>bitwise</c> in front, so the word is
+    /// not optional on this one. Reported where the operator begins, and the expression is
+    /// read as though the qualifier were there.</para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor ExclusiveOrNeedsBitwise = Error(
+        "CM0122",
+        "'exclusive or' is written 'bitwise exclusive or'",
+        "Every operation on bits says so: 'bitwise and', 'bitwise or', 'bitwise exclusive "
+        + "or'. Add 'bitwise' in front of this one.");
 
     /// <summary>
     /// The diagnostic qualified <c>end</c> exists to produce. Naming both the closer written

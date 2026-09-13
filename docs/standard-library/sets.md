@@ -2,11 +2,11 @@
 
 [← Back to the index](README.md)
 
-Everything a `T[]` answers, whatever `T` is. A Compass set is a row of things that **keeps its
-order** and **allows a value twice** — it is what C# spells `List<T>` rather than what
-mathematics calls a set, and [`Distinct`](#distinct) is how you ask for the mathematical one.
+Everything a `T[]` answers, whatever `T` is. A Compass set **keeps its order** and **allows a
+value twice**, so it is C#'s `List<T>` rather than the set of mathematics.
+[`Distinct`](#distinct) produces the mathematical one.
 
-A set's members deliberately mirror [a string's](text.md), so that the two read alike.
+A set's members mirror [a string's](text.md), so the two read alike.
 
 | Section | Members |
 |---|---|
@@ -18,8 +18,8 @@ A set's members deliberately mirror [a string's](text.md), so that the two read 
 | [Dropping the empties](#dropping-the-empties) | `Trim` `TrimStart` `TrimEnd` `TrimAll` |
 | [Sets of sets](#sets-of-sets) | — |
 
-Unlike a string, **a set can be changed**. `Insert` and `Remove` alter the set you called them on;
-`Subset`, `Union`, and the rest give back a new one and leave the original alone. The table says
+Unlike a string, **a set can be changed**. `Insert` and `Remove` alter the set they are called on.
+`Subset`, `Union`, and the rest yield a new set and leave the original alone. The tables below say
 which is which.
 
 ## Asking about it
@@ -50,8 +50,8 @@ These five change the set in place and are the only members that do.
 | `RemoveAt(integer where)` | nothing | Takes out whatever is at `where` |
 | `Clear()` | nothing | Empties it |
 
-`Remove` is the only mutator that yields anything, matching the list it is built on: it answers
-whether there was something to remove, which saves asking `Contains` first.
+`Remove` is the only mutator that yields anything, matching the `List<T>` it is built on. It
+answers whether there was something to remove, so `Contains` need not be called first.
 
 ```
 string[] queue = {};
@@ -76,7 +76,7 @@ error instead. Collect what to remove and do it afterwards.
 | `Subset(integer start)` | `T[]` | A new set, from `start` to the end |
 | `Subset(integer start, integer end)` | `T[]` | A new set, from `start` up to but not including `end` |
 
-The end is exclusive — the same reading `until` has in a loop — so `Subset(0, n)` and
+The end is exclusive, the same reading `until` has in a loop, so `Subset(0, n)` and
 `Subset(n, count)` put the whole set back together.
 
 ```
@@ -97,15 +97,14 @@ All four give back a new set and leave both originals alone.
 | `Except(T[] other)` | `T[]` | What this has that the other does not |
 | `Distinct()` | `T[]` | One of each, keeping the first of every run |
 
-**These are not the operations of the same name in mathematics**, and the difference is worth
-having straight. Because a Compass set keeps order and allows a value twice, `Union` *appends*
-rather than merging — what was in both ends up in the answer twice. `Distinct` is what turns a
-row of things into a mathematical set, and it is only ever done when asked.
+**These are not the operations of the same name in mathematics.** A Compass set keeps order and
+allows a value twice, so `Union` appends rather than merging: a value in both appears twice in the
+answer. `Distinct` removes the repeats, and only when it is called.
 
-`Intersect` and `Except` are each other's counterpart: every element of this set goes to exactly
-one of the two, repeats included, so between them they account for all of it. Appending one to
-the other does not rebuild it, though — each gathers its own in this set's order and the two runs
-then sit end to end, so `{1, 2, 3}` against `{3, 4}` comes back as `3,1,2`.
+`Intersect` and `Except` partition this set. Every element goes to exactly one of the two, repeats
+included. Appending one result to the other does not rebuild the original, because each gathers
+its own elements in this set's order and the two runs then sit end to end: `{1, 2, 3}` against
+`{3, 4}` gives `3` and `1,2`, which join as `3,1,2`.
 
 <a id="distinct"></a>
 
@@ -128,8 +127,7 @@ Console.WriteLine(mine.Except(yours).Join(","));              # 1,2
 | `Join(string separator)` | `string` | Every element written out, with `separator` between |
 
 **Any set answers it, not only a set of strings.** Each element is written out the way it would be
-on its own, which is what a reader joining numbers expects and what they would otherwise have to
-write a loop for.
+on its own, so joining a set of numbers needs no loop and no conversion first.
 
 ```
 integer[] scores = {70, 85, 90};
@@ -148,10 +146,9 @@ trim, so these four members are not offered on one.
 | `TrimEnd()` | `T?[]` | Empties off the end |
 | `TrimAll()` | `T[]` | Every empty gone, anywhere |
 
-**`TrimAll` is the one that changes the type**, and that is the point of it. Removing every empty
-leaves a set where nothing can be absent, so it yields the underlying type and the caller stops
-having to unwrap. The other three take from the ends only, so an empty in the middle survives and
-the type has to keep saying so.
+**`TrimAll` is the one that changes the type.** Removing every empty leaves a set where nothing
+can be absent, so it yields `T[]` and nothing in the result needs unwrapping. The other three take
+from the ends only, so an empty can remain in the middle and the type stays `T?[]`.
 
 ```
 integer?[] readings = {}; # ... filled from somewhere that may answer nothing
@@ -166,8 +163,8 @@ end loop
 
 ## Sets of sets
 
-`integer[][]` is a set whose elements are sets, and needs no feature of its own — every member
-above works on it, with `T` being `integer[]`.
+`integer[][]` is a set whose elements are sets. It needs no feature of its own: every member above
+works on it, with `T` being `integer[]`.
 
 ```
 integer[][] grid = {{1, 2}, {3, 4}};

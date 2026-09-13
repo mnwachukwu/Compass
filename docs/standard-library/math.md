@@ -15,14 +15,15 @@ Reached through the name; there is no such thing as *a* `Math`.
 | [How far an answer can be trusted](#how-far-an-answer-can-be-trusted) | — |
 
 **Every member that takes a number takes a `real` or a `float`**, in two forms the argument
-chooses between. Neither type can answer for the other — a real has no infinity and a float has no
-twenty-eight digits — so a single version would force a conversion at every call. Three sections
-go further and each says so: `Abs`, `Min`, and `Max` take all four number types, the rounding
-members take the three that have a fractional part, and `Factorial` counts arrangements and so
-takes a whole number only.
+chooses between. Neither type can answer for the other: a real has no infinity and a float has no
+twenty-eight digits, so a single version would force a conversion at every call.
 
-The `real` forms compute in binary and convert back, which rounds to fifteen significant digits:
-fewer than a float shows, and every one of them true.
+Three sections take more than that, and each says so. `Abs`, `Min`, and `Max` take all four number
+types. The rounding members take the three that have a fractional part. `Factorial` takes a whole
+number only.
+
+The `real` forms compute in binary and convert back, which rounds to fifteen significant digits.
+That is fewer digits than a float shows.
 
 ## Constants
 
@@ -31,9 +32,8 @@ fewer than a float shows, and every one of them true.
 | `Math.Pi` | `real` |
 | `Math.E` | `real` |
 
-**Values, not functions.** Writing `Math.Pi()` is reported (`CM0338`), as is naming a function
-without calling it (`CM0330`) — the two are a pair, so whichever a reader guesses, the compiler
-says which it is.
+**Values, not functions.** Writing `Math.Pi()` is reported (`CM0338`). Naming a function without
+calling it is reported too (`CM0330`), so either guess is answered with which one it is.
 
 ```
 real area = Math.Pi * 4.0;
@@ -50,9 +50,9 @@ Console.WriteLine(area.Format("F2"));   # 12.57
 | `Math.Pow(real x, real by)` | `real` | `x` raised by `by` |
 | `Math.Factorial(integer n)` | `integer` | `n!` |
 
-`Math.Pow` and the `^` operator do the same job; `^` is usually the one to write. `Factorial`
-counts arrangements, so it takes a whole number and gives one back — past 20 the answer outgrows
-an `integer` and raises `OverflowException`, as any other overflow does.
+`Math.Pow` and the `^` operator do the same job; `^` is the shorter form. `Factorial` counts
+arrangements, so it takes a whole number and yields one. Past 20 the answer outgrows an `integer`
+and raises `OverflowException`, as any other overflow does.
 
 ```
 Console.WriteLine(Math.Sqrt(144.0));       # 12
@@ -90,12 +90,11 @@ Every one of these works in **radians**.
 | `Math.Tanh(real)` | `real` | | `Math.Atanh(real)` | `real` |
 | `Math.Atan2(real y, real x)` | `real` | | | |
 
-`Atan2` takes `y` first, as everywhere else, and gives the angle of the point from the origin
-across the whole circle rather than only half of it.
+`Atan2` takes `y` first, as elsewhere, and yields the angle of the point from the origin across
+the whole circle rather than half of it.
 
-The hyperbolic six are named for the circular ones they sit beside and are shaped the same way,
-but measured against a hyperbola rather than a circle. A hanging chain takes the shape of `Cosh`,
-which is where most people meet them.
+The hyperbolic six are named for the circular ones beside them and take the same shape, measured
+against a hyperbola rather than a circle.
 
 ```
 Console.WriteLine(Math.Sin(0.0));            # 0
@@ -113,8 +112,8 @@ Each of these has a form for every one of the four number types, and gives back 
 | `Math.Min(integer, integer)` · `Math.Min(real, real)` · `Math.Min(float, float)` · `Math.Min(fraction, fraction)` | the same type |
 | `Math.Max(integer, integer)` · `Math.Max(real, real)` · `Math.Max(float, float)` · `Math.Max(fraction, fraction)` | the same type |
 
-Measuring keeps the type it measured, so a distance between integers is one. That is what stops
-`Math.Abs(-3)` from arriving as something that cannot be counted with.
+Each keeps the type it was given, so a distance between integers is an integer and
+`Math.Abs(-3)` can be used as a count.
 
 ```
 Console.WriteLine(Math.Abs(-3));           # 3 — still an integer
@@ -155,22 +154,20 @@ arithmetic library the platform ships, and those are permitted to disagree by a 
 ulp.
 
 The `real` forms work in binary and convert back, which rounds to fifteen significant digits.
-That is fewer digits than the `float` forms show, and it is the better half of the trade: every
-digit that survives is one the calculation actually had, where a float's tail is often noise. A
-program wanting the raw binary answer asks for it with an `f`.
+That is fewer digits than the `float` forms show, and every digit that remains is one the
+calculation produced; a float's trailing digits are often below its accuracy. A program wanting
+the raw binary answer writes the argument with an `f`.
 
 Two guarantees are made against that:
 
 - **A root of an exact power is exact.** `Math.Cbrt(27.0)` is `3` and `Math.Root(32.0, 5.0)` is
   `2`, on every machine. Where raising the nearest whole number by the degree gives the value back
-  exactly, that whole number *is* a root of it, so it is used — a better answer as well as the
-  same one everywhere.
-- **Nothing else is corrected.** `Math.Cbrt(28.0)` is left as the library worked it out. A program
-  that needs a real answer to be identical across machines should round it to as many places as it
-  means to claim, which is what saying "to four places" amounts to.
+  exactly, that whole number is a root of it, and it is the answer used.
+- **Nothing else is corrected.** `Math.Cbrt(28.0)` is what the platform library produced. A
+  program that needs a real answer to be identical across machines rounds it to the number of
+  places it means to claim.
 
 ## Nearby
 
 [Numbers](numbers.md) for what each number type answers about itself, and for the whole
-conversion chart. [Random](random.md) for chance, which is the other model in this corner of the
-library.
+conversion chart. [Random](random.md) for chance.

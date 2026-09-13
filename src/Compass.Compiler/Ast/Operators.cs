@@ -69,8 +69,7 @@ public static class Operators
         TokenType.Percent => BinaryOperator.Remainder,
         TokenType.Caret => BinaryOperator.Power,
 
-        // 'bitwise' is read with the word after it, so what arrives here is already settled.
-        TokenType.Xor => BinaryOperator.Xor,
+        // 'bitwise' and 'exclusive' are read with the word after them, so neither arrives here.
         TokenType.ShiftLeft => BinaryOperator.ShiftLeft,
         TokenType.ShiftRight => BinaryOperator.ShiftRight,
         _ => null,
@@ -103,7 +102,7 @@ public static class Operators
         BinaryOperator.Power => "^",
         BinaryOperator.BitwiseAnd => "bitwise and",
         BinaryOperator.BitwiseOr => "bitwise or",
-        BinaryOperator.Xor => "xor",
+        BinaryOperator.Xor => "bitwise exclusive or",
         BinaryOperator.ShiftLeft => "shiftleft",
         BinaryOperator.ShiftRight => "shiftright",
         _ => op.ToString(),
@@ -128,7 +127,11 @@ public static class Operators
         // The Pratt loop asks BitwisePower instead; this arm is what lets the loop see that
         // an operator begins here at all, and its level is the loosest of the three.
         TokenType.Bitwise => (10, 11),
-        TokenType.Xor => (14, 15),
+
+        // 'exclusive' belongs after 'bitwise'. It is an operator here so that writing it
+        // without the qualifier is read as the operation it was meant to be and reported as
+        // such, rather than scanning as a word out of place.
+        TokenType.Exclusive => (14, 15),
 
         TokenType.EqualEqual or TokenType.NotEqual => (22, 23),
         TokenType.LessThan or TokenType.GreaterThan
@@ -152,8 +155,9 @@ public static class Operators
     /// <summary>
     /// <para>The binding power of <c>bitwise and</c> or <c>bitwise or</c>, told apart by the
     /// word that follows.</para>
-    /// <para>The three bitwise operations sit on three levels, as they do in C#: <c>or</c> is
-    /// loosest, then <c>xor</c>, then <c>and</c>. So <c>a bitwise or b bitwise and c</c> is
+    /// <para>The three bitwise operations sit on three levels, as they do in C#:
+    /// <c>bitwise or</c> is loosest, then <c>exclusive or</c>, then <c>bitwise and</c>. So
+    /// <c>a bitwise or b bitwise and c</c> is
     /// <c>a bitwise or (b bitwise and c)</c>, and a reader who learned the order once carries
     /// it across.</para>
     /// <para>Written for the parser rather than the table, because the level depends on a
@@ -162,6 +166,7 @@ public static class Operators
     public static (int Left, int Right) BitwisePower(TokenType following) => following switch
     {
         TokenType.And => (18, 19),
+        TokenType.Exclusive => (14, 15),
         _ => (10, 11),
     };
 

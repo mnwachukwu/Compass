@@ -2159,7 +2159,7 @@ public sealed class CilEmitterTests
                     Console.WriteLine(1024 shiftright 3);
                     Console.WriteLine(12 bitwise and 10);
                     Console.WriteLine(12 bitwise or 10);
-                    Console.WriteLine(12 xor 10);
+                    Console.WriteLine(12 bitwise exclusive or 10);
                 end function
             end model
             """);

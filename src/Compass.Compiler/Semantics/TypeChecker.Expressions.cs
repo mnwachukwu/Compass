@@ -383,8 +383,8 @@ public sealed partial class TypeChecker
     /// speak of — what it holds is a value, and how that value is stored is the runtime's
     /// business rather than the program's.</para>
     /// <para>Two booleans are told something more useful than that: <c>a != b</c> already
-    /// asks whether exactly one of them holds, and reaching for <c>xor</c> instead is what a
-    /// C# reader does, since <c>^</c> there covers both.</para>
+    /// asks whether exactly one of them holds, and writing <c>exclusive or</c> instead is
+    /// what a C# reader does, since <c>^</c> there covers both.</para>
     /// </summary>
     private TypeSymbol CheckBitwise(BinaryExpr binary, TypeSymbol left, TypeSymbol right)
     {

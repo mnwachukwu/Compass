@@ -32,6 +32,7 @@ public static class ReservedWords
             ["else"] = TokenType.Else,
             ["end"] = TokenType.End,
             ["enumeration"] = TokenType.Enumeration,
+            ["exclusive"] = TokenType.Exclusive,
             ["extends"] = TokenType.Extends,
             ["false"] = TokenType.False,
             ["finally"] = TokenType.Finally,
@@ -74,7 +75,6 @@ public static class ReservedWords
             ["using"] = TokenType.Using,
             ["virtual"] = TokenType.Virtual,
             ["while"] = TokenType.While,
-            ["xor"] = TokenType.Xor,
             ["yield"] = TokenType.Yield,
         }.ToFrozenDictionary(StringComparer.Ordinal);
 

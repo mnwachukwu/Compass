@@ -240,9 +240,9 @@ Interpolation      = "{{" Expr [ ":" FormatPattern ] "}}" ;
    indentation of the closing quotes is removed from every line and the breaks beside
    each run of quotes go.
 
-   A run shorter than the delimiter is text, which is what a longer delimiter buys:
-   a block holding three quotes is written with four. EBNF cannot state that the two
-   runs are equal, so the equality is a rule of the scanner. *)
+   A run shorter than the delimiter is text, so a longer delimiter lets a block hold
+   more quotes: one holding three quotes is written with four. EBNF cannot state that
+   the two runs are equal, so the equality is a rule of the scanner. *)
 BlockStringLiteral = QuoteRun { AnyCharacter } QuoteRun ;
 
 QuoteRun           = '"' '"' '"' { '"' } ;
@@ -301,7 +301,7 @@ NewExpr        = "new" Identifier "(" [ ArgList ] ")" ;
        1    or                             infix      left
        2    and                            infix      left
        3    bitwise or                     infix      left
-       4    xor                            infix      left
+       4    bitwise exclusive or           infix      left
        5    bitwise and                    infix      left
        6    not                            prefix     right
        7    ==  !=                         infix      left
@@ -322,10 +322,11 @@ NewExpr        = "new" Identifier "(" [ ArgList ] ")" ;
    "a bitwise or (b bitwise and c)". A shift binds tighter than a comparison
    and looser than arithmetic, so "x shiftleft 1 + 1" shifts by two.
 
-   "bitwise" is the only operator written as two words, and its level depends
-   on which word follows, so the parser asks Operators.BitwisePower rather
-   than the table. "xor", "shiftleft" and "shiftright" need no qualifier
-   because nothing else claims those words.
+   Every operation on bits is written with "bitwise" in front, because "and",
+   "or" and "exclusive or" each name a boolean operation on their own. The
+   level depends on the word after "bitwise", so the parser asks
+   Operators.BitwisePower rather than the table. "shiftleft" and "shiftright"
+   claim words nothing else uses and are one word each.
 
    "^" raises to a power. It is the only right-associative infix operator, so
    "2 ^ 3 ^ 2" is 2 ^ (3 ^ 2) rather than (2 ^ 3) ^ 2, matching how the
@@ -382,7 +383,7 @@ NewExpr        = "new" Identifier "(" [ ArgList ] ")" ;
    It is refused everywhere else, VarDecl and the left of an ExprStmt
    assignment included. Nothing obliges those to name anything, and ExprStmt
    admits a bare Expr, so a value is dropped by writing it on its own and a
-   throwaway written to drop the same value only spends a line. It is refused
+   throwaway written to drop the same value adds nothing. It is refused
    as the Identifier of Param and LambdaParam, which a caller reads, and as
    the name of anything reached by writing it: a field, a function, a type,
    an enumeration member, a namespace.
@@ -401,8 +402,8 @@ NewExpr        = "new" Identifier "(" [ ArgList ] ")" ;
 
    STATEMENT BOUNDARIES. Because a body has no opener, a condition ends at
    the first token that cannot continue an expression. Read literally that
-   rule is not quite sufficient, and the exception is worth understanding
-   before reading the restriction on ExprStmt above.
+   rule is not quite sufficient. The exception below explains the restriction
+   on ExprStmt above.
 
    An expression is followed directly by a body in exactly four places:
    IfStmt, WhileStmt, ForStmt, and ForEachStmt. Everywhere else a keyword
@@ -411,7 +412,8 @@ NewExpr        = "new" Identifier "(" [ ArgList ] ")" ;
    preceding expression correctly on its own, because identifiers, "this",
    "base", every literal, "{", "new", "not", and every keyword that opens a
    statement have no infix binding power. The keywords that do have one --
-   "and", "or", "xor", "is", "as", "bitwise", "shiftleft", "shiftright" --
+   "and", "or", "is", "as", "bitwise", "exclusive", "shiftleft",
+   "shiftright" --
    open no statement, so none of them ever stands at this boundary.
 
    Two tokens do not. "(" is the call operator and "-" is infix as well as
@@ -422,8 +424,8 @@ NewExpr        = "new" Identifier "(" [ ArgList ] ")" ;
            (x as Dog).Value();
        end if
 
-   parses its condition as "c(x as Dog)" and swallows the body's first
-   statement.
+   parses its condition as "c(x as Dog)" and takes the body's first statement
+   into it.
 
    THE RULE: an expression statement may not begin with "(" or "-".
 

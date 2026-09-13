@@ -9,19 +9,18 @@ For the condensed reference and the prose comparison see
 [diagnostics appendix](language-spec.md#appendix-a-diagnostics).
 
 **These are fragments, not programs.** Each carries the least context needed to show the shape,
-so most would not compile as written — a model with no enclosing file, a statement with no
-function around it. Where a whole program is wanted, [the samples](../samples) are all runnable
-and recorded.
+so most would not compile as written: a model with no enclosing file, a statement with no
+function around it. [The samples](../samples) are all runnable and recorded.
 
 **The C# is the nearest equivalent rather than the best C#.** Where idiomatic C# would use a
 construct Compass has no counterpart to, the comparison shows the same job done rather than the
 same style, and notes what that costs.
 
-**The last three sections keep score.**
+**The last three sections compare the two languages.**
 [§9](#9-where-compass-does-it-better) covers what both have and Compass does better;
 [§10](#10-where-c-does-it-better) covers what both have and C# does better; and
-[§11](#11-c-with-no-compass-equivalent) covers what C# has and Compass has no form for at all.
-The third is the longest of them.
+[§11](#11-c-with-no-compass-equivalent) covers what C# has and Compass has no form for.
+The third is the longest.
 
 ## Contents
 
@@ -293,8 +292,8 @@ static class Program
 }
 ```
 
-`constant` needs an explicit type and a value known while compiling, and is permitted only where
-an unchanging binding really means an unchanging value.
+`constant` needs an explicit type and a value known while compiling, so it is permitted only
+where the binding and the value are both unchanging.
 
 ---
 
@@ -391,7 +390,7 @@ Action<string> announce = text =>
 Console.WriteLine(add(2, 3));
 ```
 
-**`delegate` writes the type; `function` writes the thing.** Where C# needs `Func<>` for something
+**`delegate` writes the type; `function` writes the function.** Where C# needs `Func<>` for something
 yielding a value and `Action<>` for something not, Compass writes the result type in front or
 leaves it off. `Function` is the root every function type descends from, and types a value as a
 function without fixing its shape.
@@ -458,8 +457,8 @@ foreach (int grade in grades)
 A `loop each` reads its sequence's length once, when the loop begins, so a change made during one
 cannot move with it. Where the compiler can see the change it refuses the program (`CM0243`);
 where it cannot — a set reached through a parameter, say — the change raises
-`SequenceChangedException` as C# does. The difference is that the cases worth catching are caught
-before the program runs, rather than every one of them being left to run time.
+`SequenceChangedException` as C# does. The difference is that the visible cases are reported
+before the program runs rather than all of them being left to run time.
 
 C#'s walks anything implementing `IEnumerable`, including things computed lazily as they are
 read. Compass's walks a set.
@@ -938,7 +937,7 @@ C#'s figures are Roslyn's own, from `SyntaxFacts.GetReservedKeywordKinds` and
 `GetContextualKeywordKinds`, minus four undocumented `__`-prefixed ones it also counts. Compass's
 is asserted by a test, so the number above cannot drift from the compiler.
 
-The second row is the one that shows up while writing. In C#, `value`, `var`, `record`, `await`,
+The second row is what a writer meets. In C#, `value`, `var`, `record`, `await`,
 and forty-odd others are keywords in one position and ordinary names everywhere else, so whether a
 word is reserved depends on where it sits. In Compass a word is reserved everywhere or nowhere,
 and `@` takes one back as a name. The list is
@@ -972,7 +971,7 @@ Both languages have these, and C#'s version is better.
 | **Counting up** | `n = n + 1;` | `n++;` | Same reasoning, and `++` carries a pre/post distinction that is a common source of error. The cost is that a very common statement is the longer one |
 | **Reading a member** | `scores.Count` | `scores.Count` | The same. A program cannot declare a property, but the library provides them, and a member that is a value is read rather than called |
 | **Matching a shape** | `if x is Dog` then `x as Dog` | `if (x is Dog d)` | No pattern variables, so a test and a cast are written separately. C#'s form cannot get them out of step |
-| **Choosing on a value** | `switch` over constants | switch expressions, type and property patterns, `when` guards | Compass's switch is a jump table with better defaults. C#'s is a small pattern language, and for anything past equality it is far less code |
+| **Choosing on a value** | `switch` over constants | switch expressions, type and property patterns, `when` guards | Compass's switch is a jump table with better defaults. C#'s is a small pattern language, and for anything past equality it is less code |
 | **Returning two things** | a `structure` declared for it | `(int, string)` tuple, deconstructed at the call | Naming the pair is often the better design. When it is not, C# costs a line and Compass costs a type |
 | **Numbers** | `integer` (64-bit), `real`, `float` (64-bit), `fraction` | `byte` through `ulong`, `float`, `double`, `decimal`, `BigInteger` | One type per idea rather than one per width: no width to choose and no unsigned surprises. `real` is C#'s `decimal` and is what a decimal point means, so money is exact by default rather than by remembering a suffix; `float` is C#'s `double`, named so that binary floating point is asked for. What is given up is wider-than-64 arithmetic and the narrow types a program that has to fit a wire format needs |
 | **Ending a scope** | `finally` | `using` on an `IDisposable` | Explicit and visible, versus a construct that guarantees it. A file left unclosed is a bug Compass cannot make impossible |
@@ -1037,7 +1036,7 @@ needs a different approach.
 Three of the absences above are **deferred rather than rejected**: generics, interfaces, and
 properties, together with a key-to-value type and rectangular sets. They are the prerequisites
 for binding directly to .NET, which is what would turn the last row of
-[§11.4](#114-reaching-other-code) from "nothing" into "everything".
+[§11.4](#114-reaching-other-code) from nothing reachable into the whole framework.
 
 Direct binding arrives over several versions. Each stage stands on its own as a language feature
 rather than being justified only by the binder:
@@ -1065,8 +1064,8 @@ and `fraction?` each hold a number or nothing: nullable value types are reached 
 [§6](#6-optionals-sets-and-fractions) rather than through a second kind of type.
 
 The rest are **decisions**. No `null`, no ternary, no fallthrough, no compound assignment, no
-`++`, no truthiness, no `unsafe`: each was weighed against a beginner reading a line and getting
-it right, and each costs something a working developer would use. The reasoning is in the
+`++`, no truthiness, no `unsafe`: each was decided on whether a beginner reads the line correctly,
+and each costs something a working developer would use. The reasoning is in the
 specification's [design principles](language-spec.md#03-design-principles) and the
 [README](../README.md#what-it-is-for).
 
@@ -1085,7 +1084,7 @@ since each is a correct program in both.
 | `a == b` on two models holding equal fields | `true` — equality is deep and structural | `false` — reference identity, unless `Equals` was written |
 | arithmetic that overflows | `OverflowException`, naming the bound | wraps silently, unless `checked` was written |
 
-The first row is the one to watch, since writing it is a C# habit. A case here cannot fall
+The first row is the one a C# habit produces. A case here cannot fall
 through, so a `break` has nothing to end and keeps the meaning it has everywhere else in the
 language: a `break` written at the end of a case ends the enclosing loop. Nothing reports it,
 since it is a legal statement and both readings are correct programs.

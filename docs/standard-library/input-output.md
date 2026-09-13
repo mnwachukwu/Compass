@@ -2,9 +2,9 @@
 
 [← Back to the index](README.md)
 
-Three models, all reached through their names: there is no such thing as *a* `Console`, *a* `File`,
-or *a* `Directory`. A file is not a thing a program holds — it is somewhere a program puts text
-and takes it back.
+Three models, all reached through their names. None of them is ever constructed: there is no such
+thing as *a* `Console`, *a* `File`, or *a* `Directory`. A path names where text is written and
+read back, and the program holds the path rather than the file.
 
 | Section | Members |
 |---|---|
@@ -26,10 +26,9 @@ and takes it back.
 | `Console.WriteLine()` | nothing | Ends the line |
 | `Console.Read()` | `string?` | The next line typed, or nothing when input has run out |
 
-**Both writers take a value of any type**, and behave exactly as in C#: only `WriteLine` ends the
-line. Neither is an overload set — both are known to the compiler, which decides how to render the
-value from its static type. That is why a `boolean` prints `true` rather than `True`, and a
-fraction prints `1|2`.
+**Both writers take a value of any type**, and behave as in C#: only `WriteLine` ends the line.
+Neither is an overload set. The compiler knows both, and renders the value from its static type,
+so a `boolean` prints `true` rather than `True` and a fraction prints `1|2`.
 
 **`Read` yields an [optional](optionals.md)** because the input running out is an answer rather
 than a fault.
@@ -41,7 +40,7 @@ string name = Console.Read().Or("stranger");
 Console.WriteLine("Hello, " + name);
 ```
 
-Reading a number means reading text and then asking it to be one — see
+Reading a number is two steps: read the text, then convert it. See
 [reading a value back out](text.md#reading-a-value-back-out):
 
 ```
@@ -67,13 +66,11 @@ end if
 | `File.Read(string path)` | `string?` | There is no such file |
 | `File.ReadLines(string path)` | `string[]?` | There is no such file |
 
-**Absence means "not there", and nothing else.** Everything else that can go wrong — a locked
-file, a bad path, a full disk — raises `IOException`, because an absent optional cannot say which
-of those it was.
+**Absence means "not there", and nothing else.** A locked file, a bad path, and a full disk each
+raise `IOException` instead, because an absent optional cannot say which of them occurred.
 
-**This is why there is no "check first" pattern to write.** Asking `File.Exists` and then reading
-is the version that races: the file can go between the two lines. Reading and handling the absence
-cannot.
+**There is no "check first" pattern to write.** `File.Exists` followed by a read is a race: the
+file can be removed between the two lines. Reading and handling the absence cannot race.
 
 ### Writing
 
@@ -83,8 +80,8 @@ cannot.
 | `File.WriteLines(string path, string[] lines)` | nothing | The same, one line each |
 | `File.Append(string path, string text)` | nothing | Adds to the end |
 
-All three make the file when there is none. **None of them makes the folder it sits in**, so a
-path with a typo in it fails rather than creating a new folder.
+All three create the file when there is none. **None of them creates the folder it sits in**, so
+a path with a typo in it fails rather than producing a new folder.
 
 ### Managing
 
@@ -102,9 +99,8 @@ path with a typo in it fails rather than creating a new folder.
 
 ### How text is stored
 
-**UTF-8 with no mark at the front.** Writing ends every line with `\n`; reading accepts either
-that or `\r\n` and gives back neither — so a file written on one machine reads the same on
-another.
+**UTF-8 with no mark at the front.** Writing ends every line with `\n`. Reading accepts either
+`\n` or `\r\n` and returns neither, so a file written on one machine reads the same on another.
 
 ```
 File.WriteLines("notes.txt", {"first", "second"});
@@ -133,12 +129,12 @@ File.Delete("notes.txt");
 
 `Directory.Current` is a **value** and takes no parentheses.
 
-**`Create` makes every folder on the way**, since making one inside another that is not there yet
-is the ordinary reason to ask. That is the opposite of `File.Write`, which deliberately does not —
-writing a file is about the file, and making folders on the way would hide a mistyped path.
+**`Create` makes every folder on the way**, since making one inside another that does not exist
+yet is the usual reason to call it. `File.Write` does the opposite and makes none, so a mistyped
+path fails rather than producing an unintended folder.
 
-**`Files` and `Folders` do not descend.** What is directly inside is what you get, which is the
-same rule a `.cmp` project follows for a `source` naming a folder.
+**`Files` and `Folders` do not descend.** They yield what is directly inside, the same rule a
+`.cmp` project follows for a `source` naming a folder.
 
 ```
 Directory.Create("out/reports");

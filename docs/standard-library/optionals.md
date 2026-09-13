@@ -2,12 +2,12 @@
 
 [← Back to the index](README.md)
 
-A `T?` holds a `T` or holds nothing. **There are three members and there are only three**, which
-is the feature that replaces `null`.
+A `T?` holds a `T` or holds nothing. It has three members and no others, and it is what the
+language has in place of `null`.
 
-The important part is not the members but the rule around them: **the compiler will not let you
-read an optional it cannot prove is present.** Reaching for a value that might be absent stops
-being a crash and becomes a line that does not compile.
+The rule around those members is the substance: **the compiler will not read an optional it
+cannot prove is present.** Reading a value that might be absent is a compile error rather than a
+run-time fault.
 
 | Section | Members |
 |---|---|
@@ -21,15 +21,15 @@ being a crash and becomes a line that does not compile.
 
 | Member | Yields | What it does |
 |---|---|---|
-| `HasValue()` | `boolean` | Whether something is in there |
-| `Value()` | `T` | What is in there — refused unless the compiler can prove it is |
-| `Or(T fallback)` | `T` | What is in there, or `fallback` |
-| `Or(T? fallback)` | `T?` | What is in there, or the other optional |
+| `HasValue()` | `boolean` | Whether a value is present |
+| `Value()` | `T` | The value, refused unless the compiler can prove one is present |
+| `Or(T fallback)` | `T` | The value, or `fallback` |
+| `Or(T? fallback)` | `T?` | The value, or the other optional |
 
 ## `HasValue` narrows
 
-Asking is what makes reading legal. Inside a block guarded by `HasValue()`, the compiler knows the
-value is there and `Value()` is allowed.
+Inside a block guarded by `HasValue()`, the compiler knows the value is present and `Value()` is
+allowed.
 
 ```
 string? typed = Console.Read();
@@ -42,8 +42,8 @@ else
 end if
 ```
 
-Written without the guard, `typed.Value()` is `CM0401` — a compile error, not a crash. The mistake
-moves from run time to build time.
+Written without the guard, `typed.Value()` is `CM0401`: a compile error rather than a run-time
+fault.
 
 ## `Or` supplies a fallback
 
@@ -59,8 +59,8 @@ optional turns out to be present.
 
 ## The two forms of `Or`, and chaining
 
-Given a plain value, `Or` **ends** the chain with a definite one. Given another optional, it keeps
-the chain going — which is what makes a run of fallbacks work:
+Given a plain value, `Or` **ends** the chain and yields a `T`. Given another optional, it yields
+a `T?`, so fallbacks can be run one after another:
 
 ```
 string? fromFile = File.Read("settings.txt");
@@ -75,9 +75,9 @@ string chosen = fromFile.Or(fromInput).Or("a built-in default");
 
 ## When there is nothing to fall back on
 
-`Value()` on an optional that turns out empty raises `EmptyOptionalException`. Reaching that line
-means the compiler was told the value was there, so it is a claim that turned out false rather
-than a missing check. See [exceptions](exceptions.md).
+`Value()` on an optional that turns out empty raises `EmptyOptionalException`. The compiler had
+been given proof the value was present, so this is a claim that turned out false rather than a
+missing check. See [exceptions](exceptions.md).
 
 ## Where optionals come from
 
@@ -90,14 +90,15 @@ The library yields one wherever an answer may not exist:
 | [`"12".ToInteger()`](text.md#reading-a-value-back-out) | `integer?` | The text does not spell a number |
 | [`DateTime.Parse(text)`](dates-and-times.md) | `DateTime?` | The text does not read as a moment |
 
-**Absence is an answer, not a fault.** Every one of these is an ordinary thing to happen, which is
-why none of them raises — and why asking `File.Exists` before `File.Read` is the pattern that
-races rather than the careful one.
+**Absence is an answer, not a fault**, so none of these raises. `File.Exists` followed by
+`File.Read` is a race: the file can be removed between the two calls. Read it and handle the
+absence.
 
 ## A set of optionals
 
-`T?[]` holds values that may each be absent, and has [four members of its own](sets.md#dropping-the-empties)
-for getting rid of them — `TrimAll` being the one that gives back a `T[]` so the unwrapping stops.
+`T?[]` holds values that may each be absent, and has
+[four members of its own](sets.md#dropping-the-empties) for removing them. `TrimAll` yields a
+`T[]`, which ends the unwrapping.
 
 ## Comparing them
 
@@ -122,7 +123,6 @@ read it — printing it, joining it to a string, reaching a member of it — sti
 
 ## Also on every optional
 
-Nothing else. An optional does **not** answer [`ToString()` or `Equals()`](every-value.md).
-Both of those are members, and reaching a member of an optional means reaching through to what it
-holds, which is the one thing an optional will not do without proof. `==` is an operator rather
-than a member, which is why it answers where `Equals()` refuses.
+Nothing else. An optional does **not** answer [`ToString()` or `Equals()`](every-value.md). Both
+are members, and a member call reads what the optional holds, which requires proof. `==` is an
+operator rather than a member, so it answers where `Equals()` refuses.

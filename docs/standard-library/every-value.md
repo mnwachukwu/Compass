@@ -2,14 +2,14 @@
 
 [← Back to the index](README.md)
 
-Two members exist on every type in the language: a primitive, a set, an enumeration member, a
-structure, a model a program declared, and a model the language provides. They come from `Model`,
-which every type descends from.
+Two members exist on every type: a primitive, a set, an enumeration member, a structure, a model
+a program declared, and a model the language provides. Both come from `Model`, which every type
+descends from.
 
-**An optional is the exception, and answers neither.** Reaching a member of one means reaching
-through to what it holds, which it will not do without proof — so `ToString()` and `Equals()` are
-refused on an optional as any other member would be. Comparing two of them with `==` is the one
-thing that needs no proof; [optionals.md](optionals.md#comparing-them) gives the rules.
+**An optional answers neither.** A member call on an optional reads what it holds, which requires
+proof that a value is there, so `ToString()` and `Equals()` are refused like any other member.
+`==` between two optionals needs no proof;
+[optionals.md](optionals.md#comparing-them) gives the rules.
 
 | Section | Members |
 |---|---|
@@ -28,8 +28,8 @@ thing that needs no proof; [optionals.md](optionals.md#comparing-them) gives the
 `Equals` accepts a value of **any** type. Comparing two values that could never be equal is not
 refused; it answers `false`.
 
-Both are `virtual`, so any type may write its own — a structure as freely as a model. Calling
-either on a value does not box: it compiles to a direct call, the way `5.ToString()` does in C#.
+Both are `virtual`, so any type may write its own, structures included. Neither boxes: each
+compiles to a direct call, as `5.ToString()` does in C#.
 
 ### What `ToString` says when nothing overrides it
 
@@ -39,14 +39,13 @@ either on a value does not box: it compiles to a direct call, the way `5.ToStrin
 | An enumeration | The member's name |
 | A model | The type's name |
 
-**The difference is forced rather than chosen.** A structure cannot contain itself, so walking its
-fields always finishes. A model can take part in a cycle — and while `==` solves that with
-cycle-safe bisimulation, there is no equivalent trick for printing, so a model prints its type name
-and an author who wants more writes one.
+**A structure cannot contain itself**, so walking its fields always finishes. A model can take
+part in a cycle. `==` handles that with cycle-safe bisimulation, which has no counterpart for
+printing, so a model prints its type name unless it declares `ToString`.
 
 A declared `ToString` is what a value prints everywhere: written out, printed on its own, joined to
-a string with `+`, or inside a set. All of them dispatch on the runtime type, so printing and
-calling never disagree.
+a string with `+`, or inside a set. Each dispatches on the runtime type, so printing and calling
+never disagree.
 
 ```
 integer count = 3;
@@ -59,9 +58,8 @@ Console.WriteLine(count.Equals(name));      # false
 
 ## What `Equals` compares
 
-**What the value holds, not where it lives.** This is the same question `==` asks, and it goes all
-the way down: two models are equal when every field is equal, and a field holding a model is
-compared the same way.
+**What the value holds, not where it lives.** `==` asks the same question. It recurses: two models
+are equal when every field is equal, and a field holding a model is compared the same way.
 
 ```
 model Point
@@ -88,9 +86,9 @@ shared model Program
 end model
 ```
 
-**Two models that hold each other are handled.** A structure that reaches itself through a model,
-or a pair of models pointing at one another, does not send the comparison round forever — the
-engine that answers `Equals` keeps track of the pairs it is already in the middle of.
+**Cycles terminate.** A structure that reaches itself through a model, or a pair of models
+pointing at one another, compares without looping: `Equals` records the pairs it is already
+comparing and treats a repeat as equal.
 
 ## `Reference.Equals`
 
@@ -101,14 +99,13 @@ things rather than about one.
 |---|---|---|
 | `Reference.Equals(anything, anything)` | `boolean` | Whether both names reach the same object |
 
-**It is the only way to ask that question**, and it is deliberately awkward to reach: comparing by
-identity is the unusual thing to want, and a beginner reaching for `==` should get the answer
-about values.
+**It is the only way to ask that question.** Comparing by identity is the rarer thing to want, and
+`==` answers about values, so the identity form is written out in full rather than given an
+operator.
 
-**A structure is refused rather than answered.** A structure is copied when it is passed, so
-asking whether two of them are the same object is a question with no useful answer — and one
-whose true answer would depend on where the compiler happened to put things. The refusal is a
-compile error rather than a `false` at run time.
+**A structure is refused.** A structure is copied when it is passed, so whether two of them are
+the same object depends on where the compiler put them. The refusal is a compile error, not
+`false` at run time.
 
 ## Enumerations
 
@@ -136,6 +133,5 @@ shared model Program
 end model
 ```
 
-**The conversion only goes one way.** There is no `ToSuit(0)`, because an integer that names no
-member would have to produce something that is not a `Suit` — and every enumeration in Compass
-holds only the members it declared.
+**The conversion goes one way.** There is no `ToSuit(0)`: an integer naming no member would have
+to produce a value that is not a `Suit`, and an enumeration holds only the members it declares.

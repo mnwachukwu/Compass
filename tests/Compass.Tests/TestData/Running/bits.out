@@ -4,12 +4,12 @@
   may delete:   false
   added twice:  true
   now shares:   true
-== and, or, xor ==
-  1100 and 1010: 1000
-  1100 or  1010: 1110
-  1100 xor 1010: 110
-  xor undoes it: true
-  levels:        1101
+== and, or, exclusive or ==
+  1100 bitwise and          1010: 1000
+  1100 bitwise or           1010: 1110
+  1100 bitwise exclusive or 1010: 110
+  a second pass undoes it:        true
+  levels:                         1101
 == moving the bits along ==
   1 left 4:     10000
   and as a number: 16

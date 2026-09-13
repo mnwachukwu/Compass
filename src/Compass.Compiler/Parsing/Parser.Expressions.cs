@@ -65,7 +65,8 @@ public sealed partial class Parser
 
             // Which level "bitwise" is on depends on the word after it, which the table cannot
             // see. Settled before the level is compared, or "bitwise and" would be turned away
-            // at the loosest of the three and never reach its own.
+            // at the loosest of the three and never reach its own. A leading "exclusive" is
+            // already on its own level, since only one operator begins that way.
             if (Check(TokenType.Bitwise))
             {
                 power = Operators.BitwisePower(Peek().Type);
@@ -78,13 +79,20 @@ public sealed partial class Parser
 
             BinaryOperator op;
 
-            // "bitwise" says which of two words follows, so the operator is two tokens. It is
-            // the only one, and only because "and" and "or" already mean something on their
-            // own; every other bitwise word stands alone.
+            // "bitwise" qualifies a word that already means something on its own, so the
+            // operator runs to two tokens, or three for "bitwise exclusive or". A leading
+            // "exclusive" is the same operator with the qualifier left off, and is read here
+            // so the diagnostic can name the whole of it.
             if (Check(TokenType.Bitwise))
             {
                 Advance();
                 op = ReadWhichBitwiseOperation();
+            }
+            else if (Check(TokenType.Exclusive))
+            {
+                _diagnostics.Report(DiagnosticDescriptors.ExclusiveOrNeedsBitwise, Current.Span);
+                Advance();
+                op = ReadTheOrAfterExclusive();
             }
             else
             {
@@ -102,9 +110,8 @@ public sealed partial class Parser
 
     /// <summary>
     /// <para>Reads the word after <c>bitwise</c>, which says which operation was meant.</para>
-    /// <para>Only <c>and</c> and <c>or</c> may follow it, and only because those two already
-    /// mean something on their own — <c>xor</c> claims nothing else, so it needs no qualifier.
-    /// Anything else here is named rather than left to scan as a word out of place.</para>
+    /// <para>Only <c>and</c>, <c>or</c>, and <c>exclusive or</c> may follow it. Anything else
+    /// here is named rather than left to scan as a word out of place.</para>
     /// </summary>
     private BinaryOperator ReadWhichBitwiseOperation()
     {
@@ -116,6 +123,11 @@ public sealed partial class Parser
         if (Match(TokenType.Or))
         {
             return BinaryOperator.BitwiseOr;
+        }
+
+        if (Match(TokenType.Exclusive))
+        {
+            return ReadTheOrAfterExclusive();
         }
 
         _diagnostics.Report(
@@ -132,6 +144,29 @@ public sealed partial class Parser
         // Carrying on as one of the two keeps the rest of the expression readable; which one
         // it is cannot matter, since the program is already refused.
         return BinaryOperator.BitwiseAnd;
+    }
+
+    /// <summary>
+    /// <para>Reads the <c>or</c> that completes <c>bitwise exclusive or</c>.</para>
+    /// <para>Nothing else may follow <c>exclusive</c>, so a different word is named here
+    /// rather than left to scan as the start of the right-hand side.</para>
+    /// </summary>
+    private BinaryOperator ReadTheOrAfterExclusive()
+    {
+        if (Match(TokenType.Or))
+        {
+            return BinaryOperator.Xor;
+        }
+
+        _diagnostics.Report(
+            DiagnosticDescriptors.ExclusiveNeedsOr, Current.Span, Describe(Current));
+
+        if (Kind.IsKeyword() || Check(TokenType.Identifier))
+        {
+            Advance();
+        }
+
+        return BinaryOperator.Xor;
     }
 
     /// <summary>A prefix operator, or a primary expression.</summary>

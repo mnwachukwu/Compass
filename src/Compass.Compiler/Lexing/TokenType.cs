@@ -95,6 +95,7 @@ public enum TokenType
     Else,
     End,
     Enumeration,
+    Exclusive,
     Extends,
     False,
     Finally,
@@ -137,7 +138,6 @@ public enum TokenType
     Using,
     Virtual,
     While,
-    Xor,
     Yield,
 
     // ---- Arithmetic operators -----------------------------------------------------------

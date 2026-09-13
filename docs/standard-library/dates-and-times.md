@@ -11,12 +11,11 @@
 | `TimeSpan` | How long | how long a journey takes |
 | `DateTime` | Which moment | when a message was sent |
 
-Keeping them apart is what makes the awkward cases come out right: **23:30 plus an hour is 00:30
-on a clock, but the next day as a moment.** A `Time` wraps; a `DateTime` does not.
+Keeping them apart is what settles the ambiguous cases: **23:30 plus an hour is 00:30 on a clock,
+but the next day as a moment.** A `Time` wraps; a `DateTime` does not.
 
-Every one of the four is a model with instances, and each has members reached two ways — through
-the name (`DateTime.Now`) and through a value you are holding (`landing.Year`). The tables say
-which.
+All four are models with instances, and each has members reached two ways: through the name
+(`DateTime.Now`) and through a value (`landing.Year`). The tables say which.
 
 | Section | Members |
 |---|---|
@@ -121,11 +120,11 @@ Console.WriteLine(journey.TotalHours);   # 1.5
 moment from another asks *how long between them* and yields a `TimeSpan`; taking a span from a
 moment asks *what moment then* and yields a `DateTime`.
 
-**`Date.AddDays` takes a whole number** where `DateTime.AddDays` takes a `real` — half a day is
-not a day.
+**`Date.AddDays` takes a whole number** where `DateTime.AddDays` takes a `real`, since half a day
+is not a day.
 
-`Negate` turns a span around; `Duration` gives its size regardless of direction, so a span of
-minus two hours has a duration of two hours.
+`Negate` reverses a span's direction. `Duration` yields its size regardless of direction, so a
+span of minus two hours has a duration of two hours.
 
 ```
 DateTime sent = new DateTime(2026, 3, 1, 9, 0, 0);
@@ -137,7 +136,7 @@ Console.WriteLine(waited.TotalMinutes);          # 150
 Console.WriteLine(sent.AddDays(1).Day);          # 2
 ```
 
-### The one that catches people out
+### Where a clock and a moment differ
 
 ```
 Time late = new Time(23, 30, 0).AddHours(1);
@@ -154,9 +153,9 @@ Console.WriteLine(moment.Day);                   # 2 — a moment does not
 | `CompareTo(same type)` | `integer` | Negative if earlier, zero if equal, positive if later |
 
 Every one of the four answers it against its own type. **`<`, `>`, `<=`, and `>=` work too**, and
-are what to write when the question is which came first — each is `CompareTo` against zero, so
-the two can never disagree. `CompareTo` itself is for when the three-way answer is wanted in one
-go, as when sorting.
+are what to write when the question is which came first. Each is `CompareTo` against zero, so the
+two cannot disagree. `CompareTo` itself gives the three-way answer in one call, which is what
+sorting needs.
 
 `==` and `!=` compare what the value holds, as they do for [any other
 value](every-value.md#what-equals-compares).
@@ -187,7 +186,7 @@ whatever order the fields happened to be declared in.
 
 **The patterns are .NET's own, unchanged** — `yyyy-MM-dd` is a date, `HH:mm` a 24-hour time,
 `hh\:mm` a span. **`Parse` yields an [optional](optionals.md)** because text that does not read is
-the ordinary case, not a fault: most of it was typed by somebody.
+an ordinary outcome rather than a fault, since most of it was typed by a person.
 
 ```
 DateTime landing = new DateTime(1969, 7, 20, 20, 17, 0);

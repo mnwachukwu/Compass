@@ -745,7 +745,7 @@ Every one of these runs. Each is a complete program, and each is there to show o
 | [fractions.cm](samples/fractions.cm) | **Exact rationals.** `1\|3 + 1\|3 + 1\|3` is exactly 1; the same sum in `real` is not |
 | [runtime-fractions.cm](samples/runtime-fractions.cm) | Building fractions from values with `Fraction.Create`, when literals will not do |
 | [standard-library.cm](samples/standard-library.cm) | Everything the language provides without declaring anything |
-| [bits.cm](samples/bits.cm) | **Working on the bits of a whole number.** Flags combined and asked about, `bitwise and`/`or`/`xor`, and the two shifts |
+| [bits.cm](samples/bits.cm) | **Working on the bits of a whole number.** Flags combined and asked about, `bitwise and`, `bitwise or`, `bitwise exclusive or`, and the two shifts |
 | [ignoring.cm](samples/ignoring.cm) | **Telling the compiler to stop saying something.** The three severities, the three forms of `# ignore`, how far each reaches, and why a comment beginning with the word stays a comment |
 | [documenting.cm](samples/documenting.cm) | **Writing down what a thing is.** `@summary:` and the labels beside it, how a summary runs to several paragraphs, and why a remark above a declaration stays a remark |
 | [visibility.cm](samples/visibility.cm) | **`shared` and `public` answer different questions.** One asks how many there are, the other who can reach it — a shared model's members are private until they say otherwise |
@@ -845,7 +845,7 @@ Programs the compiler rejects:
 | [imports.cm](samples/negatives/compile/imports.cm) | Imports naming a file that is not there, and one that is not Compass |
 | [visibility.cm](samples/negatives/compile/visibility.cm) | Reaching a private and a protected member from outside, two visibilities on one declaration, and `protected` on a type |
 | [overriding.cm](samples/negatives/compile/overriding.cm) | `override` matching nothing, overriding a function that is not `virtual`, yielding something else, and hiding one without saying so |
-| [bits.cm](samples/negatives/compile/bits.cm) | `xor` on two booleans, bit operations on a real and a fraction, a shift past the width of an integer, and a word after `bitwise` that is neither `and` nor `or` |
+| [bits.cm](samples/negatives/compile/bits.cm) | `bitwise exclusive or` on two booleans, bit operations on a real and a fraction, a shift past the width of an integer, a word after `bitwise` that begins none of the three operations, a word after `exclusive` that is not `or`, and `exclusive or` written without its qualifier |
 | [looping.cm](samples/negatives/compile/looping.cm) | Inserting into, removing from, and clearing the very sequence a `loop each` is walking, walking a number and an optional set, and four range loops that cannot work: a step of zero, a step pointing away, a bound already behind, and an exclusive bound already reached |
 | [conditions.cm](samples/negatives/compile/conditions.cm) | A number and an optional asked to be a condition, in all six places one is taken: `if`, `loop while`, `loop … until`, the `if` expression, an operand of `and`, and `not` |
 | [closures.cm](samples/negatives/compile/closures.cm) | Misreadings of what a kept function names — assigning to a loop counter, hiding a name it kept, and reaching for an instance a shared member does not have |

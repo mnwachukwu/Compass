@@ -117,7 +117,7 @@ CompilationUnit
         CallExpr
           MemberExpr 'WriteLine'
             IdentifierExpr 'Console'
-          LiteralExpr "== and, or, xor ==" [String]
+          LiteralExpr "== and, or, exclusive or ==" [String]
       VarDeclStmt 'left'
         NamedTypeSyntax 'integer'
         LiteralExpr 0b1100 [Integer]
@@ -129,7 +129,7 @@ CompilationUnit
           MemberExpr 'WriteLine'
             IdentifierExpr 'Console'
           BinaryExpr '+'
-            LiteralExpr "  1100 and 1010: " [String]
+            LiteralExpr "  1100 bitwise and          1010: " [String]
             CallExpr
               MemberExpr 'Format'
                 ParenthesizedExpr
@@ -142,7 +142,7 @@ CompilationUnit
           MemberExpr 'WriteLine'
             IdentifierExpr 'Console'
           BinaryExpr '+'
-            LiteralExpr "  1100 or  1010: " [String]
+            LiteralExpr "  1100 bitwise or           1010: " [String]
             CallExpr
               MemberExpr 'Format'
                 ParenthesizedExpr
@@ -155,11 +155,11 @@ CompilationUnit
           MemberExpr 'WriteLine'
             IdentifierExpr 'Console'
           BinaryExpr '+'
-            LiteralExpr "  1100 xor 1010: " [String]
+            LiteralExpr "  1100 bitwise exclusive or 1010: " [String]
             CallExpr
               MemberExpr 'Format'
                 ParenthesizedExpr
-                  BinaryExpr 'xor'
+                  BinaryExpr 'bitwise exclusive or'
                     IdentifierExpr 'left'
                     IdentifierExpr 'right'
               LiteralExpr "B" [String]
@@ -168,12 +168,12 @@ CompilationUnit
           MemberExpr 'WriteLine'
             IdentifierExpr 'Console'
           BinaryExpr '+'
-            LiteralExpr "  xor undoes it: " [String]
+            LiteralExpr "  a second pass undoes it:        " [String]
             ParenthesizedExpr
               BinaryExpr '=='
                 ParenthesizedExpr
-                  BinaryExpr 'xor'
-                    BinaryExpr 'xor'
+                  BinaryExpr 'bitwise exclusive or'
+                    BinaryExpr 'bitwise exclusive or'
                       IdentifierExpr 'left'
                       IdentifierExpr 'right'
                     IdentifierExpr 'right'
@@ -183,7 +183,7 @@ CompilationUnit
           MemberExpr 'WriteLine'
             IdentifierExpr 'Console'
           BinaryExpr '+'
-            LiteralExpr "  levels:        " [String]
+            LiteralExpr "  levels:                         " [String]
             CallExpr
               MemberExpr 'Format'
                 ParenthesizedExpr

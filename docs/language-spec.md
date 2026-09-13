@@ -132,8 +132,7 @@ Compass is an **introductory language**. Its goal is to make programming concept
 beginner while staying faithful to the patterns a C# developer uses daily, so that what a
 student learns transfers rather than has to be unlearned.
 
-This purpose is normative, not decorative. Several design decisions were reversed once it was
-stated explicitly, and it is the tiebreaker wherever two designs are otherwise comparable.
+This purpose is normative. It is the tiebreaker wherever two designs are otherwise comparable.
 
 ### 0.3 Design principles
 
@@ -141,8 +140,7 @@ stated explicitly, and it is the tiebreaker wherever two designs are otherwise c
 teaches better, even when it is more to type.
 
 **Compile-time errors beat runtime crashes.** Definite assignment, strict optional access, and
-qualified block closers all exist to move failures earlier. A program that compiles should
-fail in fewer ways.
+qualified block closers all move failures from run time to compile time.
 
 **Explicit beats implicit.** `this.` is required on member access. A constant must name its
 type. A bare identifier reaches only locals and parameters.
@@ -173,9 +171,8 @@ year first, `2026-07-29`, and a time in twenty-four hours. None of this is the m
 default — every rendering names the invariant form deliberately.
 
 This matters more for an introductory language than for most. A student comparing output with a
-classmate or a book should be comparing the program, not the two computers' idea of how a date
-is written; and `07/08/2026` means two different days depending on who is reading it, which is
-not something anyone should have to think about while learning what a loop is.
+classmate or a book is then comparing the program rather than two machines' regional settings.
+`07/08/2026` names two different days depending on where it is read.
 
 ### 0.4 Relationship to C#
 
@@ -383,19 +380,18 @@ line with it**:
 ##
 ```
 
-The body is indented under the marks by convention rather than by rule — the compiler reads a
-block the same either way, and an editor the compiler answers folds it either way.
+The body is indented under the marks by convention rather than by rule. The compiler reads a
+block the same either way, and so does an editor folding it.
 
-That closing rule settles two things at once.
+Two rules follow from the closer taking the rest of its line.
 
-**Nesting is not an idea that can go wrong, because it is not an idea.** The first `##` after
-the opener closes the block, whatever was written between. A comment discussing comment syntax
-cannot half-close itself and spill its remainder into the program as code.
+**Blocks do not nest.** The first `##` after the opener closes the block, whatever was written
+between. A comment discussing comment syntax cannot half-close itself and leave its remainder
+to be read as code.
 
-**A comment is a line of its own, or the end of a line — never the middle of one.** Since the
-closer takes the rest of its line, nothing can follow one and still be code. This is a
-judgement about reading rather than a limitation: a comment interrupting an expression breaks
-the sentence the expression is trying to be.
+**A comment is a line of its own, or the end of a line, and never the middle of one.** Since
+the closer takes the rest of its line, nothing can follow one and still be code. A comment
+cannot be written in the middle of an expression.
 
 A run of marks is a heading rather than an error, since the extra ones are simply comment
 text:
@@ -423,8 +419,8 @@ mistake it is (`CM0021`) rather than read as a number beside a name: nothing in 
 puts two values side by side, so `1each` and `40var` have no reading in which they are two
 things.
 
-Identifiers are case-sensitive, so `Model` and `model` are different words — and since one of
-them is reserved, they are different *kinds* of word.
+Identifiers are case-sensitive, so `Model` and `model` are different words. One of them is
+reserved and the other is not.
 
 An identifier may not be one of the reserved words in section 2. Adjacency to an underscore is
 enough to make a word ordinary rather than reserved: `model_` and `models` are identifiers.
@@ -435,8 +431,8 @@ may begin with something other than a letter or an underscore.
 
 This exists because several reserved words are ordinary things to call a variable. `end` pairs
 with `start`, `base` pairs with `height`, `to` pairs with `from`, and `each` is a natural name
-for what a loop is given. Renaming every such keyword would cost the vocabulary and still leave
-the rest taken, so the language keeps its words and hands one back on request.
+for what a loop is given. Renaming every such keyword would change the vocabulary and still
+leave the rest reserved, so the words stay and `@` releases one where it is needed.
 
 An `@` before a word that is not reserved does nothing, and is reported as such. An `@`
 followed by no name at all is an error.
@@ -536,9 +532,9 @@ Console.WriteLine("{{apples}} apples and {{pears}} pears is {{apples + pears}} f
 ```
 
 **A single brace is ordinary text.** Only a pair opens a hole, so `"a set is {1, 2}"` needs
-nothing done to it. This is why the braces are doubled rather than the literal being marked
-with a prefix: the cost is paid only where interpolation is used, instead of by every string
-that happens to contain a brace. To write a literal pair, escape the first: `"\{{"`.
+nothing done to it. The braces are doubled rather than the literal carrying a prefix so that
+only strings using interpolation pay for it, rather than every string holding a brace. To write
+a literal pair, escape the first: `"\{{"`.
 
 **A hole holds any expression**, including a call, a conditional, or a string that interpolates
 in turn. The scanner counts braces opened inside a hole, so `"{{ {1, 2}.Count }}"` closes at
@@ -553,18 +549,18 @@ whole to the closing braces:
 ```
 
 The patterns are .NET's, unchanged, so what is learned here transfers. A pattern may only be
-given where the value answers `Format` — the measured and the dated types do, and asking it of
-anything else is `CM0341`. The same patterns are available without a string around them,
-through `Format` itself.
+given where the value answers `Format`, which the four number types and the four date and time
+types do; asking it of anything else is `CM0341`. The same patterns are available without a
+string around them, through `Format` itself.
 
 **An interpolated string is a `string`**, whatever it holds, and means exactly the
 concatenation it looks like: each hole becomes `ToString()`, or `Format(pattern)` where one was
 named, and the pieces are joined with `+`.
 
-**So a hole must hold something with text**, which is the same requirement the join it becomes
-already has. An optional answers no `ToString()`, so an optional in a hole is `CM0349` — as it
-is joined to a string, or written out with `Console.Write`. Say what to write with `Or`, or
-prove presence and write the value.
+**A hole must hold something with text**, which is what the join it becomes already requires. An
+optional answers no `ToString()`, so an optional in a hole is `CM0349`, as it is when joined to a
+string or written out with `Console.Write`. Say what to write with `Or`, or prove presence and
+write the value.
 
 A block string does **not** interpolate, per [§1.5](#15-literals).
 
@@ -605,13 +601,13 @@ Compass has **63** reserved words. A name may take one back by writing `@` in fr
 ```words
 abstract     and          as           base         begin        bitwise      boolean
 break        case         catch        character    constant     continue     default
-delegate     each         else         end          enumeration  extends      false
-finally      float        for          fraction     function     if           import
-in           integer      internal     is           let          loop         model
-namespace    new          not          or           override     protected    public
-real         sealed       shared       shiftleft    shiftright   stepby       string
-structure    switch       then         this         throw        to           true
-try          until        using        virtual      while        xor          yield
+delegate     each         else         end          enumeration  exclusive    extends
+false        finally      float        for          fraction     function     if
+import       in           integer      internal     is           let          loop
+model        namespace    new          not          or           override     protected
+public       real         sealed       shared       shiftleft    shiftright   stepby
+string       structure    switch       then         this         throw        to
+true         try          until        using        virtual      while        yield
 ```
 
 These are every reserved word, and nothing is reserved outside the list. A comment is marked
@@ -627,8 +623,8 @@ is no `null`; and nothing the language defines is abbreviated — `enumeration` 
 **Every one of the 63 is reserved everywhere.** C# has a second
 kind: `value`, `var`, `record`, `await`, and forty-odd others are keywords in one position and
 ordinary names in every other, so whether a word is reserved there depends on where it sits.
-Compass has none of those, and `@` takes any of the 63 back as a name — one rule, written at the
-point it applies. The
+Compass has none of those. A word is reserved everywhere or nowhere, and `@` takes any of the 63
+back as a name at the point it is used. The
 [comparison with C#](side-by-side.md#9-where-compass-does-it-better) counts both languages.
 
 ### 2.2 Operators and punctuation
@@ -653,10 +649,11 @@ Writing `=>` or `->` reports `CM0006` and names the word to use instead.
 
 **`^` is exponentiation, not exclusive-or.** In C# the same symbol is a bitwise operation,
 where `10 ^ 2` evaluates to 8, so the meaning does not carry across — the operation it names
-there is spelled `xor` here.
+there is spelled `bitwise exclusive or` here.
 
 The boolean operators are the reserved words `and`, `or`, and `not`, not symbols. So are the
-ones that work on bits: `bitwise and`, `bitwise or`, `xor`, `shiftleft`, and `shiftright`
+ones that work on bits: `bitwise and`, `bitwise or`, `bitwise exclusive or`, `shiftleft`, and
+`shiftright`
 ([§5.2](#52-operators)).
 
 There is **no** ternary conditional, no compound assignment (`+=` and its family), and no
@@ -686,8 +683,8 @@ Two recoveries change what the parser then sees.
 
 **An unterminated string ends at the newline, not at the end of the file.** A missing close
 quote almost always means a missing quote on that line, and scanning to the end of the file
-would turn one real error into a hundred spurious ones. A partial token is emitted so the
-parser keeps its footing.
+would turn one real error into a hundred spurious ones. A partial token is emitted so the parser
+can carry on.
 
 **A C# operator with no reading here stands in for the Compass one.** `x += 1` scans as
 `x = 1` and reports `CM0006`; `=>` before a lambda's body scans as `yield`. The statement
@@ -715,7 +712,7 @@ where a decimal point means binary floating point `0.1 + 0.2` is not `0.3`. Here
 digits are held as digits. A real stops at its bounds rather than passing into an infinity,
 which is the same choice `integer` makes, and it has no value meaning "not a number".
 
-**`float` is binary floating point**, and is in the language to be met rather than avoided. It
+**`float` is binary floating point**, and is named so that it is asked for deliberately. It
 is what C, C#, Java, and Go spell `float` or `double`, and it keeps every behavior that comes
 with that: a tenth that does not round-trip, a division by zero that produces an infinity, and
 `Float.NotANumber`, which is not equal to itself.
@@ -749,17 +746,17 @@ The table names `Math.Round`, but `Math.Floor` and `Math.Ceiling` also yield an 
 any of the three may be written. All three are correct answers to different questions, which is
 why there is no single `ToInteger`: it would have to pick one of them without being asked.
 
-Two conversions lose nothing and are still written out, because the answer is surprising rather
-than lossy: `fraction.ToReal()`, since a third has no decimal that ends, and
-`float.ToFraction()`, since `0.1f` is really `3602879701896397|36028797018963968`.
+Two conversions lose nothing and are still written out, because the result does not look like the
+value that produced it: `fraction.ToReal()`, since a third has no decimal that ends, and
+`float.ToFraction()`, since `0.1f` is `3602879701896397|36028797018963968`.
 
 **Nothing reaches a `float` on its own**, an integer included. Every member of `Math` exists in
 a `real` form and a `float` form, so a whole number widening to both would leave `Math.Sqrt(2)`
 with two readings and no way to choose.
 
 A `real` becoming a `fraction` is exact but can outgrow one, since a fraction's parts are whole
-numbers. Written down, that is `CM0346`; arriving in a variable, it stops when it runs — the
-same division `CM0324` draws around dividing by zero.
+numbers. Written down, that is `CM0346`; arriving in a variable, it stops when the conversion
+runs. `CM0324` divides the two cases for dividing by zero the same way.
 
 ### 3.2 The two suffixes
 
@@ -775,7 +772,7 @@ Node[]?       an optional set
 `Node?[]` and `Node[]?` are different types and both are legal. Suffixes read left to right,
 so the one written last is the outermost.
 
-A **set** is Compass's one collection. It is ordered, indexed from zero, grows as you insert,
+A **set** is Compass's one collection. It is ordered, indexed from zero, grows on insertion,
 and holds one type. There is no array/list distinction to learn: `integer[] scores = {};`
 then `scores.Insert(60);`. [§11](#11-the-standard-library) lists its members.
 
@@ -819,7 +816,7 @@ integer delegate(integer)?            an optional one
 delegate(string)[]                    a set of them
 ```
 
-**Two words, two jobs.** `function` declares a function or makes one on the spot; `delegate`
+**The two words do different jobs.** `function` declares a function or makes one on the spot; `delegate`
 writes the type of one and does nothing else. Writing `function` where a type belongs is
 `CM0117`, which names the fix.
 
@@ -834,9 +831,8 @@ integer delegate(integer) delegate(integer)    takes an integer, yields a functi
 `delegate` builds a type, as `[]` and `?` do, rather than naming one. It is the third such
 mark and the only one spelled as a word.
 
-Omitting the result means the function yields nothing. A type that yields nothing and a type
-whose result is some "void type" are not two ideas here — there is only the first, and
-nothing names the second.
+Omitting the result means the function yields nothing. There is no void type: a function type
+either names a result or omits one, and nothing names the absence.
 
 **`Function` is the root of them all.** Every function type descends from it, so a function
 may be held without its signature being named:
@@ -846,9 +842,9 @@ Function held = (integer n) yield n + 1;
 Function[] all = { held, (integer a, integer b) yield a + b, (string s) yield Console.WriteLine(s) };
 ```
 
-The set is what it is for: a set holds one type, so without a root there is no way to keep
-functions of different shapes together. `Function` sits between `Model` and each concrete
-signature — a `Function` is a `Model`, and nothing that is not a function reaches it.
+A set holds one type, so a root is what allows functions of different shapes to be kept
+together. `Function` sits between `Model` and each concrete signature: a `Function` is a
+`Model`, and nothing that is not a function reaches it.
 
 It says nothing about what the parameters hold, so a lambda written into one has nothing to
 take a type from and writes its own ([§9.2](#92-where-a-lambdas-parameter-types-go)). It cannot be called, since calling needs a
@@ -1014,9 +1010,9 @@ begin
 end
 ```
 
-Inside a function body, then, a bare name means one thing throughout. That is what allows a
-lambda to reach a local of the function around it with nothing marking the reach: there is
-nothing the name could be confused with, so a marking would carry no information.
+Inside a function body a bare name therefore means one thing throughout. A lambda reaches a
+local of the function around it with nothing marking the reach, because there is nothing the
+name could be confused with.
 
 **A local may still carry a field's name.** Fields are never reached by a bare name — that is
 what `this.` is for — so the two never compete:
@@ -1033,7 +1029,7 @@ model Box
 end model
 ```
 
-The rules differ because the problems differ. A field may be declared in an ancestor model or
+The two rules differ because the cases differ. A field may be declared in an ancestor model or
 in another file, so `this.` tells a reader to stop looking in this function; and forbidding the
 overlap would mean adding a field could break methods that have nothing to do with it. A local
 in an enclosing scope is always a few lines above, in the same body.
@@ -1048,9 +1044,8 @@ loop each _ in numbers          one line per element, whatever the element is
 catch ArgumentException _       the type was the whole answer
 ```
 
-Both rules above pass over it, because there is nothing to pass over: a throwaway enters no
-scope, so several in one body are ordinary rather than a clash, and none of them hides
-anything.
+Neither rule above applies to it. A throwaway enters no scope, so several in one body are
+ordinary rather than a clash, and none of them hides anything.
 
 ```text
 loop each _ in numbers
@@ -1070,10 +1065,9 @@ _ = Announce();                 CM0256, for the same reason
 integer _;                      CM0256 — and this one does nothing at all
 ```
 
-That reasoning reaches a shape the language does not have yet. Destructuring several values at
-once would be a fourth place a name is obliged, so a throwaway would belong there for the parts
-not wanted — but not for *all* of them, since a left side that keeps nothing is a call written
-the long way round.
+Destructuring would be a fourth place a name is obliged, and a throwaway would be accepted there
+for the parts not wanted. It would still be refused for all of them, since a left side keeping
+nothing is a call with the result dropped. The language has no destructuring form.
 
 Because it binds nothing, **it cannot be read** (`CM0254`), and it cannot name anything that is
 reached by writing its name — a field, a function, a type, an enumeration member, a namespace
@@ -1121,7 +1115,7 @@ model Account
 end model
 ```
 
-There is no `private` keyword, because private is what you get by writing nothing. `protected`,
+There is no `private` keyword, because writing nothing is private. `protected`,
 `internal`, and `public` each widen that, and only one of them may be written on a declaration
 (`CM0219`). `shared` is what other languages call `static`: there is one of the member for the
 whole program rather than one per instance, and it says nothing about who may reach it.
@@ -1165,7 +1159,7 @@ field belongs to the type rather than to any instance and no constructor runs th
 in.
 
 **Two kinds of field are exempt, and for the same reason: they already hold something.** Every
-primitive starts at a zero of its own — a counter at nought, a flag at `false`, a string empty,
+primitive starts at a zero of its own — a counter at `0`, a flag at `false`, a string empty,
 a fraction at `0|1` — and an optional starts empty, which is a value like any other and is what
 makes a self-referential model constructible. Everything else has no such value: a model, a set,
 a function, or an enumeration left alone would hold nothing, and nothing for those is the null
@@ -1335,7 +1329,7 @@ adding a row rather than adding a production. Ten levels, loosest first:
 | 9 | `^` | infix | **right** |
 | 10 | `(` call, `[` index, `.` member | postfix | left |
 
-Two placements differ from C and are deliberate.
+Two placements differ from C.
 
 **`not` is looser than comparison**, as in Python, so `not a == b` groups as `not (a == b)`.
 The C reading, `(not a) == b`, is almost always a mistake.
@@ -1352,9 +1346,9 @@ dividing by a variable that turns out to be zero throws `DivideByZeroException`.
 
 **A `float` is exempt from both.** Dividing one by zero is defined rather than mistaken: it
 yields `Float.Infinity`, its negative, or `Float.NotANumber`, which are values the type has and
-its own arithmetic produces. Refusing the expression would leave the one type with an answer as
-the one type unable to ask. C# draws the line in the same place — `int` and `decimal` refuse it,
-`double` answers.
+its own arithmetic produces. A float is the only type with an answer, so it is the only type
+allowed to ask. C# draws the line in the same place: `int` and `decimal` refuse it, `double`
+answers.
 
 `+` also joins strings, and converts the other side when one side is a string.
 
@@ -1367,43 +1361,46 @@ Both short-circuit. `not` is the word for `!`.
 
 `^` raises to a power, and is **not** exclusive-or. In C# the same symbol is bitwise, where
 `10 ^ 2` is 8, so the meaning does not carry across — which is why the operation it names
-there is spelled `xor` here.
+there is spelled `bitwise exclusive or` here.
 
 **The operations on bits are written as words**, and take integers on both sides:
 
 ```text
-flags bitwise and mask      the bits both have
-flags bitwise or mask       the bits either has
-flags xor mask              the bits exactly one has
-flags shiftleft 2           every bit two places up, so the value quadruples
-flags shiftright 2          every bit two places down
+flags bitwise and mask              the bits both have
+flags bitwise or mask               the bits either has
+flags bitwise exclusive or mask     the bits exactly one has
+flags shiftleft 2                   every bit two places up; the value quadruples
+flags shiftright 2                  every bit two places down
 ```
 
-`&` and `|` were not available to be borrowed: `|` already writes a fraction, and adding
-punctuation for the rest would have been the only symbol operators in a language that spells
-`and`, `or`, and `not`. So `bitwise` qualifies the two words that already mean something.
-Nothing else claims `xor`, `shiftleft`, or `shiftright`, so those stand alone, and a word after
-`bitwise` that is not `and` or `or` is reported (`CM0118`).
+Every operation on bits is written with `bitwise` in front. `and`, `or`, and `exclusive or`
+each name a boolean operation on their own, and the qualifier is what separates the two
+readings. A word after `bitwise` that begins none of the three is reported (`CM0118`); a word
+after `exclusive` that is not `or` is reported (`CM0121`); `exclusive or` written without the
+qualifier is reported (`CM0122`). `shiftleft` and `shiftright` claim words nothing else uses
+and take no qualifier.
 
-The three sit on three levels, in C#'s order among themselves — `or` loosest, then `xor`, then
-`and` — so `a bitwise or b bitwise and c` groups as `a bitwise or (b bitwise and c)`. A shift
+`&` and `|` are not used. `|` writes a fraction, and the language spells `and`, `or`, and
+`not` as words, so symbols here would be the only ones.
+
+**Precedence follows C#**: `bitwise or` is loosest, then `bitwise exclusive or`, then
+`bitwise and`. So `a bitwise or b bitwise and c` is `a bitwise or (b bitwise and c)`. A shift
 binds tighter than a comparison and looser than arithmetic.
 
-**Two booleans are refused** (`CM0342`) rather than treated as one bit each: `a != b` already
-asks whether exactly one of them holds, and the language keeps one spelling for one idea. This
-is a deliberate divergence from C#, whose `^` covers both.
+**Two booleans are an error** (`CM0342`). `a != b` already asks whether exactly one of them
+holds, and the language keeps one spelling per operation. C#'s `^` covers both cases.
 
-**A shift of fewer than zero places, or of 64 or more, is an error** (`CM0343`) — an integer
-holds 64 bits and a shift past all of them has nothing left to move. A literal amount is caught
-while compiling; one that arrives in a variable raises `ArgumentException`. C# folds the amount
-into range instead, so `x << 64` means `x << 0` there, with nothing reported.
+**A shift of fewer than 0 places, or of 64 or more, is an error** (`CM0343`). An integer holds
+64 bits. A literal amount is caught while compiling; an amount held in a variable raises
+`ArgumentException` when the shift runs. C# masks the amount instead, so `x << 64` is `x << 0`
+there and nothing is reported.
 
 ### 5.3 Raising to a power
 
-**`^` is the only arithmetic operator whose two sides are not the same
-kind of thing.** Everywhere else the operands unify — adding an integer to a real makes both
-real. An exponent instead counts how many times the base is multiplied, so it stands on its
-own, and the result follows the base:
+**`^` is the only arithmetic operator whose two sides play different
+roles.** Everywhere else the operands unify: adding an integer to a real makes both real. An
+exponent counts how many times the base is multiplied, so it keeps its own type and the result
+follows the base:
 
 | Base | Exponent | Result | |
 |---|---|---|---|
@@ -1491,9 +1488,8 @@ naming both (`CM0104`), so a misplaced `end` is caught where it is written rathe
 end of the file.
 
 **One construct is closed by something other than `end`.** A `loop` with no qualifier is closed
-by `until` and its condition ([§6.3](#63-looping)). The word doing the closing carries
-information, which is what earns it the exception; nothing else in the language departs from
-the rule.
+by `until` and its condition ([§6.3](#63-looping)). The closing word carries the condition, so
+it says more than `end loop` would. Nothing else in the language departs from the rule.
 
 **A construct's body has no opening token.** `begin` opens a block, and a block is always an
 anonymous scope rather than any construct's body:
@@ -1550,9 +1546,9 @@ warning** (`CM0337`), naming the ones with no case. This is what makes adding a 
 enumeration safe: every switch that has to change says so, at the place it has to change,
 rather than the new member falling through all of them unreported.
 
-Writing a `default` silences it, because a default handles the rest and saying so is the
-point of writing one. Members are compared by the value each carries rather than by name, so
-two members naming one value are handled together.
+Writing a `default` silences it, since a default handles every member left out. Members are
+compared by the value each carries rather than by name, so two members naming one value are
+handled together.
 
 ### 6.3 Looping
 
@@ -1572,9 +1568,8 @@ One opener and one closer: every form but `until` closes with `end loop`. That o
 construct in the language `end` does not close, because `until` carries the condition and so is
 already saying the loop is over.
 
-That regularity is the point. A reader learns that `loop` means something repeats and then asks
-one question — which kind — rather than learning three unrelated words and discovering that one
-of them has two forms.
+A reader learns that `loop` means something repeats, and then asks one question: which kind.
+Other languages spell the kinds as three unrelated words, one of which has two forms.
 
 `to` includes its bound and `until` excludes it, which is the distinction other languages
 leave to remembering whether `<` or `<=` was written.
@@ -1591,13 +1586,12 @@ step of zero never advances, so the loop runs forever (`CM0413`); a step carryin
 from its bound means the body never runs at all (`CM0414`), as does a bound already reached where
 `until` says to stop before it. Neither stops a build: each names exact behavior rather than the
 absence of any, which is what separates them from dividing by zero. Where any of the three is
-worked out while the program runs, nothing is said — a loop counting a number of times somebody
-supplies is ordinary.
+worked out while the program runs, nothing is reported: a loop counting a number of times read
+from input is ordinary.
 
-**`loop ... until` tests after the body, so the body always runs at least once.** That is the
-whole reason it exists, and it has a consequence the others do not share: whatever the body
-definitely assigns is definitely assigned afterwards, because the first turn is unconditional.
-Every other loop may run no times at all.
+**`loop ... until` tests after the body, so the body always runs at least once.** That gives it
+one property the other forms lack: whatever the body definitely assigns is definitely assigned
+afterwards, because the first turn is unconditional. Every other loop may run no times at all.
 
 The condition is written at the bottom because that is where it is tested. Written at the top
 it would be indistinguishable from a `loop while` that checks at a different moment, and
@@ -1757,8 +1751,7 @@ fields hold nothing until their own initializers have run — so a name reached 
 would answer with whatever it happened to hold, and which fields had run would depend on the
 order they were written in. A field whose value depends on another belongs in a constructor.
 
-All four are C#'s rules, chosen for that reason: construction is a place where a wrong mental
-model is expensive, and this is one a reader carries forward rather than unlearns.
+All four are C#'s rules, so what a reader learns about construction here holds there.
 
 **An `abstract` function is declared and left open**, ending at a semicolon where a body would
 begin:
@@ -1769,8 +1762,8 @@ abstract model Shape
 end model
 ```
 
-It closes no block, so it takes no `end function`, and it is asked for no result here — that
-is the obligation of whatever writes it. Four rules follow, each with its own diagnostic:
+It closes no block, so it takes no `end function`. Producing the result is the obligation of
+whatever overrides it. Four rules follow, each with its own diagnostic:
 
 - Only an **abstract model** may carry one (`CM0240`). An instance of a model that could be
   constructed would reach a function with no body.
@@ -1789,10 +1782,9 @@ is what silence means. `public` and `internal` still say so where they are wante
 `abstract` is what offers the function for overriding, so `virtual` beside it says nothing
 further and is an opinion (`CM0242`).
 
-**`this.` is required to reach an instance member.** `name` and `this.name` are not two ways
-to write one thing — the first is a local and the second is a field, and the difference is
-visible in every line that touches either. This costs five characters and removes the
-question of which one a bare name means.
+**`this.` is required to reach an instance member.** `name` and `this.name` are not two ways to
+write one thing: the first is a local and the second is a field. The difference is visible in
+every line that touches either, so a bare name is never ambiguous.
 
 ### 7.2 Virtual dispatch
 
@@ -1822,8 +1814,8 @@ parameter type that changed, leaves a function still marked `override` and overr
 The program compiles and runs, and every call through the base type reaches the base's version.
 
 A function differing in **parameter types** is an overload rather than an override, and
-overloading across a base and a derived model is ordinary. `CM0222` is what tells the two apart
-when a type meant the second and wrote the first.
+overloading across a base and a derived model is ordinary. `CM0222` reports the case where an
+override was intended and an overload was written.
 
 **`ToString` and `Equals` are inherited from `Model`**, which every model extends whether or not
 it wrote `extends`, so both may be overridden with no base named:
@@ -1885,9 +1877,9 @@ taken.x = 55;                the set still reads 99
 ```
 
 `Reference.Equals` may not be asked about a structure. "Are these two names reaching one thing"
-is a question only a reference can answer, and a value is not somewhere a name points — so it is
-`CM0347` rather than an answer, the same rule that refuses a structure in a `Model`-typed slot.
-`==` is the comparison that applies.
+is a question only a reference can answer, and a structure is a value rather than something a
+name points at. Asking is `CM0347`, the same rule that refuses a structure in a `Model`-typed
+slot. `==` is the comparison that applies.
 
 > Readers coming from C# should note the first of these. A C# `struct` in a `List` cannot be
 > changed through the list at all — the compiler refuses it, because the indexer hands back a
@@ -1903,9 +1895,8 @@ Reference.Equals(a, b)       true only if a and b are the same object
 a == b                       true if they hold the same values
 ```
 
-The comparison handles cycles: a model reachable from itself does not send it into a loop.
-Two values are equal when nothing distinguishes them, which is what a reader means by the
-word.
+The comparison handles cycles: a model reachable from itself does not make it loop. Two values
+are equal when nothing about their contents distinguishes them.
 
 Two structures are equal when their fields are, in the same way. **Two different declared
 types are never equal**, however alike their fields — a `Point` and a `Size` both holding two
@@ -1950,9 +1941,8 @@ Tree.Node held = new Tree.Node(7);   from anywhere the container is named
 Node made = new Node(7);             from inside Tree, and nowhere else
 ```
 
-A bare name never reaches across the program, which is what lets two containers each hold a
-`Node` without either giving way. That is the point of nesting rather than an incidental of it:
-a helper type belongs to the one type that uses it.
+A bare name never reaches across the program, so two containers may each hold a `Node` without
+colliding. Nesting exists for that: a helper type belongs to the one type that uses it.
 
 **A nested type is a member, and carries a member's visibility.** Saying nothing means the
 declaring type alone (`CM0339` where something else names it), exactly as a field or a function
@@ -1968,8 +1958,7 @@ model Tree
 end model
 ```
 
-Both rules match C#, which is the point: a reader who learns nesting here will find it means
-the same thing there.
+Both rules match C#, so nesting learned here means the same thing there.
 
 ## 8. Optionals
 
@@ -1980,8 +1969,8 @@ reference.
 **One `?` and no more** (`CM0252`). `Node??` is refused, because the two ways of being empty it
 would create cannot be told apart: nothing an optional offers can see past the first level, so
 "absent" and "present, holding an absence" would answer alike to every question a program can
-ask. A language whose whole claim about absence is that the compiler can prove it should not
-offer a shape where it cannot. C# refuses the same thing for the same reason.
+ask. The guarantee an optional makes is that the compiler can prove presence, and it cannot
+prove it at two levels. C# refuses the same thing for the same reason.
 
 ### 8.1 The three members
 
@@ -1994,17 +1983,16 @@ found.Value()         the value, throwing EmptyOptionalException if there is non
 ```
 
 Any value converts to an optional of its own type automatically, so `integer? n = 5;` is
-written directly. **The reverse is never automatic** — that strictness is the whole point.
-Reading a `T?` where a `T` is wanted is rejected by `CM0329`, whose message names all three
-ways out rather than only reporting the mismatch.
+written directly. **The reverse is never automatic.** Reading a `T?` where a `T` is wanted is
+rejected by `CM0329`, whose message names all three ways out rather than only reporting the
+mismatch.
 
 `Or` is the usual choice. `Value` is for where absence is impossible and the program says so.
 
 **Writing one out is a reading too**, and is rejected the same way (`CM0349`). Printing an
 optional, joining it to a string, and putting it in a hole all ask it for its text, and an
-optional has none — what an absence prints as is a question with no answer worth guessing. A
-set of optionals is not itself one, so printing that is fine, and each element that holds
-nothing shows as `empty`.
+optional has none: there is no text an absence should print as. A set of optionals is not itself
+one, so printing that is allowed, and each element that holds nothing shows as `empty`.
 
 ### 8.2 Narrowing
 
@@ -2029,8 +2017,8 @@ Console.WriteLine(found + 1);          narrowed for everything after
 ```
 
 An arm that always leaves — by `yield`, `throw`, `break`, or `continue` — never arrives at the
-join after it, so it has no say in what holds there. That is what makes the example above work,
-and it is not only about guards: where one arm leaves, what the other one stored is what holds.
+join after it, so it contributes nothing to what holds there. This applies to any branch, not
+only a guard: where one arm leaves, what the other arm stored is what holds.
 
 **Assignment narrows too, and stops at the same joins.** Storing a value in an optional proves
 presence exactly as a guard does, and it survives a join only where every way through the branch
@@ -2068,9 +2056,9 @@ clear();
 Console.WriteLine(n + 1);       refused (CM0345), and rightly: n is empty here
 ```
 
-Writing `HasValue()` does not help, and the message says so rather than sending its author to
-write a check that changes nothing. **Copy it into a local first** — one nothing else holds sits
-still, and narrowing works on it as it does everywhere else.
+Writing `HasValue()` does not help, and the message says so rather than leaving a check to be
+written that changes nothing. **Copy it into a local first.** A local nothing else can reach
+cannot change between the check and the read, so narrowing works on it as it does elsewhere.
 
 ### 8.3 Narrowing settles which member is meant
 
@@ -2191,7 +2179,7 @@ let addFive = Program.AdderOf(5);
 Console.WriteLine(addFive(3));            8
 ```
 
-**That first line comes apart in four pieces**, and each word says which:
+**That first line has four parts**, in this order:
 
 ```text
 integer delegate(integer)   function   AdderOf   (integer by)
@@ -2219,7 +2207,7 @@ can convert to. Two versions reachable only by conversion is a tie, and a tie is
 **A name belongs to one member** (`CM0253`). Two members of a type share a name only when they
 are versions of one function, told apart by what they take — so two fields cannot, a field and a
 function cannot, and neither can two functions taking the same types. Without the rule the second
-declaration is simply unreachable: every use of the name finds the first, so calls intended for
+declaration is unreachable: every use of the name finds the first, so calls intended for
 the second run the first instead. It is reported where the second is written, and names the line
 the first is on.
 
@@ -2278,7 +2266,7 @@ let halve = (integer n) yield n / 2;              # nothing else says it, so thi
 integer delegate(integer) double = (n) yield n * 2;   # the declared type says it
 ```
 
-So a lambda always has exactly one spelling that says nothing twice and leaves nothing unsaid.
+Every lambda therefore has exactly one correct spelling.
 
 Mixing the two forms in one list needs no rule of its own. Each written type is reported for
 the same reason it would be alone, and taking the advice leaves a list written one way.
@@ -2308,8 +2296,8 @@ Eleven exception types, and every one descends from `Exception`:
 | `RecursionTooDeepException` | Calls nested deeper than the language will follow. The one no `catch` takes ([§10.1b](#101b-calling-too-deeply)) |
 | `IOException` | Anything going wrong with a file except its not being there, which is an absent optional instead ([`File`](standard-library/input-output.md#file)) |
 
-Every one carries a `Message()`. A name the language can raise is a name a program can write,
-because the two come from one list — so nothing can be thrown that cannot be named.
+Every one carries a `Message()`. The names the language raises and the names a program may write
+are one list, so nothing can be thrown that cannot be named.
 `RecursionTooDeepException` is the one that can be named and not caught
 ([§10.1b](#101b-calling-too-deeply)).
 
@@ -2322,11 +2310,10 @@ carries is *not* .NET's: a message is written here to say what happened and what
 A `catch` takes what the program caused: an exception it threw, and one the language raised on
 its behalf. It does not take a failure in the implementation itself.
 
-The distinction matters because every failure on the platform answers to `Exception`, so a
-clause naming the root would otherwise take a bug in the compiler as readily as a divide by
-zero — and, having taken it, would report it as something the program did. A program cannot
-handle a fault it did not cause, and hiding one behind a handler written for something else
-costs the only report the person who could fix it would ever get.
+Every failure on the platform answers to `Exception`, so a clause naming the root would
+otherwise take a bug in the compiler as readily as a divide by zero, and then report it as
+something the program did. A program cannot handle a fault it did not cause, and a handler
+written for something else would hide the only report of it.
 
 ### 10.1b Calling too deeply
 
@@ -2334,19 +2321,18 @@ Calling too deeply — most often a function that calls itself without ever reac
 that stops it — raises `RecursionTooDeepException`. **It is the one exception no `catch` takes,
 `catch Exception` included.**
 
-Being nameable and being catchable are separate things, and this is the one place they come
-apart. The name exists so a reader can be told what stopped their program. It is not catchable:
-the depth is the implementation's number rather than a property of the program, so a handler
-would run at an arbitrary point with every frame beneath it abandoned part-way. Naming it in a
-`catch` is reported as `CM0344` rather than left as a clause that never runs.
+This is the one exception that can be named and not caught. The name exists so the message can
+say what stopped the program. It cannot be caught because the depth is the implementation's
+number rather than a property of the program, so a handler would run at an arbitrary point with
+every frame beneath it abandoned part-way. Naming it in a `catch` is reported as `CM0344` rather
+than left as a clause that never runs.
 
-**It is not a stack overflow, which is why it does not carry that name.** The limit is a count
-the language keeps, and it is reached long before the machine is near the end of its stack —
-deliberately, so that the program stops while there is still room to say why. A real stack
-overflow offers no such chance, and .NET's `StackOverflowException` is uncatchable for that
-harder reason: by the time it happens the process is already going down. The bargain here is
-the same in shape — a name to read, and no pretence that catching it would help — but the cause
-is the language's own guard rather than the machine giving out.
+**It is not a stack overflow, and does not carry that name.** The limit is a count the language
+keeps, and it is reached well before the machine runs out of stack, so the program stops while
+there is still room to report why. A real stack overflow leaves no such room: .NET's
+`StackOverflowException` is uncatchable because by the time it is raised the process is already
+failing. Both offer a name to read and no way to handle it, but this one is the language's own
+guard rather than the machine running out.
 
 ### 10.2 Throwing and catching
 
@@ -2419,13 +2405,13 @@ bare `DateTime` with both in scope is **ambiguous** (`CM0226`) and the program s
 meant; at a lower rank the import would take the name silently. Nothing collides with `Standard`
 today, so the rule is settled now rather than once a program depends on the other behavior.
 
-**A program may declare these names.** A `Math` of your own is legal, wins over the library's
+**A program may declare these names.** A `Math` of its own is legal, wins over the library's
 by the ordinary nearest-name rule, and is warned about (`CM0203`) because losing `Math.Sqrt`
 is almost never what was meant. `Standard.Math` still reaches the other one.
 
 **A program may not declare `namespace Standard`** (`CM0229`). Namespaces merge, so it would
-let a program add types that then read as the language's own, and `Standard.X` can only keep
-meaning "the language gives you this" if nothing else may write there.
+let a program add types that then read as the language's own. `Standard.X` means "provided by
+the language" only while nothing else may write there.
 
 `Program` is not part of `Standard`. It is a name reserved for something a program *provides*
 rather than something the language does, and must be declared exactly once ([§12](#12-execution-and-entry-point)).
@@ -2480,10 +2466,9 @@ This section says what the library *is*; that says what is *in* it.
 | [Input and output](standard-library/input-output.md) | `Console`, `File`, `Directory` |
 | [Exceptions](standard-library/exceptions.md) | `Message`, and every exception the language raises |
 
-It is kept apart from this document for the reason every reference is: the two are read
-differently. A specification is read once, in order, to learn what the language does; a reference
-is opened at one member, answered, and closed. Written into one file they crowd each other out,
-which is what the member tables here had begun to do.
+It is kept apart from this document because the two are read differently. A specification is read
+once, in order, to learn what the language does; a reference is opened at one member, answered,
+and closed. One file serving both would interrupt the first with the tables of the second.
 
 **A test holds the two together.** Every member the compiler provides must have a row in that
 index, nothing may be listed there that the compiler does not provide, every page must be
@@ -2498,9 +2483,8 @@ and left undocumented fails the build.
 
 **A member that may have no answer yields an optional** rather than raising: `File.Read` yields
 `string?`, `"12".ToInteger()` yields `integer?`, `Console.Read` yields `string?`. Absence is an
-ordinary outcome and is handled by [§8](#8-optionals); a fault is an exception. Which of the two
-a member chooses is the single most useful thing to know about it, and every table in the
-reference says so.
+ordinary outcome and is handled by [§8](#8-optionals); a fault is an exception. Every table in
+the reference states which of the two a member does.
 
 ### 11.3 How a value prints
 
@@ -2547,16 +2531,15 @@ the same declaration, and the explicit form is legal and says nothing the first 
 **`Main` declares no result, or an integer.** The integer is the program's exit code, which is
 what whatever ran it reads to learn whether it succeeded.
 
-The restriction is not a choice about what is useful. Every other function's result has a
-purpose because a caller uses it; `Main`'s caller is the operating system, and that boundary
-carries exactly one small integer. A result of any other type would be computed and then
-dropped, so the program would appear to report something it never reported.
+Every other function's result has a purpose because a caller uses it. `Main`'s caller is the
+operating system, and that boundary carries exactly one small integer. A result of any other
+type would be computed and then dropped, so the program would appear to report something it
+never reported.
 
 Giving another type a meaning would mean inventing one. A `string` result that printed itself
 would be an implicit write that happens in one function and nowhere else. A `boolean` result
 would duplicate the integer, inverted, since a shell reads zero as success. A result carrying a
-failure is already served: an uncaught exception prints and exits non-zero, which is what a
-program that cannot finish should do.
+failure is already served: an uncaught exception prints and exits non-zero.
 
 A `Main` that yields nothing exits zero. So does one that declares an integer and is left to
 run off its end — except that it cannot be, since a function declaring a result must reach one
@@ -2615,8 +2598,8 @@ built before the project itself, so a build reads in the order it depends. A ref
 transitive: referencing a project also reaches what *it* references, matching .NET, so a shared
 project need be named only by whoever actually builds on it.
 
-A project made only of references is composition rather than emptiness, and builds what its
-references bring.
+A project holding only references declares no sources of its own, and builds what its references
+bring.
 
 **One file belongs to one project.** Two projects in a build listing the same file leave
 undecided which one it belongs to, and it is reported naming both. The fix is for the project
@@ -2626,8 +2609,7 @@ that owns the file to keep it, and the other to reference that project.
 files is only a warning, and the difference is what a project is. Files in a circle still all
 belong to one compilation, so nothing about reading them together is in question. A reference
 crosses from one build to another, and a build that has to exist before itself cannot be
-produced — which stays true, and becomes literal, the moment a project is something separately
-built. The circle is reported at the reference that closes it and read back as a sentence:
+produced. The circle is reported at the reference that closes it and read back as a sentence:
 `Ledger references Reports, which references Ledger`. A project referencing itself is the same
 rule with one project in it. Code that two projects both need belongs in a third that both
 reference.
@@ -2891,9 +2873,9 @@ thing twice, and a call whose result nothing keeps.
 
 The last two are the exception to that shape, and they are the same exception twice: a `loop` with
 no condition that nothing inside can break, yield, or throw out of, and a range loop with a step of
-zero, which never reaches its bound. Nothing written in either is redundant — something is missing
-or wrong — and the language says so as an opinion because a program meaning to run until it is
-stopped from outside is one somebody may write.
+zero, which never reaches its bound. Nothing written in either is redundant; something is missing
+or wrong. The language reports it as an opinion, because a program meant to run until it is
+stopped from outside is a legitimate one to write.
 
 ### CM0000 to CM0099
 
@@ -2949,7 +2931,9 @@ stopped from outside is one somebody may write.
 | `CM0115` | opinion | This parameter's type is already known | The surrounding code already says what '{0}' holds, so writing its type says it twice. Leave the type out. |
 | `CM0116` | error | A function's type is written with 'delegate' | 'Function' takes no parentheses. For a particular shape write 'delegate(...)', with a result before it if it has one, as in 'integer delegate(string)'. |
 | `CM0117` | error | A function's type is written with 'delegate' | 'function' declares a function or makes one on the spot. To write the type of one, use 'delegate' — 'integer delegate(string)' takes a string and yields an integer. |
-| `CM0118` | error | Only 'and' or 'or' may follow 'bitwise' | 'bitwise' says which of two operations follows, and {0} is neither. Write 'bitwise and' or 'bitwise or' — 'xor', 'shiftleft', and 'shiftright' need no word before them. |
+| `CM0118` | error | 'and', 'or', or 'exclusive or' may follow 'bitwise' | 'bitwise' says which of three operations follows, and {0} begins none of them. Write 'bitwise and', 'bitwise or', or 'bitwise exclusive or' — 'shiftleft' and 'shiftright' take no word before them. |
+| `CM0121` | error | Only 'or' may follow 'exclusive' | 'exclusive' is the middle word of 'bitwise exclusive or', and {0} is not 'or'. |
+| `CM0122` | error | 'exclusive or' is written 'bitwise exclusive or' | Every operation on bits says so: 'bitwise and', 'bitwise or', 'bitwise exclusive or'. Add 'bitwise' in front of this one. |
 | `CM0119` | error | 'let' declares a local, not a field | 'let' works inside a function, where the value it holds is written beside it. A field is read far from here, so it says its type: '{0} {1} = ...'. |
 | `CM0120` | error | A loop begins with 'loop' | Every loop opens with 'loop', so this is written 'loop {0}'. The word after 'loop' says which kind: 'for', 'each', 'while', or nothing at all. |
 

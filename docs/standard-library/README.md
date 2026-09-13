@@ -4,7 +4,7 @@ Everything a program can use without declaring it. Nothing here is imported, and
 installed: these members exist in every file, and the models live in the `Standard` namespace,
 which is in scope everywhere without being asked for.
 
-This page is the map — every type, then every member, each linking to the section that explains
+This page is the index: every type, then every member, each linking to the section that explains
 it. [Section 11 of the specification](../language-spec.md#11-the-standard-library) says what the
 library is and why it is shaped this way.
 
@@ -12,7 +12,7 @@ library is and why it is shaped this way.
 
 ### Types you write down
 
-A value can have one of these, so you can declare a variable of it.
+A value can have one of these, so a variable may be declared with it.
 
 | Type | What it is | Its members |
 |---|---|---|
@@ -58,9 +58,8 @@ one could never be filled, and declaring it is reported.
 | `String` | The name for an empty string | [String](text.md#string) |
 | `Fraction` | Building a `fraction` from values, and reading one from text | [Fraction](numbers.md#fraction) |
 
-A reserved word cannot stand in front of a dot, which is why the facts about a primitive live
-beside it under a capital: `integer.MaxValue` is not something the grammar can read, and
-`Integer.MaxValue` is.
+A reserved word cannot stand in front of a dot, so the facts about a primitive live beside it
+under a capital: `integer.MaxValue` does not parse and `Integer.MaxValue` does.
 
 ### Names for what went wrong
 
@@ -85,13 +84,13 @@ each.
 
 ## Every member, by what it is on
 
-Grouped by the type you reach it through, because that is what you know when you go looking: you
-have a string in hand, or a set, and you want to know what it will answer.
+Grouped by the type the member is reached through, which is what a reader starts from: a string
+or a set is already in hand, and the question is what it answers.
 
 Within a group the names are alphabetical. **A name on more than one type appears under each of
-them**, so a group can be read straight down without having to know what else exists — and the
-*On* column stays wherever a group has more than one owner, since `Insert` is one idea answered by
-both a string and a set and reading them apart would hide that.
+them**, so a group can be read straight down without knowing what else exists. The *On* column
+stays wherever a group has more than one owner, since `Insert` is one idea answered by both a
+string and a set.
 
 - [The Compass standard library](#the-compass-standard-library)
   - [Every type](#every-type)
@@ -156,7 +155,7 @@ both a string and a set and reading them apart would hide that.
 
 ### On a set
 
-The `Trim` family is on a set of optionals only — there is nothing empty to drop anywhere else.
+The `Trim` family is on a set of optionals only, since nothing else can hold an empty to drop.
 
 | Member | On | Yields | Where |
 |---|---|---|---|
@@ -181,7 +180,7 @@ The `Trim` family is on a set of optionals only — there is nothing empty to dr
 
 ### On an optional
 
-Three, and there are only three.
+Three members, and no others.
 
 | Member | Yields | Where |
 |---|---|---|
@@ -247,8 +246,8 @@ word cannot stand in front of a dot.
 
 ### Random
 
-Every one is on a `Random` you hold, and on the name itself for a program that wants one number
-and no generator to keep.
+Every one is on a `Random` the program holds, and on the name itself for a program that wants one
+number and no generator to keep.
 
 | Member | Yields | Where |
 |---|---|---|
@@ -305,8 +304,8 @@ and no generator to keep.
 
 ### Input and output
 
-Everything that can fail to find what it was given yields an optional, which is most of the file
-members: a path is somebody's text and may name nothing.
+Every member that can fail to find what it was given yields an optional, which is most of the
+file members: a path is text and may name nothing.
 
 | Member | On | Yields | Where |
 |---|---|---|---|
@@ -375,34 +374,33 @@ by the *type* of what is on the left, so every `string` answers the same members
 answers the same members whatever it holds.
 
 **Reached through a model's name.** `Math.Sqrt(2.0)`, `Console.WriteLine(x)`, `File.Read(path)`.
-These belong to a model that has no instances — there is no such thing as *a* `Math` — so the
-name on the left is the type itself.
+These belong to a model with no instances, so the name on the left is the type itself. There is
+no such thing as *a* `Math`.
 
 **Five models are both.** `Random`, `DateTime`, `Date`, `Time`, and `TimeSpan` each have members
-reached through the name (`DateTime.Now`) and members reached through a value you are holding
-(`landing.Year`) — and they are the five a program may construct with `new`. Each page says which
-member is which.
+reached through the name (`DateTime.Now`) and members reached through a value (`landing.Year`).
+They are also the five a program may construct with `new`. Each page says which member is which.
 
 ## What the library does not have
 
 **No generics and no interfaces.** The members here work on any element type because the
-*compiler* knows them, not because the language can express "a member of a set of anything". That
-is the same reason `Console.Write` accepts a value of any type while a program cannot write a
+*compiler* knows them, not because the language can express "a member of a set of anything". For
+the same reason `Console.Write` accepts a value of any type while a program cannot declare a
 function that does.
 
-**No properties a program can declare.** The library has them — `Math.Pi` and `landing.Year` are
-values rather than calls — but they are the compiler's, and a model a program writes cannot
-declare one. That is on the v2 list along with generics and interfaces.
+**No properties a program can declare.** The library has them: `Math.Pi` and `landing.Year` are
+values rather than calls. They are the compiler's, and a model a program writes cannot declare
+one. That is on the v2 list along with generics and interfaces.
 
-**Nothing is `null`.** A member that may not have an answer yields an [optional](optionals.md) —
-`File.Read` yields `string?`, `"x".ToInteger()` yields `integer?` — and the compiler will not let
-you read one without proving it is there.
+**Nothing is `null`.** A member that may not have an answer yields an [optional](optionals.md).
+`File.Read` yields `string?` and `"x".ToInteger()` yields `integer?`, and the compiler will not
+read either without proof that a value is there.
 
 ## Where the shapes come from
 
 **The library keeps .NET's names and .NET's shapes wherever it can.** `Substring`, `IndexOf`,
 `TrimStart`, `Math.Atan2`, `AddDays`, `CompareTo`, and the format patterns are all the ones a
-reader will type next in C#. Where Compass differs it is because the language does: `Insert` on a
+reader will type next in C#. Where Compass differs, the language is what differs: `Insert` on a
 string yields a new string because a Compass `string` cannot be changed, and a set's `Union`
 appends rather than merging because a Compass set keeps its order.
 

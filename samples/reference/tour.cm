@@ -265,12 +265,12 @@ namespace Tour
             let mixed = 22|7;
             let flag = true and false;
 
-            # Working on the bits of an integer rather than on the number it spells. 'and' and
-            # 'or' already answer about booleans, so the bitwise pair says which it means;
-            # nothing else claims 'xor', so that one stands alone.
+            # Working on the bits of an integer rather than on the number it spells. 'and',
+            # 'or', and 'exclusive or' already answer about booleans, so all three say
+            # 'bitwise' to mean the bits instead.
             let combined = 0b1100 bitwise or 0b1010;
             let common = 0b1100 bitwise and 0b1010;
-            let differing = 0b1100 xor 0b1010;
+            let differing = 0b1100 bitwise exclusive or 0b1010;
             let doubled = 1 shiftleft 4;
             let halved = 64 shiftright 3;
 

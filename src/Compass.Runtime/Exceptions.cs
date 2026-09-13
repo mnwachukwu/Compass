@@ -66,12 +66,11 @@ public sealed class SequenceChangedException : InvalidOperationException
 /// is reached long before the machine is anywhere near out of room — deliberately, so that the
 /// program stops while it can still say why. A real stack overflow gives no such chance: by the
 /// time it happens there is no room left to report it in.</para>
-/// <para>It has a name because a reader deserves to know what stopped their program, and it
-/// cannot be caught because there is nothing useful a program could do with it. The depth is
-/// the language's number rather than the program's, so a handler would run at an arbitrary
-/// point with every frame beneath it abandoned half-finished. .NET's
-/// <c>StackOverflowException</c> is uncatchable for the same reason, and this is the same
-/// bargain — a name to read, and no pretence that catching it would help.</para>
+/// <para>The name exists so the message can say what stopped the program. It cannot be caught
+/// because the depth is the language's number rather than the program's, so a handler would run
+/// at an arbitrary point with every frame beneath it abandoned half-finished. .NET's
+/// <c>StackOverflowException</c> is uncatchable for the same reason: both offer a name to read
+/// and no way to handle it.</para>
 /// </summary>
 public sealed class RecursionTooDeepException : Exception
 {

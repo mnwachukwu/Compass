@@ -30,15 +30,15 @@ catch DivideByZeroException problem
 end try
 ```
 
-**The divisor arrives in a variable on purpose.** `10 / 0` written out does not compile at all —
-`CM0324` catches a zero the compiler can see, so there is nothing left to catch at run time. The
-exception is for the zero it cannot see.
+**The divisor arrives in a variable on purpose.** `10 / 0` written out does not compile:
+`CM0324` reports a zero the compiler can see, leaving nothing to catch at run time. The exception
+covers the zero it cannot see.
 
 ## Declaring your own
 
-Extend `Exception` and hand the message up with `base(...)`. `Exception` declares no constructor a
-program can see, but it takes the message every exception carries — which is what makes
-`base("...")` reach `Message()`.
+Extend `Exception` and pass the message to `base(...)`. `Exception` declares no constructor a
+program can see, but it accepts the message every exception carries, so `base("...")` is what
+`Message()` later returns.
 
 ```
 model NotEnoughMoney extends Exception
@@ -63,9 +63,8 @@ end model
 
 ## What the language raises
 
-Eleven names. Each is the same name at run time as the one a program writes, so what the language
-raises is what a program names — and every one but `RecursionTooDeepException` is one a `catch`
-can take.
+Eleven names. Each is the same name at run time as the one a program writes. A `catch` can take
+all of them except `RecursionTooDeepException`.
 
 | Exception | Raised when |
 |---|---|
@@ -81,46 +80,45 @@ can take.
 | `RecursionTooDeepException` | Recursion with no base case; **nothing catches this one** |
 | `IOException` | Anything that goes wrong with a file except its absence |
 
-**`RecursionTooDeepException` is nameable but not catchable.** It has a name so that a reader can
-be told what stopped their program, and it stops the program because there is nothing useful to
-do about it: the stack that would run the handler is the stack that just ran out. A `catch`
-naming it is reported (`CM0344`) rather than left sitting there looking like a handler.
+**`RecursionTooDeepException` is nameable but not catchable.** The name exists so the message can
+say what stopped the program. It cannot be handled because the stack that would run the handler is
+the stack that ran out. A `catch` naming it is reported (`CM0344`), so it cannot sit in a program
+looking like a handler.
 
 **Absence is never an exception.** A file that is not there, text that does not read as a number,
-input that has run out — each of those yields an [optional](optionals.md) instead, because each is
-an ordinary thing to happen rather than a fault.
+and input that has run out each yield an [optional](optionals.md) instead. Each is an ordinary
+outcome rather than a fault.
 
-**The names are .NET's; the messages are not.** A name a reader learns here means the same thing
-in C#, which is why none of them were renamed. What each one *says* is written for this language:
-dividing by a variable holding zero reports that a divisor written down would have been refused
-while compiling, so this one must have arrived in a variable — where C# says only "Attempted to
-divide by zero."
+**The names are .NET's; the messages are not.** A name learned here means the same thing in C#, so
+none were renamed. The text is written for this language. C# reports "Attempted to divide by
+zero"; Compass reports that a literal zero divisor would have been refused while compiling, so
+this one arrived in a variable.
 
-**`catch Exception` takes less here than C#'s `catch (Exception)` does.** It takes what the program
-caused, and not a failure in the implementation. In C# the root clause takes everything including a
-bug in a library, which is how a `catch (Exception)` ends up reporting someone else's defect as the
-program's. `RecursionTooDeepException` above is the same reasoning as C#'s uncatchable
-`StackOverflowException`, applied the same way — and it does not borrow that name, since a name
-shared with C# should behave as C#'s does.
+**`catch Exception` takes less here than C#'s `catch (Exception)` does.** It takes what the
+program caused, not a failure in the implementation. In C# the root clause takes everything,
+including a bug in a library, so a `catch (Exception)` can report another component's defect as
+the program's. `RecursionTooDeepException` is uncatchable for the same reason C#'s
+`StackOverflowException` is. It does not reuse that name, because a name shared with C# behaves
+as C#'s does.
 
 ## Two with non-obvious behavior
 
-**`OverflowException` on a fraction rarely names the culprit.** Denominators multiply every time
-two unlike fractions are added, so a long chain of them can outgrow an integer even where no
-single fraction looks large. The operand you are looking at is rarely the one at fault.
+**`OverflowException` on a fraction rarely names the operand at fault.** Denominators multiply
+every time two unlike fractions are added, so a long chain can outgrow an integer while no single
+fraction is large.
 
-**`SequenceChangedException` has a compile-time twin.** Where the compiler can see a set being
-changed inside a walk of itself, it is an error rather than something to catch. The exception is
-for the cases it cannot see — a set reached through a parameter, for instance.
+**`SequenceChangedException` has a compile-time counterpart.** Where the compiler can see a set
+being changed inside a walk of itself, it reports an error instead. The exception covers the cases
+it cannot see, such as a set reached through a parameter.
 
 ## When to throw and when to yield an optional
 
 The rule the library follows: **throw when the caller has made a claim that turned out false;
 yield an optional when the answer may not exist.**
 
-`Value()` on an empty optional throws, since reaching that line meant telling the compiler the
-value was there. `File.Read` on a missing file yields nothing, since nothing claimed the file
-existed.
+`Value()` on an empty optional throws, because reaching that line required proving to the compiler
+that the value was present. `File.Read` on a missing file yields nothing, because nothing claimed
+the file existed.
 
 ## Also on every exception
 

@@ -59,9 +59,13 @@ public sealed class GrammarPrecedenceTests : LexerTestBase
                     continue;
                 }
 
+                // "bitwise" runs to two words, or three where "exclusive" is the second.
                 if (words[i] == "bitwise" && i + 1 < words.Length)
                 {
-                    operators.Add($"bitwise {words[++i]}");
+                    int last = words[i + 1] == "exclusive" && i + 2 < words.Length ? i + 2 : i + 1;
+
+                    operators.Add(string.Join(' ', words[i..(last + 1)]));
+                    i = last;
                     continue;
                 }
 
@@ -84,7 +88,9 @@ public sealed class GrammarPrecedenceTests : LexerTestBase
         "or" => TokenType.Or,
         "and" => TokenType.And,
         "bitwise or" or "bitwise and" => TokenType.Bitwise,
-        "xor" => TokenType.Xor,
+        // The word the level belongs to. 'bitwise' begins all three, so naming it here would
+        // put every one of them on the loosest level and leave 'exclusive' out of the table.
+        "bitwise exclusive or" => TokenType.Exclusive,
         "not" => TokenType.Not,
         "==" => TokenType.EqualEqual,
         "!=" => TokenType.NotEqual,
@@ -123,6 +129,7 @@ public sealed class GrammarPrecedenceTests : LexerTestBase
         {
             ("bitwise and", _) => Operators.BitwisePower(TokenType.And),
             ("bitwise or", _) => Operators.BitwisePower(TokenType.Or),
+            ("bitwise exclusive or", _) => Operators.BitwisePower(TokenType.Exclusive),
             (_, "prefix") => Operators.PrefixBindingPower(token) is { } prefix
                 ? (prefix, prefix)
                 : null,
