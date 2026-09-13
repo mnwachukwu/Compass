@@ -34,6 +34,10 @@ coloring by what each name means, and breakpoints and stepping. Installing it is
   - [Seeing the machinery](#seeing-the-machinery) — the commands that print each stage
   - [One thing to remember](#one-thing-to-remember)
 - [The VS Code extension](#the-vs-code-extension) — what it does, and why it is elsewhere
+- [Embedding Compass](#embedding-compass) — running it inside another .NET program
+  - [Checking and running](#checking-and-running) · [A program the host keeps](#a-program-the-host-keeps) ·
+    [Types the host provides](#types-the-host-provides) ·
+    [Bounding a call](#bounding-a-call-and-asking-what-a-program-reaches)
 - [Building](#building) — building the compiler itself, and re-recording its tests
 - [Samples](#samples) — every program in `samples/`, and what each is there to show
   - [Samples that fail on purpose](#samples-that-fail-on-purpose)
@@ -695,6 +699,137 @@ cm vocabulary > docs/vocabulary.json
 ```
 
 A test fails if you forget.
+
+## Embedding Compass
+
+Compass runs inside another .NET program as well as from a terminal. A host checks a program,
+holds it, and calls into it — which is what a game engine wants from a scripting language, and
+what the playground in the browser already does.
+
+Reference `Compass.Compiler`, `Compass.Interpreter`, and `Compass.Runtime`. `Compass.Cli` is the
+terminal driver and an embedder needs none of it.
+
+### Checking and running
+
+```csharp
+DiagnosticBag diagnostics = new();
+CompilationUnit unit = Parser.Parse(new SourceText(source, "rules.cm"), diagnostics);
+SemanticModel model = FrontEnd.Check(unit, diagnostics);
+
+if (diagnostics.HasErrors)
+{
+    return;
+}
+
+Interpreter.Run([.. ClosureConversion.Convert(Lowering.Lower([unit], model), model)], model);
+```
+
+`FrontEnd.Check` and `Interpreter.Run` both take a list, so several files are checked and run
+together as one program. `Run` takes a `TextWriter` and a `TextReader`, so what `Console.Write`
+and `Console.Read` mean is the host's to decide.
+
+### A program the host keeps
+
+`Interpreter.Run` runs a program once and returns what `Main` yielded. A host that wants to call
+a program repeatedly — an event handler, a rule invoked on a timer — loads it instead:
+
+```csharp
+LoadedProgram program = LoadedProgram.Load(lowered, model);
+
+if (program.Offers("Rules", "OnTick", 0))
+{
+    program.Call("Rules", "OnTick");
+}
+```
+
+Every shared field's initializer runs once, at `Load`, and what one call leaves behind is there
+for the next. A host may address a named function on a `shared model`, and `Offers` answers
+whether one is there without throwing.
+
+**A call runs on the thread that makes it**, and one Compass call costs about 4 KB of stack. The
+default depth of 512 therefore wants roughly 2 MB, which is more than an ordinary thread has, so
+a host either calls on a thread it made with room or lowers `maximumDepth` to what its thread
+holds. `LoadedProgram` is not thread-safe and is not re-entrant: one call at a time, from one
+thread at a time.
+
+### Types the host provides
+
+A host may register types and members of its own, which a program then names as it names
+`Console`. [§11.3 of the specification](docs/language-spec.md#113-types-a-host-provides) gives the
+rules; the shape is:
+
+```csharp
+ExternalCatalog catalog = ExternalCatalog.Of(["Player", "World"], types =>
+{
+    ModelSymbol player = types.SymbolFor("Player")!;
+
+    return
+    [
+        new BuiltInModelInfo("Player", "Standard", MayBeExtended: false, Members:
+        [
+            new BuiltInMember("Say", null, [PrimitiveType.String],
+                Binding: (who, arguments) => Speak((Person)who!, (string)arguments[0]!)),
+        ]),
+
+        new BuiltInModelInfo("World", "Standard", MayBeExtended: false, HasNoInstances: true,
+            Members:
+            [
+                new BuiltInMember("Named", player, [PrimitiveType.String],
+                    Reach: Reached.ThroughTheName,
+                    Binding: (_, arguments) => Find((string)arguments[0]!)),
+            ]),
+    ];
+});
+
+SemanticModel model = FrontEnd.Check(unit, diagnostics, externals: catalog);
+```
+
+The two passes exist because a member's signature often names a type the same catalog registers,
+and a signature needs the symbol. `Of` settles the names first and hands back a catalog that can
+already answer `SymbolFor`. Registration refuses what the language cannot model — a reserved
+word, a name the language owns, a member named `ToString`, a member with no binding.
+
+A catalog is supplied per compilation rather than settled once, so two programs compiled by one
+process may be given different ones and neither can see the other's.
+
+### Bounding a call, and asking what a program reaches
+
+A script that will not finish is stopped by the host that called it:
+
+```csharp
+using CancellationTokenSource budget = new(TimeSpan.FromMilliseconds(50));
+
+try
+{
+    program.Call("Rules", "OnTick", new CallLimits(budget.Token, MaximumBytes: 4 * 1024 * 1024));
+}
+catch (ScriptStoppedException)           { /* ran too long */ }
+catch (ScriptAllocatedTooMuchException)  { /* grew too large */ }
+```
+
+Both are noticed at a loop's back edge and at a call's entry, which is everywhere a program can
+fail to end. Neither is a name the language has, so no `catch` in a script can take either. A
+call given neither limit pays one comparison for each.
+
+And a host running a program it did not write can ask what that program touches beyond itself:
+
+```csharp
+if (model.Reaches != Reaches.Nothing)
+{
+    return Refuse($"this module reaches {model.Reaches}");
+}
+```
+
+`Reaches.Files` covers `File` and `Directory`; `Reaches.Clock` covers the four members that ask
+the machine what time it is. The language states the fact and a host decides the policy, since
+only the host knows whose machine it is running on. A program that reaches something cannot be
+stopped from reaching it once it runs, so a host that cares refuses it before loading it.
+
+### What the back end does not do
+
+A program using host members **runs and does not build**. `cm build` reports `CM0124` rather than
+emitting a call to a delegate that belongs to the compiling process, which an assembly outlives.
+The limits above are the interpreter's too: a built assembly runs without them.
 
 ## Building
 

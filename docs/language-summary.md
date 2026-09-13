@@ -49,6 +49,10 @@ string, a set, an optional — each with its signature and an example:
 says when nothing overrides it: [every-value.md](standard-library/every-value.md). What can be
 thrown and what a `catch` takes: [exceptions.md](standard-library/exceptions.md).
 
+**What a host provides.** A program embedding the compiler may register types and members of its
+own, which a program names as it names `Console`:
+[specification §11.3](language-spec.md#113-types-a-host-provides).
+
 **Diagnostics.** What the three severities mean and how a warning or an opinion is silenced:
 [specification §0.5](language-spec.md#05-conformance-and-terminology). Every identifier the
 compiler reports, with its severity and what it says:

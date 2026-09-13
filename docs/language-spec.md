@@ -100,7 +100,8 @@ This document is the normative one: where they disagree, this is right.
 - [11. The standard library](#11-the-standard-library) — the built-in models and what they provide
   - [11.1 The reference](#111-the-reference)
   - [11.2 Two rules the reference relies on](#112-two-rules-the-reference-relies-on)
-  - [11.3 How a value prints](#113-how-a-value-prints)
+  - [11.3 Types a host provides](#113-types-a-host-provides)
+  - [11.4 How a value prints](#114-how-a-value-prints)
 - [12. Execution and entry point](#12-execution-and-entry-point) — compilations, which `Program` starts, namespaces
   - [12.1 What a compilation is made of](#121-what-a-compilation-is-made-of)
   - [12.2 A name belongs to one type](#122-a-name-belongs-to-one-type)
@@ -2486,7 +2487,33 @@ and left undocumented fails the build.
 ordinary outcome and is handled by [§8](#8-optionals); a fault is an exception. Every table in
 the reference states which of the two a member does.
 
-### 11.3 How a value prints
+### 11.3 Types a host provides
+
+The library above is what `cm` gives every program. **A host embedding the compiler may add
+types and members of its own**, which a program then names as it names `Console`: a game engine
+running Compass as its scripting language registers a `Player` and a `World`, and a script calls
+them without writing anything to reach them.
+
+What a host registers is supplied per compilation rather than settled once, so two programs
+compiled by one process may be given different sets and neither can see the other's.
+
+A program may **name** such a type, hold values of it, and call its members. It may not declare
+one, and it may not extend one (`CM0123`) — the values are opaque, and a program has no way to
+supply what a descendant would need. Constructing one is possible only where the host offered a
+constructor. Everything else about them is ordinary: an optional of one is an optional, a set of
+one is a set, and equality is identity unless the host says otherwise.
+
+**A program using them runs and does not build** (`CM0124`). What a host registers is a delegate
+belonging to the process doing the compiling, and an assembly outlives that process, so there
+would be nothing on the other side of the call by the time it ran.
+
+**Nothing else is reachable.** A program reaches what the language provides and what its host
+registered, and has no way to reach anything further — no ambient way to open a file beyond
+[`File`](standard-library/input-output.md), no reflection, and no way to name a .NET type. A
+host that needs a program to reach less than the language provides refuses the program before
+running it, which it can do because the front end reports what a program touches beyond itself.
+
+### 11.4 How a value prints
 
 A set prints its elements between braces, separated by a comma and a space, and a structure
 prints its fields **in the order they were declared**.
