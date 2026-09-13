@@ -589,6 +589,18 @@ public sealed partial class Interpreter
             return Perform(constant, subject, []).Value;
         }
 
+        // The same, for a value the host registered: 'player.Level' rather than 'player.Name()'.
+        // Read through the call boundary so that a binding failing here means what it means
+        // anywhere else.
+        if (_model.GetExternal(member) is { Binding: { } binding })
+        {
+            object? subject = TypeNamedBy(member.Receiver) is not null
+                ? null
+                : Evaluate(member.Receiver, scope, receiver);
+
+            return CallExternal(member.MemberName, binding, subject, []);
+        }
+
         // A type name on the left reaches a shared member.
         if (TypeNamedBy(member.Receiver) is not null)
         {

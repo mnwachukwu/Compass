@@ -258,6 +258,12 @@ public sealed partial class Resolver
         }
 
         yield return BuiltInTypes.Standard;
+
+        // Last of all, so that a name the language owns is never taken by a host's.
+        if (!_externals.IsEmpty)
+        {
+            yield return _externals.Namespace;
+        }
     }
 
     /// <summary>

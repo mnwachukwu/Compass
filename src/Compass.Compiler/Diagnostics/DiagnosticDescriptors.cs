@@ -742,6 +742,30 @@ public static class DiagnosticDescriptors
         + "only 'Model' and the exceptions may follow 'extends'.");
 
     /// <summary>
+    /// <para>A program extending a type the host registered.</para>
+    /// <para>An external type is opaque: the program holds its values and calls its members,
+    /// and has no way to supply what a descendant of it would need. The host owns the type, so
+    /// the host is where another one comes from.</para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor CannotExtendExternalType = Error(
+        "CM0123",
+        "Cannot extend a type from outside the program",
+        "'{0}' comes from outside the program and has nothing a program can inherit.");
+
+    /// <summary>
+    /// <para>A program built rather than run, having called a member the host registered.</para>
+    /// <para>A host member is a delegate belonging to the process doing the compiling. An
+    /// assembly outlives that process, so there would be nothing on the other side of the call
+    /// by the time it ran. Reported here rather than emitted and left to fail at run time.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor CannotEmitExternalMember = Error(
+        "CM0124",
+        "A member from outside the program cannot be built",
+        "'{0}' is provided by the host running the compiler, which an assembly outlives. A "
+        + "program using it can be run but not built.");
+
+    /// <summary>
     /// <para>Two types of one name.</para>
     /// <para>A compilation is one set of declarations however many files it spans, so this is
     /// the same mistake whether the two are written together or apart, and the message says

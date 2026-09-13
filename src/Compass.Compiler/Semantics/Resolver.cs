@@ -30,6 +30,16 @@ public sealed partial class Resolver
     private readonly DiagnosticBag _diagnostics;
     private readonly SemanticModel _model = new();
 
+    /// <summary>What the host registered, or an empty catalog.</summary>
+    private readonly ExternalCatalog _externals;
+
+    /// <summary>
+    /// Whether a name belongs to the language or to the host, either of which a program may
+    /// name and neither of which it may declare.
+    /// </summary>
+    private bool IsProvidedType(string name) =>
+        BuiltInTypeNames.Contains(name) || _externals.TypeNames.Contains(name);
+
     /// <summary>
     /// The file being collected from, so that a type records where it was declared. Null once
     /// collection is over, since every later pass works on the whole compilation at once.
@@ -87,10 +97,15 @@ public sealed partial class Resolver
     /// </summary>
     private readonly CancellationToken _cancellation;
 
-    private Resolver(DiagnosticBag diagnostics, CancellationToken cancellation)
+    private Resolver(
+        DiagnosticBag diagnostics,
+        CancellationToken cancellation,
+        ExternalCatalog externals)
     {
         _diagnostics = diagnostics;
         _cancellation = cancellation;
+        _externals = externals;
+        _model.Externals = externals;
     }
 
     /// <summary>
@@ -115,12 +130,13 @@ public sealed partial class Resolver
         bool requireEntryPoint = false,
         IReadOnlyDictionary<SourceText, string>? projects = null,
         string? entryPoint = null,
+        ExternalCatalog? externals = null,
         CancellationToken cancellation = default)
     {
         ArgumentNullException.ThrowIfNull(units);
         ArgumentNullException.ThrowIfNull(diagnostics);
 
-        Resolver resolver = new(diagnostics, cancellation);
+        Resolver resolver = new(diagnostics, cancellation, externals ?? ExternalCatalog.Empty);
 
         if (projects is not null)
         {
@@ -217,7 +233,8 @@ public sealed partial class Resolver
                         ? used
                         : [],
                     _currentType,
-                    _inSharedMember));
+                    _inSharedMember,
+                    _externals));
         }
 
         try
@@ -400,7 +417,10 @@ public sealed partial class Resolver
     {
         bool empty = declared is ModelSymbol { IsShared: true }
                      || (ReferenceEquals(declared.Container, BuiltInTypes.Standard)
-                         && BuiltIns.HasNoInstances(declared.Name));
+                         && BuiltIns.HasNoInstances(declared.Name))
+                     // A host may register a name to reach members through, which is the same
+                     // shape Console has and is refused here for the same reason.
+                     || _externals.FindModel(declared.Name)?.HasNoInstances == true;
 
         if (!empty)
         {

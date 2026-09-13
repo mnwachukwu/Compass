@@ -157,7 +157,9 @@ public sealed partial class TypeChecker
     private void RequireSharedBuiltIn(
         MemberExpr member, DeclaredTypeSymbol type, BuiltInMember found)
     {
-        if (found.IsShared || BuiltIns.HasNoInstances(type.Name))
+        if (found.IsShared
+            || BuiltIns.HasNoInstances(type.Name)
+            || _model.Externals.FindModel(type.Name)?.HasNoInstances == true)
         {
             return;
         }
@@ -199,6 +201,13 @@ public sealed partial class TypeChecker
     /// </summary>
     private void RecordBuiltIn(SyntaxNode node, BuiltInMember chosen)
     {
+        if (chosen.IsExternal)
+        {
+            _model.BindExternal(node, chosen);
+
+            return;
+        }
+
         if (chosen.Id is { } id)
         {
             _model.BindBuiltIn(node, id);
@@ -240,7 +249,8 @@ public sealed partial class TypeChecker
             return [];
         }
 
-        IReadOnlyList<BuiltInMember> found = BuiltInMembers.FindAllOnValues(receiver, name);
+        IReadOnlyList<BuiltInMember> found =
+            BuiltInMembers.FindAllOnValues(receiver, name, _model.Externals);
 
         if (found.Count > 0)
         {
@@ -250,7 +260,7 @@ public sealed partial class TypeChecker
         if (UnnarrowedTypeOf(receiverExpression) is { } declared
             && !ReferenceEquals(declared, receiver))
         {
-            return BuiltInMembers.FindAllOnValues(declared, name);
+            return BuiltInMembers.FindAllOnValues(declared, name, _model.Externals);
         }
 
         return [];
@@ -449,7 +459,7 @@ public sealed partial class TypeChecker
         IReadOnlyList<BuiltInMember> builtIns = named is not null
             ? DeclaresMember(named, member.MemberName)
                 ? []
-                : BuiltInMembers.FindAll(named, member.MemberName)
+                : BuiltInMembers.FindAll(named, member.MemberName, _model.Externals)
             : FindAllBuiltIn(member.Receiver, receiver, member.MemberName);
 
         if (builtIns.Count > 0)

@@ -784,6 +784,19 @@ public sealed partial class TypeChecker
         // nothing.
         // An exception is left to the rule below, which lets every one of them take the
         // message they all carry without each having to list a form of its own.
+        // A type the host registered is refused the same way, and says where it came from
+        // rather than claiming the language provides it.
+        if (_model.Externals.FindModel(type.Name) is { MayBeConstructed: false })
+        {
+            Report(
+                DiagnosticDescriptors.CannotInstantiate,
+                construction,
+                type.Name,
+                "a type from outside the program");
+
+            return;
+        }
+
         if (BuiltIns.FindModel(type.Name) is { } named
             && !named.MayBeConstructed
             && !BuiltInMembers.IsException(type))

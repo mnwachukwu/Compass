@@ -1199,6 +1199,13 @@ public sealed class ClosureConversion
             _model.BindBuiltIn(replacement, builtIn);
         }
 
+        // As in lowering: the binding the checker chose is carried rather than looked for
+        // again, since nothing downstream has the receiver's declared type to look with.
+        if (_model.GetExternal(original) is { } external)
+        {
+            _model.BindExternal(replacement, external);
+        }
+
         if (_model.GetSettledTest(original) is { } settled)
         {
             _model.SettleTest(replacement, settled);

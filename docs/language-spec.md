@@ -2932,10 +2932,12 @@ stopped from outside is a legitimate one to write.
 | `CM0116` | error | A function's type is written with 'delegate' | 'Function' takes no parentheses. For a particular shape write 'delegate(...)', with a result before it if it has one, as in 'integer delegate(string)'. |
 | `CM0117` | error | A function's type is written with 'delegate' | 'function' declares a function or makes one on the spot. To write the type of one, use 'delegate' — 'integer delegate(string)' takes a string and yields an integer. |
 | `CM0118` | error | 'and', 'or', or 'exclusive or' may follow 'bitwise' | 'bitwise' says which of three operations follows, and {0} begins none of them. Write 'bitwise and', 'bitwise or', or 'bitwise exclusive or' — 'shiftleft' and 'shiftright' take no word before them. |
-| `CM0121` | error | Only 'or' may follow 'exclusive' | 'exclusive' is the middle word of 'bitwise exclusive or', and {0} is not 'or'. |
-| `CM0122` | error | 'exclusive or' is written 'bitwise exclusive or' | Every operation on bits says so: 'bitwise and', 'bitwise or', 'bitwise exclusive or'. Add 'bitwise' in front of this one. |
 | `CM0119` | error | 'let' declares a local, not a field | 'let' works inside a function, where the value it holds is written beside it. A field is read far from here, so it says its type: '{0} {1} = ...'. |
 | `CM0120` | error | A loop begins with 'loop' | Every loop opens with 'loop', so this is written 'loop {0}'. The word after 'loop' says which kind: 'for', 'each', 'while', or nothing at all. |
+| `CM0121` | error | Only 'or' may follow 'exclusive' | 'exclusive' is the middle word of 'bitwise exclusive or', and {0} is not 'or'. |
+| `CM0122` | error | 'exclusive or' is written 'bitwise exclusive or' | Every operation on bits says so: 'bitwise and', 'bitwise or', 'bitwise exclusive or'. Add 'bitwise' in front of this one. |
+| `CM0123` | error | Cannot extend a type from outside the program | '{0}' comes from outside the program and has nothing a program can inherit. |
+| `CM0124` | error | A member from outside the program cannot be built | '{0}' is provided by the host running the compiler, which an assembly outlives. A program using it can be run but not built. |
 
 ### CM0200 to CM0299
 

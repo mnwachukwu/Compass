@@ -61,6 +61,12 @@ public sealed partial class Interpreter
         Environment scope,
         Instance? receiver)
     {
+        // Where the program is, for an exception that reaches a host. Unconditional because a
+        // failure is not something a host opts into watching for, and cheap because it is two
+        // field writes rather than anything built.
+        _where = statement.Span.Start;
+        _whereFile = _file;
+
         if (_host is not null)
         {
             Announce(statement, scope);

@@ -24,18 +24,22 @@ public sealed class NameScope
     private readonly NamespaceSymbol _here;
     private readonly IReadOnlyList<NamespaceSymbol> _usings;
 
+    private readonly ExternalCatalog _externals;
+
     internal NameScope(
         Scope locals,
         NamespaceSymbol here,
         IReadOnlyList<NamespaceSymbol> usings,
         DeclaredTypeSymbol? enclosingType,
-        bool inSharedMember)
+        bool inSharedMember,
+        ExternalCatalog? externals = null)
     {
         _locals = locals;
         _here = here;
         _usings = usings;
         EnclosingType = enclosingType;
         InSharedMember = inSharedMember;
+        _externals = externals ?? ExternalCatalog.Empty;
     }
 
     /// <summary>The type whose body this sits in, or null at the top of a file.</summary>
@@ -104,6 +108,16 @@ public sealed class NameScope
             if (already.Add(name))
             {
                 yield return BuiltInTypes.Of(name);
+            }
+        }
+
+        // Last, and so shadowed by everything above: a program's own name for something wins
+        // over a host's, the same way it wins over the language's.
+        foreach (BuiltInModelInfo model in _externals.Models)
+        {
+            if (already.Add(model.Name) && _externals.SymbolFor(model.Name) is { } symbol)
+            {
+                yield return symbol;
             }
         }
     }

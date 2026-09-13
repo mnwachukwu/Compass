@@ -1,6 +1,7 @@
 using System.Runtime.ExceptionServices;
 using Compass.Compiler.Ast;
 using Compass.Compiler.Semantics;
+using Compass.Compiler.Text;
 using Compass.Runtime;
 
 namespace Compass.Interpreter;
@@ -92,6 +93,27 @@ public sealed partial class Interpreter
     /// <summary>Which file each function was declared in, noted while the units are walked.</summary>
     private readonly Dictionary<FunctionDecl, string> _fileOf = [];
 
+    /// <summary>
+    /// <para>Where the last statement to begin running is, and the file it is in.</para>
+    /// <para>What an exception escaping to a host is reported at. Kept here rather than carried
+    /// on the exception because the language raises several from inside the runtime, which has
+    /// no position to put on them, and a host reading a log has no editor to find the line in
+    /// any other way.</para>
+    /// <para><b>Not restored while the stack unwinds</b>, which is what makes it right: nothing
+    /// runs a statement on the way out, so what it holds when an exception arrives somewhere is
+    /// the innermost statement that was running when it was raised. <see cref="_file"/> alone
+    /// would not do — that one is put back as each call returns.</para>
+    /// <para>Two field writes a statement, no allocation and no frame. The debugger's
+    /// bookkeeping sits behind a check for exactly the opposite reason: it allocates.</para>
+    /// </summary>
+    private SourcePosition _where = SourcePosition.None;
+
+    private string _whereFile = string.Empty;
+
+    /// <summary>Where the innermost statement that ran is, for a host to report.</summary>
+    internal (string File, int Line, int Column) Position =>
+        (_whereFile, _where.Line, _where.Column);
+
 
     private const int MaximumDepth = 512;
 
@@ -115,13 +137,30 @@ public sealed partial class Interpreter
         SemanticModel model,
         TextWriter output,
         TextReader input,
-        IDebugHost? host = null)
+        IDebugHost? host = null,
+        int? maximumDepth = null)
     {
         _model = model;
         _output = output;
         _input = input;
         _host = host;
+        _maximumDepth = maximumDepth ?? MaximumDepth;
     }
+
+    /// <summary>
+    /// Builds one for a host to keep, which <see cref="LoadedProgram"/> is the public face of.
+    /// </summary>
+    internal static Interpreter ForHost(
+        SemanticModel model, TextWriter output, TextReader input, int? maximumDepth) =>
+        new(model, output, input, host: null, maximumDepth);
+
+    /// <summary>
+    /// <para>How deep a call may go before <c>RecursionTooDeepException</c> is raised.</para>
+    /// <para>A host may lower this. The default is sized for the stack <c>Run</c> gives
+    /// itself; a host calling in on its own thread knows how much stack that thread has and is
+    /// the only one who can say what fits in it.</para>
+    /// </summary>
+    private readonly int _maximumDepth;
 
     /// <summary>
     /// <para>Runs a program, returning what <c>Main</c> yielded, or zero.</para>
@@ -228,7 +267,13 @@ public sealed partial class Interpreter
         return Run([lowered], model, output, input, host);
     }
 
-    private int Execute(IReadOnlyList<CompilationUnit> units)
+    /// <summary>
+    /// <para>Collects the declarations and runs every shared initializer, once.</para>
+    /// <para>Split from <see cref="Execute"/> so that a host can do this and then call into
+    /// the program repeatedly, against the state it left behind. Running it twice against one
+    /// interpreter would initialize everything a second time.</para>
+    /// </summary>
+    internal void Initialize(IReadOnlyList<CompilationUnit> units)
     {
         // Types across every file are collected before any shared field is initialized, so that
         // an initializer in one file may name a type declared in another.
@@ -248,6 +293,58 @@ public sealed partial class Interpreter
         {
             InitializeShared(declaration);
         }
+    }
+
+    /// <summary>
+    /// <para>The lowered body of a function a host may call, or null where there is none to
+    /// call.</para>
+    /// <para>A named function on a <c>shared model</c>, and nothing else. An instance method
+    /// would need an instance the host has no way to name, and a closure has no name at all —
+    /// so both are absent rather than refused, and a host asks whether a name is there before
+    /// deciding what to do about it.</para>
+    /// </summary>
+    internal FunctionDecl? Callable(string modelName, string functionName, int arity)
+    {
+        if (!_types.TryGetValue(modelName, out DeclaredTypeSymbol? type)
+            || type is not ModelSymbol { IsShared: true })
+        {
+            return null;
+        }
+
+        foreach (Symbol candidate in type.Lookup(functionName))
+        {
+            if (candidate is FunctionSymbol function
+                && BodyOf(function) is { } body
+                && body.Parameters.Count == arity)
+            {
+                return body;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Runs a function found by <see cref="Callable"/>, with values already marshalled.</summary>
+    internal object? InvokeCallable(FunctionDecl declaration, IReadOnlyList<object?> values)
+    {
+        // The shared environment rather than any local one: a host call starts at the top of
+        // the program, as the entry point does.
+        return Invoke(
+            new FunctionValue(
+                declaration.Parameters,
+                declaration.Body,
+                expressionBody: null,
+                _shared,
+                receiver: null,
+                declaration.Name,
+                _fileOf.GetValueOrDefault(declaration, _file)),
+            arguments: [],
+            values);
+    }
+
+    private int Execute(IReadOnlyList<CompilationUnit> units)
+    {
+        Initialize(units);
 
         if (_model.EntryPoint is not { } main)
         {
@@ -402,10 +499,10 @@ public sealed partial class Interpreter
     {
         _ = arguments;
 
-        if (++_depth > MaximumDepth)
+        if (++_depth > _maximumDepth)
         {
             _depth--;
-            throw new RecursionTooDeepException(MaximumDepth);
+            throw new RecursionTooDeepException(_maximumDepth);
         }
 
         string callersFile = _file;

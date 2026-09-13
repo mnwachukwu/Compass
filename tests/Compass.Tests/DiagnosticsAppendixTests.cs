@@ -62,6 +62,28 @@ public sealed class DiagnosticsAppendixTests : LexerTestBase
         "diagnostics Appendix A lists that the compiler cannot report");
 
     /// <summary>
+    /// <para>And lists them in order.</para>
+    /// <para>A reader meeting <c>CM0119</c> looks for it where the numbers say it is, so a row
+    /// out of place is a row that reads as missing. Nothing else notices: the appendix agrees
+    /// with the compiler about every id and every word whatever order they sit in, which is how
+    /// four rows came to sit between <c>CM0118</c> and <c>CM0119</c>.</para>
+    /// </summary>
+    [Test]
+    public void TheAppendixListsThemInOrder()
+    {
+        string[] listed =
+            [.. Regex.Matches(File.ReadAllText(SpecificationPath), @"^\| `(CM\d{4})`",
+                              RegexOptions.Multiline)
+                     .Select(m => m.Groups[1].Value)];
+
+        Assert.That(listed, Is.Not.Empty, "Appendix A has no rows");
+        Assert.That(
+            listed,
+            Is.EqualTo(listed.Order(StringComparer.Ordinal)),
+            "Appendix A lists a diagnostic out of numerical order");
+    }
+
+    /// <summary>
     /// <para>A message is either literal text or a format string, and never half of each.</para>
     /// <para>Nothing formats a descriptor that takes no arguments — the text is used as
     /// written — so one that takes none may hold a brace as punctuation, and <c>CM0313</c>'s

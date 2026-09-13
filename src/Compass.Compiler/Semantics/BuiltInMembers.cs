@@ -27,14 +27,28 @@ namespace Compass.Compiler.Semantics;
 /// answers about a value that was never made — which the interpreter reads as a default and
 /// the emitter cannot load at all.</para>
 /// </param>
+/// <param name="Binding">
+/// What runs the member, for one a host registered, and null for one the language provides.
+/// Carrying it here is what lets an external member reuse every rule the catalog already has
+/// about names, signatures, and overloads.
+/// </param>
 public sealed record BuiltInMember(
     string Name,
     TypeSymbol? ReturnType,
     IReadOnlyList<TypeSymbol?> ParameterTypes,
     BuiltInId? Id = null,
     bool IsValue = false,
-    Reached Reach = Reached.ThroughAValue)
+    Reached Reach = Reached.ThroughAValue,
+    ExternalBinding? Binding = null)
 {
+    /// <summary>
+    /// <para>Whether a host supplied this rather than the language.</para>
+    /// <para>The binding is the identity: the language's members are told apart by
+    /// <see cref="Id"/>, which is a fixed enum a host cannot add to, so an external member
+    /// carries what runs it instead of a number naming it.</para>
+    /// </summary>
+    public bool IsExternal => Binding is not null;
+
     /// <summary>Whether the type's own name may be written to the left of the dot.</summary>
     public bool IsShared => Reach is Reached.ThroughTheName or Reached.EitherWay;
 
@@ -74,9 +88,10 @@ public static class BuiltInMembers
     /// than one form: <c>WriteLine</c> with and without a value, and an optional's <c>Or</c>
     /// taking either a plain value or another optional.</para>
     /// </summary>
-    public static IReadOnlyList<BuiltInMember> FindAll(TypeSymbol receiver, string name)
+    public static IReadOnlyList<BuiltInMember> FindAll(
+        TypeSymbol receiver, string name, ExternalCatalog? externals = null)
     {
-        IReadOnlyList<BuiltInMember> candidates = MembersOf(receiver);
+        IReadOnlyList<BuiltInMember> candidates = MembersOf(receiver, externals);
         List<BuiltInMember> matches =
             [.. candidates.Where(m => string.Equals(m.Name, name, StringComparison.Ordinal))];
 
@@ -105,8 +120,9 @@ public static class BuiltInMembers
     /// path that starts at a type name asks <see cref="FindAll"/> whole, so that a member
     /// belonging to each value is found and refused by name rather than reported missing.</para>
     /// </summary>
-    public static IReadOnlyList<BuiltInMember> FindAllOnValues(TypeSymbol receiver, string name) =>
-        [.. FindAll(receiver, name).Where(m => m.IsOnValues)];
+    public static IReadOnlyList<BuiltInMember> FindAllOnValues(
+        TypeSymbol receiver, string name, ExternalCatalog? externals = null) =>
+        [.. FindAll(receiver, name, externals).Where(m => m.IsOnValues)];
 
     /// <summary>
     /// <para>Everything the language provides on a receiver of this type.</para>
@@ -114,24 +130,26 @@ public static class BuiltInMembers
     /// could write next needs the list rather than an answer about one entry. Read from the same
     /// catalog <see cref="FindAll"/> reads, so what is offered is what will resolve.</para>
     /// </summary>
-    public static IReadOnlyList<BuiltInMember> On(TypeSymbol receiver)
+    public static IReadOnlyList<BuiltInMember> On(
+        TypeSymbol receiver, ExternalCatalog? externals = null)
     {
         ArgumentNullException.ThrowIfNull(receiver);
 
-        return MembersOf(receiver);
+        return MembersOf(receiver, externals);
     }
 
     /// <summary>
     /// Everything the language provides on a receiver of this type, read from the catalog.
     /// See <see cref="BuiltIns"/>.
     /// </summary>
-    private static IReadOnlyList<BuiltInMember> MembersOf(TypeSymbol receiver) => receiver switch
+    private static IReadOnlyList<BuiltInMember> MembersOf(
+        TypeSymbol receiver, ExternalCatalog? externals = null) => receiver switch
     {
         SetType set => BuiltIns.OnSet(set),
         OptionalType optional => BuiltIns.OnOptional(optional),
         EnumerationSymbol => BuiltIns.OnEnumeration(),
         PrimitiveType primitive => OnPrimitive(primitive),
-        ModelSymbol model => OnModel(model),
+        ModelSymbol model => OnModel(model, externals),
         _ => BuiltIns.OnEveryType(),
     };
 
@@ -165,13 +183,23 @@ public static class BuiltInMembers
         return BuiltIns.OnEveryType();
     }
 
-    private static IReadOnlyList<BuiltInMember> OnModel(ModelSymbol model)
+    private static IReadOnlyList<BuiltInMember> OnModel(
+        ModelSymbol model, ExternalCatalog? externals = null)
     {
         List<BuiltInMember> members = [];
 
         if (BuiltIns.FindModel(model.Name) is { } builtIn)
         {
             members.AddRange(builtIn.Members);
+        }
+
+        // A host's type is looked up by the symbol it registered rather than by name, so a
+        // program declaring a model of the same name does not pick up the host's members.
+        if (externals is not null
+            && ReferenceEquals(externals.SymbolFor(model.Name), model)
+            && externals.FindModel(model.Name) is { } registered)
+        {
+            members.AddRange(registered.Members);
         }
 
         // Exception's own contribution is answered on the value rather than through its name,

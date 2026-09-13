@@ -36,6 +36,14 @@ public sealed class SemanticModel
     /// <summary>The entry point, once one has been found.</summary>
     public FunctionSymbol? EntryPoint { get; internal set; }
 
+    /// <summary>
+    /// <para>What a host registered for this compilation, or an empty catalog.</para>
+    /// <para>Carried here so that every pass after the resolver reads the same one. A
+    /// compilation is checked against the catalog it was given, and two compilations given
+    /// different catalogs cannot see each other's types.</para>
+    /// </summary>
+    public ExternalCatalog Externals { get; internal set; } = ExternalCatalog.Empty;
+
     /// <summary>Records what a node refers to.</summary>
     internal void Bind(SyntaxNode node, Symbol symbol) => _symbols[node] = symbol;
 
@@ -111,6 +119,29 @@ public sealed class SemanticModel
     /// </summary>
     public BuiltInId? GetBuiltIn(SyntaxNode node) =>
         _builtIns.TryGetValue(node, out BuiltInId id) ? id : null;
+
+    private readonly Dictionary<SyntaxNode, BuiltInMember> _externalMembers = [];
+
+    /// <summary>
+    /// Records that a name resolved to a member the host registered. The member itself rather
+    /// than an id, since the binding it carries is what tells one from another.
+    /// </summary>
+    internal void BindExternal(SyntaxNode node, BuiltInMember member) =>
+        _externalMembers[node] = member;
+
+    /// <summary>
+    /// The member the host registered that a name resolved to, or null where it resolved to
+    /// something the language or the program provides.
+    /// </summary>
+    public BuiltInMember? GetExternal(SyntaxNode node) =>
+        _externalMembers.GetValueOrDefault(node);
+
+    /// <summary>
+    /// <para>Every place a program named a member the host registered.</para>
+    /// <para>Read by the back end, which cannot emit a call to a delegate that exists only in
+    /// the compiling process. A program using one runs and does not build.</para>
+    /// </summary>
+    public IReadOnlyCollection<SyntaxNode> ExternalMemberUses => _externalMembers.Keys;
 
     /// <summary>
     /// <para>Records that a type test's answer follows from the types alone.</para>

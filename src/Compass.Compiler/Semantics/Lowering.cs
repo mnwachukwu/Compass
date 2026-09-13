@@ -549,6 +549,14 @@ public sealed class Lowering
             _model.BindBuiltIn(replacement, builtIn);
         }
 
+        // A member the host registered travels the same way, and for the same reason: the
+        // binding that runs it is what the checker chose, and nothing downstream could choose
+        // again.
+        if (_model.GetExternal(original) is { } external)
+        {
+            _model.BindExternal(replacement, external);
+        }
+
         // A type test the types already answered travels with the node too. The back end could
         // not work it out again: a set does not carry its element type, nor a function its
         // signature.

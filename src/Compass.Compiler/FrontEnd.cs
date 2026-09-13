@@ -38,13 +38,14 @@ public static class FrontEnd
         IReadOnlyDictionary<SourceText, string>? projects = null,
         string? entryPoint = null,
         bool reportUnusedSuppressions = true,
+        ExternalCatalog? externals = null,
         CancellationToken cancellation = default)
     {
         ArgumentNullException.ThrowIfNull(units);
         ArgumentNullException.ThrowIfNull(diagnostics);
 
         SemanticModel model = Resolver.Resolve(
-            units, diagnostics, requireEntryPoint, projects, entryPoint, cancellation);
+            units, diagnostics, requireEntryPoint, projects, entryPoint, externals, cancellation);
 
         TypeChecker.Check(units, model, diagnostics, cancellation);
         DefiniteAssignment.Analyze(units, model, diagnostics, cancellation);
@@ -70,6 +71,7 @@ public static class FrontEnd
         DiagnosticBag diagnostics,
         bool requireEntryPoint = false,
         bool reportUnusedSuppressions = true,
+        ExternalCatalog? externals = null,
         CancellationToken cancellation = default)
     {
         ArgumentNullException.ThrowIfNull(unit);
@@ -79,6 +81,7 @@ public static class FrontEnd
             diagnostics,
             requireEntryPoint,
             reportUnusedSuppressions: reportUnusedSuppressions,
+            externals: externals,
             cancellation: cancellation);
     }
 }

@@ -78,7 +78,7 @@ public sealed partial class Resolver
     /// </summary>
     private void WarnIfShadowsStandard(string name, Declaration declaration)
     {
-        if (BuiltInTypeNames.Contains(name))
+        if (IsProvidedType(name))
         {
             Report(DiagnosticDescriptors.ShadowsStandardType, declaration, name);
         }
@@ -597,6 +597,14 @@ public sealed partial class Resolver
             if (baseType is null)
             {
                 Report(DiagnosticDescriptors.TypeNotFound, declaration, baseName);
+                continue;
+            }
+
+            // A type the host registered is opaque, so nothing extends one.
+            if (_externals.TypeNames.Contains(baseType.Name))
+            {
+                Report(
+                    DiagnosticDescriptors.CannotExtendExternalType, declaration, baseName);
                 continue;
             }
 

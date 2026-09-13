@@ -54,6 +54,13 @@ public sealed partial class Interpreter
         // A type name on the left: either a built-in like Console, or a shared function.
         if (TypeNamedBy(member.Receiver) is not null)
         {
+            // A member the host registered on a type's name: World.SayTo(...).
+            if (_model.GetExternal(member) is { Binding: { } onTypeBinding })
+            {
+                return CallExternal(
+                    member.MemberName, onTypeBinding, receiver: null, arguments);
+            }
+
             // Which version of an overloaded name this is was settled while checking, weighing
             // what the arguments actually are. Looking it up again by name would find the
             // first one written, so Math.Abs on a real would run the version taking integers.
@@ -100,6 +107,11 @@ public sealed partial class Interpreter
         // receiver's type, what narrowing proved about it, and whether that type declares a
         // member of the same name. Deciding again from the value in hand would be answering a
         // different question.
+        if (_model.GetExternal(member) is { Binding: { } binding })
+        {
+            return CallExternal(member.MemberName, binding, target, arguments);
+        }
+
         if (_model.GetBuiltIn(member) is { } id)
         {
             return Perform(id, target, arguments).Value;
@@ -207,6 +219,42 @@ public sealed partial class Interpreter
     }
 
     // ---- The members the language provides -------------------------------------------------------
+
+    /// <summary>
+    /// <para>Runs a member the host registered, and decides what its failing means.</para>
+    /// <para><b>An exception the language has a name for is the program's to catch.</b> A host
+    /// signalling that an argument was wrong throws <c>ArgumentException</c>, and a script
+    /// writing <c>catch ArgumentException</c> takes it. The names are .NET's
+    /// ([§10.1](#101-what-the-language-raises)), so a host needs no vocabulary of its own for
+    /// this.</para>
+    /// <para><b>Anything else is the host's fault, not the program's</b>, and travels out past
+    /// every <c>catch</c> to the host that registered it. This is the rule
+    /// <c>catch Exception</c> already follows about a failure in the implementation: a
+    /// <c>NullReferenceException</c> in a binding is a bug in the engine, and a script handler
+    /// written for something else would swallow the only report of it.</para>
+    /// </summary>
+    private static object? CallExternal(
+        string name, ExternalBinding binding, object? receiver, IReadOnlyList<object?> arguments)
+    {
+        try
+        {
+            return binding(receiver, arguments);
+        }
+        catch (Exception thrown) when (
+            Runtime.BuiltInExceptions.IsBuiltIn(thrown)
+            && Runtime.BuiltInExceptions.MayBeCaught(thrown.GetType().Name))
+        {
+            // Already a name the language has. Marked as the program's so that a catch clause
+            // may take it, which is the one thing distinguishing it from an interpreter fault.
+            thrown.Data[RaisedByProgram] = true;
+
+            throw;
+        }
+        catch (Exception thrown)
+        {
+            throw new ExternalFailureException(name, thrown);
+        }
+    }
 
     /// <summary>
     /// <para>Carries out a built-in call and checks that what came back is what the catalog

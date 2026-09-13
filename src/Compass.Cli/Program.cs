@@ -878,6 +878,13 @@ public static class Program
         string output = Path.Combine(
             WhereToWrite(options, compilation, target), name + ".dll");
 
+        // A host member is a delegate in the compiling process, which an assembly outlives.
+        if (ExternalMembers.Refuse(model, diagnostics))
+        {
+            DiagnosticRenderer.WriteAll(diagnostics);
+            return Reported;
+        }
+
         IReadOnlyList<CompilationUnit> emitting = ClosureConversion.Convert(
             Lowering.Lower(compilation.Units, model), model);
 
