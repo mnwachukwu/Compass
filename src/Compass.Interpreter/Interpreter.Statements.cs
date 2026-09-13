@@ -218,6 +218,8 @@ public sealed partial class Interpreter
     {
         while (IsTrue(Evaluate(loop.Condition, scope, receiver)))
         {
+            StopIfAsked();
+
             ExecutionResult result = ExecuteStatements(loop.Body, scope.Push(), receiver);
 
             if (result.Completion == Completion.Break)
@@ -249,6 +251,8 @@ public sealed partial class Interpreter
     {
         while (true)
         {
+            StopIfAsked();
+
             ExecutionResult result = ExecuteStatements(loop.Body, scope.Push(), receiver);
 
             if (result.Completion == Completion.Break)
@@ -281,6 +285,8 @@ public sealed partial class Interpreter
     {
         while (true)
         {
+            StopIfAsked();
+
             ExecutionResult result = ExecuteStatements(loop.Body, scope.Push(), receiver);
 
             if (result.Completion == Completion.Break)
@@ -357,6 +363,8 @@ public sealed partial class Interpreter
             {
                 return ExecutionResult.Normal;
             }
+
+            StopIfAsked();
 
             Environment iteration = scope.Push();
             iteration.Declare(variable, current);

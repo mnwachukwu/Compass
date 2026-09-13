@@ -84,7 +84,35 @@ public sealed class LoadedProgram
     /// throwing.
     /// </exception>
     public object? Call(
-        string modelName, string functionName, params object?[] arguments)
+        string modelName, string functionName, params object?[] arguments) =>
+        Call(modelName, functionName, default(CallLimits), arguments);
+
+    /// <summary>
+    /// <para>The same, with a way to stop it.</para>
+    /// <para>Cancelling raises <see cref="ScriptStoppedException"/>, which no <c>catch</c> in a
+    /// script can take — a script cannot decline to stop. A time limit is
+    /// <c>new CancellationTokenSource(TimeSpan.FromMilliseconds(50))</c>: the language needs no
+    /// clock of its own for that, and what "too long" means is the host's to decide.</para>
+    /// <para><b>The stop is noticed at a loop's back edge or a call's entry</b>, which is
+    /// everywhere a program can fail to finish. A single statement that takes a long time — a
+    /// set operation over something enormous — finishes first.</para>
+    /// </summary>
+    public object? Call(
+        string modelName,
+        string functionName,
+        CancellationToken cancellation,
+        params object?[] arguments) =>
+        Call(modelName, functionName, new CallLimits(cancellation), arguments);
+
+    /// <summary>
+    /// <para>The same, bounded in both of the ways a call can fail to end.</para>
+    /// <para>See <see cref="CallLimits"/> for what each one bounds and what neither does.</para>
+    /// </summary>
+    public object? Call(
+        string modelName,
+        string functionName,
+        CallLimits limits,
+        params object?[] arguments)
     {
         ArgumentNullException.ThrowIfNull(modelName);
         ArgumentNullException.ThrowIfNull(functionName);
@@ -96,7 +124,21 @@ public sealed class LoadedProgram
 
         try
         {
-            return _interpreter.InvokeCallable(declaration, arguments);
+            return _interpreter.InvokeCallable(
+                declaration, arguments, limits.Cancellation, limits.MaximumBytes);
+        }
+        catch (OperationCanceledException)
+        {
+            // Where it had got to, which is what says which script is the one misbehaving.
+            (string file, int line, int column) = _interpreter.Position;
+
+            throw new ScriptStoppedException(file, line, column);
+        }
+        catch (AllocatedTooMuch tooMuch)
+        {
+            (string file, int line, int column) = _interpreter.Position;
+
+            throw new ScriptAllocatedTooMuchException(tooMuch.Limit, file, line, column);
         }
         catch (CompassThrow uncaught)
         {
@@ -176,6 +218,69 @@ public sealed class ExternalFailureException(string memberName, Exception cause)
 {
     /// <summary>The registered member whose binding threw.</summary>
     public string MemberName { get; } = memberName;
+}
+
+/// <summary>
+/// <para>What bounds one call into a program.</para>
+/// <para>Two, because there are two ways a call can fail to end: it runs forever, or it grows
+/// forever. Both are noticed at a loop's back edge and at a call's entry, which is everywhere a
+/// program can do either indefinitely.</para>
+/// <para><b>Neither bounds one long statement.</b> A single set operation over something
+/// enormous has no back edge to be noticed at, so it finishes first. What these stop is a
+/// script that would never finish, not every script that is slow.</para>
+/// </summary>
+/// <param name="Cancellation">
+/// Set to stop the call. A time limit is
+/// <c>new CancellationTokenSource(TimeSpan.FromMilliseconds(50))</c> — the language keeps no
+/// clock, because how long is too long is the host's question.
+/// </param>
+/// <param name="MaximumBytes">
+/// How much the call may allocate before it is stopped, or zero for no ceiling. Counted on the
+/// thread and from the start of this call, so what a host's own binding allocates while the
+/// script has it running counts too.
+/// </param>
+public readonly record struct CallLimits(
+    CancellationToken Cancellation = default, long MaximumBytes = 0);
+
+/// <summary>
+/// <para>A call allocated more than the host allowed it to.</para>
+/// <para>Carries where the script had got to, for the same reason a stop does: a log wants to
+/// name the script rather than only the fault.</para>
+/// </summary>
+public sealed class ScriptAllocatedTooMuchException(
+    long limit, string file, int line, int column)
+    : Exception($"{file}({line},{column}): the script allocated more than {limit} bytes.")
+{
+    /// <summary>How many bytes the call was allowed.</summary>
+    public long Limit { get; } = limit;
+
+    /// <summary>The file the innermost running statement was in.</summary>
+    public string File { get; } = file;
+
+    /// <summary>Its line, counted from one.</summary>
+    public int Line { get; } = line;
+
+    /// <summary>Its column, counted from one.</summary>
+    public int Column { get; } = column;
+}
+
+/// <summary>
+/// <para>A call was stopped by the host that asked for it.</para>
+/// <para>An <see cref="OperationCanceledException"/>, so the ordinary <c>catch</c> a host
+/// already writes around cancellable work takes it, and carrying where the script had got to,
+/// so a log says which one was misbehaving rather than only that something was.</para>
+/// </summary>
+public sealed class ScriptStoppedException(string file, int line, int column)
+    : OperationCanceledException($"{file}({line},{column}): the script was stopped.")
+{
+    /// <summary>The file the innermost running statement was in.</summary>
+    public string File { get; } = file;
+
+    /// <summary>Its line, counted from one.</summary>
+    public int Line { get; } = line;
+
+    /// <summary>Its column, counted from one.</summary>
+    public int Column { get; } = column;
 }
 
 /// <summary>

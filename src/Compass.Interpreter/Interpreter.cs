@@ -114,6 +114,51 @@ public sealed partial class Interpreter
     internal (string File, int Line, int Column) Position =>
         (_whereFile, _where.Line, _where.Column);
 
+    /// <summary>
+    /// <para>What a host set to stop a call that is taking too long.</para>
+    /// <para>Held here rather than passed down because every place that checks it is deep in
+    /// the walk, and threading it through would put a parameter on most of the interpreter to
+    /// be read in five places.</para>
+    /// </summary>
+    private CancellationToken _cancellation;
+
+    /// <summary>
+    /// <para>Stops the run where a host has asked it to.</para>
+    /// <para><b>Asked at a loop's back edge and at a call's entry, and nowhere else.</b> Those
+    /// two are where a program can fail to finish: straight-line code is a finite list of
+    /// statements and always ends, so anything that runs forever goes round a loop or calls
+    /// something, infinitely often. Checking there is therefore complete, and it is far cheaper
+    /// than checking every statement — which is the same argument the depth counter makes about
+    /// where it sits.</para>
+    /// <para>Raises <see cref="OperationCanceledException"/>, which no <c>catch</c> in a program
+    /// can take: it is not a name the language has, so it fails the test for what a clause may
+    /// catch. A script cannot decline to stop.</para>
+    /// </summary>
+    private void StopIfAsked()
+    {
+        _cancellation.ThrowIfCancellationRequested();
+
+        // Nothing measured where no ceiling was set, which is the ordinary case and is one
+        // comparison. Reading the counter is cheap but not free, and a tight loop reaches here
+        // every turn.
+        if (_ceiling > 0 && GC.GetAllocatedBytesForCurrentThread() > _ceiling)
+        {
+            throw new AllocatedTooMuch(_ceiling - _floor);
+        }
+    }
+
+    /// <summary>
+    /// <para>What this call had allocated when it began, and what it may not pass.</para>
+    /// <para>Measured per call rather than for the life of the program: a game calls a handler
+    /// thousands of times, and a total across all of them would be reached by any program that
+    /// ran long enough regardless of whether any one call misbehaved.</para>
+    /// <para>Counted on the thread, so what a host's own binding allocates while the script has
+    /// it running counts too. That is the script's cost as much as a set it built itself.</para>
+    /// </summary>
+    private long _floor;
+
+    private long _ceiling;
+
 
     private const int MaximumDepth = 512;
 
@@ -325,7 +370,30 @@ public sealed partial class Interpreter
     }
 
     /// <summary>Runs a function found by <see cref="Callable"/>, with values already marshalled.</summary>
-    internal object? InvokeCallable(FunctionDecl declaration, IReadOnlyList<object?> values)
+    internal object? InvokeCallable(
+        FunctionDecl declaration,
+        IReadOnlyList<object?> values,
+        CancellationToken cancellation,
+        long maximumBytes)
+    {
+        _cancellation = cancellation;
+        _floor = maximumBytes > 0 ? GC.GetAllocatedBytesForCurrentThread() : 0;
+        _ceiling = maximumBytes > 0 ? _floor + maximumBytes : 0;
+
+        try
+        {
+            return RunCallable(declaration, values);
+        }
+        finally
+        {
+            // Put back, so a call made with no limits cannot inherit the last one's.
+            _cancellation = CancellationToken.None;
+            _floor = 0;
+            _ceiling = 0;
+        }
+    }
+
+    private object? RunCallable(FunctionDecl declaration, IReadOnlyList<object?> values)
     {
         // The shared environment rather than any local one: a host call starts at the top of
         // the program, as the entry point does.
@@ -499,6 +567,11 @@ public sealed partial class Interpreter
     {
         _ = arguments;
 
+        // A call's entry, which with a loop's back edge is everywhere a program can fail to
+        // finish. Before the depth counter, so that a stop asked for during runaway recursion
+        // is answered rather than queued behind the depth being reported.
+        StopIfAsked();
+
         if (++_depth > _maximumDepth)
         {
             _depth--;
@@ -610,6 +683,19 @@ public sealed partial class Interpreter
 /// themselves. A model a program declared is not one, so it rides inside this — .NET's
 /// unwinding is what carries a throw to its handler either way.</para>
 /// </summary>
+/// <summary>
+/// <para>A call allocated past the ceiling its host set.</para>
+/// <para>Carried out of the interpreter and turned into the host-facing exception by
+/// <see cref="LoadedProgram"/>, which is where the position is known. Internal, and not a name
+/// the language has, so no <c>catch</c> in a program can take it.</para>
+/// </summary>
+internal sealed class AllocatedTooMuch(long limit)
+    : Exception($"This call allocated more than the {limit} bytes it was allowed.")
+{
+    /// <summary>How many bytes the call was allowed.</summary>
+    public long Limit { get; } = limit;
+}
+
 internal sealed class CompassThrow(Instance thrown)
     : Exception($"An unhandled {thrown.Type.Name} reached the top of the program.")
 {
