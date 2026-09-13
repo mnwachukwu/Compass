@@ -144,6 +144,32 @@ public sealed class SemanticModel
     public IReadOnlyCollection<SyntaxNode> ExternalMemberUses => _externalMembers.Keys;
 
     /// <summary>
+    /// <para>What this program touches beyond itself, taken from the members it names.</para>
+    /// <para>For a host deciding whether to run somebody else's script. The language cannot
+    /// deny one of these while a program runs — a built-in dispatches straight from its id,
+    /// with nothing in between — so a host that cares refuses the program before it loads.
+    /// Answering here rather than leaving a host to recognise the members itself is what stops
+    /// that check going stale: a member added to the language is classified with it, and a
+    /// host's rule is derived rather than transcribed.</para>
+    /// <para>Answerable as soon as the front end has run. What a host registered is not
+    /// counted — a host knows what its own bindings reach.</para>
+    /// </summary>
+    public Reaches Reaches
+    {
+        get
+        {
+            Reaches reached = Semantics.Reaches.Nothing;
+
+            foreach (BuiltInId id in _builtIns.Values)
+            {
+                reached |= BuiltIns.ReachOf(id);
+            }
+
+            return reached;
+        }
+    }
+
+    /// <summary>
     /// <para>Records that a type test's answer follows from the types alone.</para>
     /// <para>Some tests cannot be answered by looking at the value: a set does not carry its
     /// element type and a function does not carry its signature. They do not need to be, since

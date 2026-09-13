@@ -459,13 +459,40 @@ public sealed record BuiltInModelInfo(
 /// </summary>
 public static class BuiltIns
 {
+    /// <summary>
+    /// <para>What a member of the language touches beyond the program, for the twenty-one that
+    /// touch anything.</para>
+    /// <para><b>Written here rather than on each entry</b>, so that the answer to "what does
+    /// this language reach" is one list a reader can check against, and so that a member added
+    /// to <c>File</c> is classified by being a file member rather than by somebody remembering
+    /// a flag. <c>EveryModelSaysWhatItReaches</c> holds this list to the catalog.</para>
+    /// </summary>
+    public static Reaches ReachOf(BuiltInId id) => id switch
+    {
+        BuiltInId.FileRead or BuiltInId.FileReadLines or BuiltInId.FileWrite
+            or BuiltInId.FileWriteLines or BuiltInId.FileAppend or BuiltInId.FileExists
+            or BuiltInId.FileDelete or BuiltInId.FileCopy or BuiltInId.FileMove
+            or BuiltInId.FileSize or BuiltInId.FileChanged
+            or BuiltInId.DirectoryCurrent or BuiltInId.DirectoryExists
+            or BuiltInId.DirectoryCreate or BuiltInId.DirectoryDelete
+            or BuiltInId.DirectoryFiles or BuiltInId.DirectoryFolders => Reaches.Files,
+
+        // The clock, which is what stops a run repeating. Not a danger the way the filesystem
+        // is; named because a host replaying a game wants to know, and because leaving it out
+        // would make "reaches nothing" mean less than it says.
+        BuiltInId.DateTimeNow or BuiltInId.DateTimeToday
+            or BuiltInId.DateToday or BuiltInId.TimeNow => Reaches.Clock,
+
+        _ => Reaches.Nothing,
+    };
+
     private static BuiltInMember Member(
         BuiltInId id, string name, TypeSymbol? returns, params TypeSymbol?[] parameters) =>
-        new(name, returns, parameters, id);
+        new(name, returns, parameters, id, Reaches: ReachOf(id));
 
     /// <summary>A member that is a value rather than something to call, such as Math.Pi.</summary>
     private static BuiltInMember Value(BuiltInId id, string name, TypeSymbol type) =>
-        new(name, type, [], id, IsValue: true);
+        new(name, type, [], id, IsValue: true, Reaches: ReachOf(id));
 
     /// <summary>
     /// <para>A member of a model that has instances, reached through its name rather than
@@ -476,11 +503,13 @@ public static class BuiltIns
     /// </summary>
     private static BuiltInMember Shared(
         BuiltInId id, string name, TypeSymbol? returns, params TypeSymbol?[] parameters) =>
-        new(name, returns, parameters, id, Reach: Reached.ThroughTheName);
+        new(name, returns, parameters, id, Reach: Reached.ThroughTheName,
+            Reaches: ReachOf(id));
 
     /// <summary>The same, for one that is a value rather than something to call.</summary>
     private static BuiltInMember SharedValue(BuiltInId id, string name, TypeSymbol type) =>
-        new(name, type, [], id, IsValue: true, Reach: Reached.ThroughTheName);
+        new(name, type, [], id, IsValue: true, Reach: Reached.ThroughTheName,
+            Reaches: ReachOf(id));
 
     /// <summary>
     /// A member reached either way — through the type's name, and through a value of it.

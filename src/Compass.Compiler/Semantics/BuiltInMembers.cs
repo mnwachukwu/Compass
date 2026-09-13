@@ -32,6 +32,9 @@ namespace Compass.Compiler.Semantics;
 /// Carrying it here is what lets an external member reuse every rule the catalog already has
 /// about names, signatures, and overloads.
 /// </param>
+/// <param name="Reaches">
+/// What this touches beyond the program. Nothing, for all but twenty-one of them.
+/// </param>
 public sealed record BuiltInMember(
     string Name,
     TypeSymbol? ReturnType,
@@ -39,7 +42,8 @@ public sealed record BuiltInMember(
     BuiltInId? Id = null,
     bool IsValue = false,
     Reached Reach = Reached.ThroughAValue,
-    ExternalBinding? Binding = null)
+    ExternalBinding? Binding = null,
+    Reaches Reaches = Reaches.Nothing)
 {
     /// <summary>
     /// <para>Whether a host supplied this rather than the language.</para>
@@ -54,6 +58,31 @@ public sealed record BuiltInMember(
 
     /// <summary>Whether a value of the type may be.</summary>
     public bool IsOnValues => Reach is Reached.ThroughAValue or Reached.EitherWay;
+}
+
+/// <summary>
+/// <para>What a member touches beyond the program running it.</para>
+/// <para>Facts rather than policy. The language says what a member reaches; a host embedding
+/// the compiler decides what to allow, because only the host knows whose machine it is running
+/// on and whose script it is running. Compass has no way to deny one of these at run time —
+/// a built-in dispatches straight from its id — so a host that cares refuses the program
+/// before it loads, which is a better answer anyway: the author finds out at deploy rather
+/// than mid-game.</para>
+/// <para><c>Console</c> is deliberately absent. A host supplies both streams when it builds an
+/// interpreter, so it already decides what reading and writing mean, and classifying it would
+/// imply the language mediates something it does not.</para>
+/// </summary>
+[Flags]
+public enum Reaches
+{
+    /// <summary>Nothing outside the program's own values.</summary>
+    Nothing = 0,
+
+    /// <summary>The filesystem: <c>File</c> and <c>Directory</c>.</summary>
+    Files = 1,
+
+    /// <summary>The machine's clock, which is what makes a run unrepeatable.</summary>
+    Clock = 2,
 }
 
 /// <summary>How a built-in member is reached.</summary>
