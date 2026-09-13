@@ -207,9 +207,92 @@ public sealed class LoadedProgramTests
         Assert.That(program.Call("Rules", "Seen"), Is.EqualTo(1L));
     }
 
+    /// <summary>
+    /// <para>A shared function is callable wherever it was declared, because it needs no
+    /// receiver — which is the only thing a host cannot supply.</para>
+    /// <para>A plain model holding state a host wants to describe is the case: its fields keep
+    /// their links and their types, and a <c>shared</c> function beside them is the way in.
+    /// </para>
+    /// </summary>
+    [Test]
+    public void ASharedFunctionOnAPlainModelIsCallable()
+    {
+        StringBuilder printed = new();
+
+        LoadedProgram program = Load(
+            """
+            model Site
+                public string name;
+                public Site nearest;
+
+                public shared integer Counted = 0;
+
+                public shared function Describe(string what)
+                    Site.Counted = Site.Counted + 1;
+                    Console.WriteLine("describing " + what);
+                end function
+
+                public function Rename(string given)
+                    this.name = given;
+                end function
+            end model
+
+            shared model Rules
+                public function OnTick()
+                end function
+            end model
+            """,
+            printed);
+
+        Assert.Multiple(() =>
+        {
+            // Shared on an ordinary model: no receiver needed, so a host may call it.
+            Assert.That(program.Offers("Site", "Describe", 1), Is.True);
+
+            // An instance method on the same model is not offered, for the reason the shared
+            // one is: there is no instance a host could name.
+            Assert.That(program.Offers("Site", "Rename", 1), Is.False);
+
+            // And a shared model's members keep working, being implicitly shared.
+            Assert.That(program.Offers("Rules", "OnTick", 0), Is.True);
+        });
+
+        program.Call("Site", "Describe", "the harbour");
+
+        Assert.That(printed.ToString().Trim(), Is.EqualTo("describing the harbour"));
+    }
+
+    /// <summary>Shared state on a plain model survives from one host call to the next.</summary>
+    [Test]
+    public void SharedStateOnAPlainModelPersists()
+    {
+        StringBuilder printed = new();
+
+        LoadedProgram program = Load(
+            """
+            model Site
+                public shared integer Counted = 0;
+
+                public shared function Bump()
+                    Site.Counted = Site.Counted + 1;
+                end function
+
+                public shared integer function Total()
+                    yield Site.Counted;
+                end function
+            end model
+            """,
+            printed);
+
+        program.Call("Site", "Bump");
+        program.Call("Site", "Bump");
+
+        Assert.That(program.Call("Site", "Total"), Is.EqualTo(2L));
+    }
+
     /// <summary>An instance method is not something a host can address, and says nothing.</summary>
     [Test]
-    public void OnlyASharedModelsFunctionsAreOffered()
+    public void AnInstanceMethodIsNotOffered()
     {
         StringBuilder printed = new();
 

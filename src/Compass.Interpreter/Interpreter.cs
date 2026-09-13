@@ -343,22 +343,25 @@ public sealed partial class Interpreter
     /// <summary>
     /// <para>The lowered body of a function a host may call, or null where there is none to
     /// call.</para>
-    /// <para>A named function on a <c>shared model</c>, and nothing else. An instance method
-    /// would need an instance the host has no way to name, and a closure has no name at all —
-    /// so both are absent rather than refused, and a host asks whether a name is there before
-    /// deciding what to do about it.</para>
+    /// <para><b>A shared function, on whatever kind of model it was declared.</b> Needing no
+    /// receiver is the whole of the question: a host has no way to name an instance, and a
+    /// closure has no name at all, so an instance method and a closure are absent rather than
+    /// refused. A host asks whether a name is there before deciding what to do about it.</para>
+    /// <para>Asked of the member rather than of the type around it. A <c>shared model</c>'s
+    /// members are implicitly shared and carry the modifier by the time they arrive here, so
+    /// one written <c>shared</c> on an ordinary model and one that is shared for sitting in a
+    /// shared model answer alike — which they should, since neither needs an instance.</para>
     /// </summary>
     internal FunctionDecl? Callable(string modelName, string functionName, int arity)
     {
-        if (!_types.TryGetValue(modelName, out DeclaredTypeSymbol? type)
-            || type is not ModelSymbol { IsShared: true })
+        if (!_types.TryGetValue(modelName, out DeclaredTypeSymbol? type))
         {
             return null;
         }
 
         foreach (Symbol candidate in type.Lookup(functionName))
         {
-            if (candidate is FunctionSymbol function
+            if (candidate is FunctionSymbol { IsShared: true } function
                 && BodyOf(function) is { } body
                 && body.Parameters.Count == arity)
             {
